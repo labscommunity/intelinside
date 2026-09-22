@@ -140,7 +140,7 @@ export default function HardwareDetail() {
         </Section>
       ) : null}
       {h.results.length ? (
-        <Section label={integrated.length ? 'Best decode tok/s per model and quant, on the CPU cores' : 'Best decode tok/s per model and quant'}>
+        <Section label={integrated.length ? 'Best decode tok/s per model, quant, and runtime, on the CPU cores' : 'Best decode tok/s per model, quant, and runtime'}>
           <Framed>
             <TpsBarChart bars={h.chart} runtimes={cat.data.runtimes} />
           </Framed>
