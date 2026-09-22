@@ -5,6 +5,7 @@ import type {
   CustomRuntime, CustomRuntimeInput,
 } from './types'
 import { ApiError, BUILD_SUMMARY_MAX } from './types'
+import { hardwareChart } from './hardware-chart'
 import { isEvidenceUrl } from '@/lib/evidence'
 import { hostIn } from '@/lib/hardware'
 import { HARDWARE_BY_ID, MODELS, MODEL_BY_ID, QUANTS, QUANT_BY_ID, RUNTIMES, RUNTIME_BY_ID, VISIBLE_HARDWARE } from '@/catalog'
@@ -344,7 +345,7 @@ export const mockApi: Api = {
     if (!h) return fail('not_found', 'No such hardware.', 404)
     const results = visibleResults().filter((r) => r.componentId === id).sort((a, b) => b.decodeTps - a.decodeTps)
     const rigs = db.rigs.filter((rig) => rig.components.some((c) => c.hardwareId === id)).map(rigSummary)
-    const detail: HardwareDetail = { ...withCounts(h), chart: bestPerModelQuant(results), rigs, results: results.map(hydrateResult) }
+    const detail: HardwareDetail = { ...withCounts(h), chart: hardwareChart(results), rigs, results: results.map(hydrateResult) }
     return delay(detail)
   },
 
