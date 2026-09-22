@@ -1,5 +1,6 @@
 import { createClient, type User as SupabaseUser } from '@supabase/supabase-js'
 import type { User } from '@/lib/api/types'
+import { createSupabaseFetch } from './supabase-fetch'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim()
 const supabasePublishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim()
@@ -9,6 +10,7 @@ export const usesSupabaseAuth = Boolean(supabaseUrl && supabasePublishableKey)
 
 export const supabase = usesSupabaseAuth
   ? createClient(supabaseUrl!, supabasePublishableKey!, {
+      global: { fetch: createSupabaseFetch(supabaseUrl!) },
       auth: {
         detectSessionInUrl: true,
         flowType: 'pkce',

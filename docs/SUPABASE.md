@@ -28,6 +28,23 @@ writes use the Supabase table API directly. RLS enforces ownership for both.
 Text length and profanity checks run in the browser and trusted PR ingestion
 script; they are not a database-enforced security boundary.
 
+## Intermittent first-load JWT errors
+
+`PGRST303: JWT issued at future` can come from PostgREST's cached server clock,
+even with a valid token. The upstream fix shipped in PostgREST 14.18 and 16.3
+([fix](https://github.com/PostgREST/postgrest/pull/5208),
+[releases](https://github.com/PostgREST/postgrest/blob/main/CHANGELOG.md)).
+For hosted production, use Supabase's official managed upgrade when available.
+Their [September 17 incident update](https://supabase.statuspage.io/incidents/6q5902p2xd9f)
+says affected projects will need a dashboard upgrade once the new Supabase version
+is released. Confirm availability for the project with Supabase; a custom
+PostgREST build is not required. The production version has not been verified.
+
+The browser retries only REST GET requests that return HTTP 401 with that exact
+code and message, waiting 250, 750, then 1500 ms. Persistent failures still reach
+the page's error state. This mitigates transient failures without refreshing
+tokens, clearing sessions, or replaying writes; it does not fix the server clock.
+
 ## Database changes
 
 Migrations live in `supabase/migrations/`. Test locally with
