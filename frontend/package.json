@@ -14,7 +14,7 @@
     "og:assets": "node scripts/generate-og-assets.mjs",
     "og:preview": "node scripts/og-preview.mjs",
     "supabase:db:push:prod:dry-run": "supabase --workdir .. db push --project-ref ujlacyedspjfekotemmd --dry-run --skip-vault",
-    "results:test": "node --test scripts/tests/pr-results.test.mjs scripts/tests/result-evidence.test.mjs scripts/tests/supabase-fetch.test.mjs",
+    "results:test": "node --test scripts/tests/pr-results.test.mjs scripts/tests/result-evidence.test.mjs scripts/tests/hardware-chart.test.mjs scripts/tests/supabase-fetch.test.mjs",
     "supabase:db:push:prod": "supabase --workdir .. db push --project-ref ujlacyedspjfekotemmd --skip-vault"
   },
   "license": "MIT",

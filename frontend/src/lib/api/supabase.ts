@@ -9,6 +9,7 @@ import type {
   CustomRuntime,
 } from './types'
 import { ApiError, BUILD_SUMMARY_MAX, REVISION_MAX, RUNTIME_FLAGS_MAX } from './types'
+import { hardwareChart } from './hardware-chart'
 
 type ProfileRow = {
   id: string
@@ -515,7 +516,7 @@ export const supabaseApi: Api = {
     const rigIds = new Set(snapshot.components.filter((part) => part.hardware_id === id).map((part) => stringId(part.rig_id)))
     const detail: HardwareDetail = {
       ...hardware,
-      chart: bestChart(results),
+      chart: hardwareChart(results),
       rigs: snapshot.rigs.filter((rig) => rigIds.has(stringId(rig.id))).map(data.rigSummary),
       results,
     }
