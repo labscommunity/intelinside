@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "3",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "qwen3-8-flash-next",
+  "quant": "q2_0",
+  "runtime": "llamacpp",
+  "runtimeVersion": "b11026 (b49650adb)",
+  "runtimeFlags": "vulkan backend, -ngl 99 -fa 1 -ncmoe 12 -p 512 -n 256 -r 5, single request. Expert tensors of the first 12 of 48 layers are held in system RAM; the model does not fit in 32GB of VRAM.",
+  "decodeTps": 19.403761,
+  "promptTps": 202.965825,
+  "batchSize": 1,
+  "runDate": "2026-09-19",
+  "notes": "Stock upstream ggml-org/llama.cpp, clean tree, vulkan backend, binary built at b49650adb (the checkout has since been reset to c77ae695c; the measured commit is the one recorded). Weights ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF, Q2_0 (GSQ-RCO non-uniform, 61.9GiB) - the smallest full-weight GGUF of this 176.9B-parameter model that exists. decodeTps is tg256 averaged over 5 runs, one request at a time. Partial CPU offload via -ncmoe 12: expert tensors of 12 of 48 layers are held in system RAM and the remainder oversubscribes the 32GB card, so this is a partially host-resident configuration, not a fully VRAM-resident one."
+}
