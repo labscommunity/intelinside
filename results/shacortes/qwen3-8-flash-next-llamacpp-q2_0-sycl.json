@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "3",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "qwen3-8-flash-next",
+  "quant": "q2_0",
+  "runtime": "llamacpp",
+  "runtimeVersion": "b11026 (b49650adb)",
+  "runtimeFlags": "sycl backend, -ngl 99 -fa 1 -ncmoe 8 -p 512 -n 256 -r 5, single request. Hybrid: all 48 layers on the GPU, MoE experts of the first 8 on the CPU. Does not fit in 32GB VRAM.",
+  "decodeTps": 28.15156,
+  "promptTps": 453.662038,
+  "batchSize": 1,
+  "runDate": "2026-09-19",
+  "notes": "Stock upstream ggml-org/llama.cpp b11026 (b49650adb), clean tree, sycl backend. Weights ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF, Q2_0 (GSQ-RCO non-uniform, 61.9GiB) - the smallest full-weight GGUF of this model that exists. 176.9B parameters, roughly 3B active per token. This is a hybrid run, not a pure-GPU one: -ngl 99 offloads all 48 layers to the card, then -ncmoe 8 overrides the MoE expert FFN tensors of the first 8 layers to a CPU buffer, so those tensors both live in system RAM and have their matmuls executed on the CPU. Attention, the KV cache and every non-expert tensor stay on the GPU, as do the experts of the other 40 layers - 24.2GiB of weights on the card. Because the model is MoE, only the experts actually routed per token in those 8 layers hit the CPU. -ncmoe 8 is both the optimum and the floor: -ncmoe 4 aborts out of VRAM. decodeTps and promptTps are llama-bench tg256/pp512 from a short prompt, 5 runs, one at a time - i.e. at negligible context depth, matching the other results here. LIVE SERVING, NOT A BENCHMARK, same machine and weights at -ncmoe 16: a 41,415-token prompt with a cold cache took 157.2s to first token (263.4 tok/s prefill), then generated at 19.4 tok/s. A 413-token prompt against a warm cache: 141.9 tok/s prefill, 19.3 tok/s decode. Sustained decode measured 19.5-21.7 tok/s across 22k-41k tokens of context. Most of the gap from the 28.15 figure is context depth, not offload: a tg256 sweep at depth 0 gives 28.13 at -ncmoe 8 versus 27.13 at -ncmoe 16, about 1 tok/s. Prefill holds up with length where decode does not - 263 tok/s at 41k tokens."
+}
