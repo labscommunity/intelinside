@@ -7,10 +7,10 @@
   "quant": "q2_0",
   "runtime": "llamacpp",
   "runtimeVersion": "b11026 (b49650adb)",
-  "runtimeFlags": "vulkan backend, -ngl 99 -fa 1 -ncmoe 12 -p 512 -n 256 -r 5, single request. Expert tensors of the first 12 of 48 layers are held in system RAM; the model does not fit in 32GB of VRAM.",
+  "runtimeFlags": "vulkan backend, -ngl 99 -fa 1 -ncmoe 12 -p 512 -n 256 -r 5, single request. Hybrid: all 48 layers on the GPU, MoE experts of the first 12 on the CPU. Does not fit in 32GB VRAM.",
   "decodeTps": 19.403761,
   "promptTps": 202.965825,
   "batchSize": 1,
   "runDate": "2026-09-19",
-  "notes": "Stock upstream ggml-org/llama.cpp, clean tree, vulkan backend, binary built at b49650adb (the checkout has since been reset to c77ae695c; the measured commit is the one recorded). Weights ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF, Q2_0 (GSQ-RCO non-uniform, 61.9GiB) - the smallest full-weight GGUF of this 176.9B-parameter model that exists. decodeTps is tg256 averaged over 5 runs, one request at a time. Partial CPU offload via -ncmoe 12: expert tensors of 12 of 48 layers are held in system RAM and the remainder oversubscribes the 32GB card, so this is a partially host-resident configuration, not a fully VRAM-resident one."
+  "notes": "Stock upstream ggml-org/llama.cpp, clean tree, vulkan backend, binary built at b49650adb (the checkout has since been reset to c77ae695c; the measured commit is the one recorded). Weights ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF, Q2_0 (GSQ-RCO non-uniform, 61.9GiB) - the smallest full-weight GGUF of this 176.9B-parameter model that exists, roughly 3B active per token. This is a hybrid run, not a pure-GPU one: -ngl 99 offloads all 48 layers to the card, then -ncmoe 12 overrides the MoE expert FFN tensors of the first 12 layers to a CPU buffer, so those tensors both live in system RAM and have their matmuls executed on the CPU. Attention, the KV cache and every non-expert tensor stay on the GPU, as do the experts of the other 36 layers. Because the model is MoE, only the experts actually routed per token in those 12 layers hit the CPU. The sycl run of the same weights on the same machine needed only -ncmoe 8, so this configuration holds four more layers' experts on the host and is not directly comparable to it. decodeTps and promptTps are llama-bench tg256/pp512 averaged over 5 runs, one request at a time, at negligible context depth."
 }
