@@ -22,6 +22,7 @@ export const QUANTS: Quant[] = [
   { id: 'bf16', label: 'BF16', bits: 16, format: 'Brain float' },
   { id: 'q2_0', label: 'Q2_0', bits: 2, format: 'GGUF' },
   { id: 'q4_k_m', label: 'Q4_K_M', bits: 4, format: 'GGUF, used by llama.cpp and Ollama' },
+  { id: 'q4_k_l', label: 'Q4_K_L', bits: 4, format: 'GGUF' },
   { id: 'q4_k_xl', label: 'Q4_K_XL', bits: 4, format: 'GGUF, Unsloth Dynamic Q4_K_XL' },
   { id: 'q4_0', label: 'Q4_0', bits: 4, format: 'GGUF' },
   { id: 'q5_k_m', label: 'Q5_K_M', bits: 5, format: 'GGUF' },
@@ -156,7 +157,7 @@ export const MODELS: Model[] = [
   },
   {
     id: 'qwen3-8-27b', name: 'Qwen3.8-27B', family: 'Qwen3.8', brand: 'Qwen', params: '27B', architecture: 'dense',
-    sourceUrl: 'https://huggingface.co/Qwen/Qwen3.8-27B', logoUrl: '/logos/models/qwen.svg', brandColor: '#b699eb', quants: ['int4', 'int8', 'q4_k_m', 'q8_0'],
+    sourceUrl: 'https://huggingface.co/Qwen/Qwen3.8-27B', logoUrl: '/logos/models/qwen.svg', brandColor: '#b699eb', quants: ['int4', 'int8', 'q4_k_m', 'q4_k_l', 'q8_0'],
   },
   {
     id: 'qwen3-8-flash-next', name: 'Qwen3.8-Flash-Next', family: 'Qwen3.8', brand: 'Qwen', params: '125B', architecture: 'moe', activeParams: '6B',

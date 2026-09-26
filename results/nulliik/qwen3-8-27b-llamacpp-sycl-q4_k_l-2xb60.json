@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "4",
+  "component": "intel-arc-pro-b60",
+  "componentQuantity": 2,
+  "model": "qwen3-8-27b",
+  "quant": "q4_k_l",
+  "runtime": "llamacpp",
+  "runtimeVersion": "b11100 (7ab4ee7b)",
+  "runtimeFlags": "Windows 11, SYCL F16 JIT backend, oneAPI 2026.1.1, -ngl 99 -fa 1, split-mode layer, -ts 1.25/0.75, -b 4096 -ub 4096, KV q8_0, native draft-mtp (n_max 3)",
+  "decodeTps": 24.0,
+  "promptTps": 609.47,
+  "ttftMs": 840.1,
+  "contextLength": 131072,
+  "batchSize": 1,
+  "runDate": "2026-09-22",
+  "notes": "Windows 11 Pro. Measured on 2x Intel Arc Pro B60 24GB (Maxsun Dual 48G Turbo). Custom JIT SYCL build with GGML_SYCL_F16=ON, GGML_SYCL_DNN=ON, Level-Zero. Model: Swift-Qwen3.8-27B (Swift-Qwen3.8-27B-Q4_K_L.gguf, 17.72 GiB) with embedded Q8_0 MTP draft head. decodeTps is 24.00 t/s with native MTP speculative decoding (--spec-type draft-mtp --spec-draft-device SYCL0 --spec-draft-n-max 3; 20-30 t/s across context lengths in chat). Stock non-MTP decode is 16.13 t/s. promptTps is 609.47 t/s at pp512 (ttftMs: 840.1 ms; scaling to 925.39 t/s at 4k, 825.18 t/s at 32k, 724.73 t/s at 64k, and 570.24 t/s at 128k with Q8_0 KV). Special thanks to SergiioB for the cookbook (https://github.com/SergiioB/intel-arc-pro-b70-inference-cookbook)."
+}
