@@ -9,3 +9,7 @@ dist-*
 
 # OG card previews from npm run og:preview
 .og-preview/
+
+# Browser test artifacts
+/test-results/
+/playwright-report/

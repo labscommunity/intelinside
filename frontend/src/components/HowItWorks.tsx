@@ -25,9 +25,9 @@ const STEPS: Record<Path, { title: string; hint: string }[]> = {
     { title: 'Post the tok/s', hint: 'One model, one runtime, one machine.' },
   ],
   agent: [
-    { title: 'Copy the prompt', hint: 'Built for your handle and your rig.' },
-    { title: 'Your agent opens the pull request', hint: 'As you, from your own GitHub account.' },
-    { title: 'Merging puts it on the board', hint: 'Nothing to fill in afterwards.' },
+    { title: 'Create an API key', hint: 'Choose what your agent can manage.' },
+    { title: 'Give your agent the docs', hint: 'Save the key in its secret settings.' },
+    { title: 'Ask it to submit your run', hint: 'It can register the rig and runtime too.' },
   ],
 }
 
@@ -35,11 +35,11 @@ export function HowItWorks() {
   const { user, requestSignIn } = useSession()
   const [path, setPath] = useState<Path>('hand')
   const agent = path === 'agent'
-  // `?agent=1` opens the prompt dialog once the submit page has a signed-in user and their rigs.
-  const to = agent ? '/submit?agent=1' : '/submit'
+  // The settings page contains the key flow and copyable agent instructions.
+  const to = agent ? '/settings/api-keys' : '/submit'
   const cta = (
     <>
-      {agent ? <Terminal data-icon="inline-start" /> : <Plus data-icon="inline-start" />} {agent ? 'Get the prompt' : 'Submit a result'}
+      {agent ? <Terminal data-icon="inline-start" /> : <Plus data-icon="inline-start" />} {agent ? 'Connect your agent' : 'Submit a result'}
     </>
   )
   return (

@@ -1,3 +1,5 @@
+> For the supported personal-key HTTP API, see [agent documentation](../frontend/public/docs/agents.md) and [deployment notes](AGENT_API_OPERATIONS.md). This document describes the frontend adapter contract.
+
 # API contract (draft for Jack)
 
 The front end talks to the network only through `src/lib/api.ts`, whose functions map one-to-one onto these endpoints. Anything not listed here is not needed for v1.

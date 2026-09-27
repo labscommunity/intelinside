@@ -15,6 +15,7 @@ import ResultDetail from '@/pages/ResultDetail'
 import Profile from '@/pages/Profile'
 import SubmitResult from '@/pages/SubmitResult'
 import RigEditor from '@/pages/RigEditor'
+import ApiKeys from '@/pages/ApiKeys'
 import AuthCallback from '@/pages/AuthCallback'
 import Terms from '@/pages/Terms'
 import Privacy from '@/pages/Privacy'
@@ -48,6 +49,7 @@ export default function App() {
         <Route path="/about" element={<About />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/settings/api-keys" element={<ApiKeys />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="*" element={<NotFound />} />
       </Route>
