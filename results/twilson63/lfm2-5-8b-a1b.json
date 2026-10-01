@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "9",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "lfm2-5-8b-a1b",
+  "quant": "q4_k_m",
+  "runtime": "llamacpp",
+  "runtimeVersion": "version: 0.5.0-dev (build 1, commit 526c43b)",
+  "runtimeFlags": "llama.cpp Vulkan backend, -ngl 99 (all layers on GPU), ctx 4096, batch 1",
+  "decodeTps": 238.0,
+  "promptTps": 197.6,
+  "ttftMs": 111.4,
+  "contextLength": 150,
+  "batchSize": 1,
+  "runDate": "2026-09-30",
+  "notes": "ReBAR on, 32GB BAR. 3 runs: decode 238.2/237.3/238.4. Official LiquidAI Q4_K_M GGUF (5.16GB). 8B-A1B MoE; thinking traces in output, generation coherent. llama-bench tg128 cross-check: 243.7."
+}
