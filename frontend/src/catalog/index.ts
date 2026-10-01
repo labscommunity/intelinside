@@ -96,6 +96,10 @@ export const MODELS: Model[] = [
     sourceUrl: 'https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct', logoUrl: '/logos/models/llama.svg', brandColor: '#73b0ee', quants: ['int4', 'q4_k_m', 'q8_0', 'fp16'],
   },
   {
+    id: 'medgemma-4b-it', name: 'MedGemma 4B IT', family: 'MedGemma', brand: 'MedGemma', params: '4B', architecture: 'dense',
+    sourceUrl: 'https://huggingface.co/google/medgemma-4b-it', brandColor: '#4fc3a1', quants: ['q4_k_m'],
+  },
+  {
     id: 'minicpm5-2b', name: 'MiniCPM5-2B', family: 'MiniCPM5', brand: 'MiniCPM', params: '2.5B', architecture: 'dense',
     sourceUrl: 'https://huggingface.co/openbmb/MiniCPM5-2B', logoUrl: '/logos/models/minicpm.svg', brandColor: '#e5a3c2', quants: ['int4', 'q4_k_m', 'q8_0', 'fp16'],
   },
