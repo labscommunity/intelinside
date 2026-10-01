@@ -84,6 +84,10 @@ export const MODELS: Model[] = [
     sourceUrl: 'https://huggingface.co/poolside/Laguna-XS-2.1', logoUrl: '/logos/models/poolside.png', brandColor: '#7fd4a8', quants: ['q4_k_m'],
   },
   {
+    id: 'moonlight-16b-a3b', name: 'Moonlight 16B-A3B', family: 'Moonlight', brand: 'Moonshot', params: '16B', architecture: 'moe', activeParams: '3B',
+    sourceUrl: 'https://huggingface.co/moonshotai/Moonlight-16B-A3B-Instruct', brandColor: '#9fc3e8', quants: ['q4_k_m'],
+  },
+  {
     id: 'lfm2-5-2-6b', name: 'LFM2.5-2.6B', family: 'LFM2.5', brand: 'LFM', params: '2.6B', architecture: 'dense',
     sourceUrl: 'https://huggingface.co/LiquidAI/LFM2.5-2.6B', logoUrl: '/logos/models/liquid.svg', brandColor: '#6fc3d6', quants: ['int4', 'int8', 'q4_k_m', 'q8_0', 'fp16'],
   },
