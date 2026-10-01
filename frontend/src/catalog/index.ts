@@ -1,8 +1,8 @@
 import type { HardwareItem, HardwareType, Model, Quant, Runtime } from '@/lib/api/types'
 
 // The catalog: every hardware part, model, quantization, and runtime the site knows about. This file is the source
-// of truth. `npm run catalog:seed` turns it into the SQL that seeds the database, so a pull request here is
-// how a part or model gets onto the site. See catalog/README.md.
+// of truth: merging a change here syncs it to the database (.github/workflows/sync-catalog.yml), so a pull
+// request here is how a part or model gets onto the site. See catalog/README.md.
 
 export const RUNTIMES: Runtime[] = [
   { id: 'cascadia', name: 'Cascadia', logoUrl: '/logos/runtimes/cascadia.svg', repoUrl: 'https://github.com/labscommunity/cascadia', color: '#e89960' },

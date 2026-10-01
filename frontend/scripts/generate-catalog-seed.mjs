@@ -1,53 +1,34 @@
-import { createServer } from 'vite'
+// Prints the catalog as idempotent seed SQL, for a fresh database. Production syncs through the sync_catalog
+// database function on merge instead (see docs/SUPABASE.md); both use the mapping in catalog-snapshot.mjs.
+import { catalogSnapshot, loadCatalog } from './catalog-snapshot.mjs'
 
 const quote = (value) => value == null ? 'null' : `'${String(value).replaceAll("'", "''")}'`
 const json = (value) => `${quote(JSON.stringify(value))}::jsonb`
 const textArray = (values) => (values?.length ? `array[${values.map(quote).join(', ')}]::text[]` : `'{}'::text[]`)
-const row = (values) => `  (${values.join(', ')})`
+const date = (value) => value ? `${quote(value)}::date` : 'null'
+const literal = { bits: String, specs: json, release_date: date, integrated: textArray }
 // `--only hardware` prints just the hardware upsert, for a migration that changes only that table.
 const only = process.argv.includes('--only') ? process.argv[process.argv.indexOf('--only') + 1] : null
 
-const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' })
-
-try {
-  const { HARDWARE, MODELS, QUANTS, RUNTIMES } = await server.ssrLoadModule('/src/catalog/index.ts')
-  const hardwareStatements = [
-    'insert into public.hardware (id, type, vendor, name, series, specs, release_date, image_url, source, integrated) values',
-    HARDWARE.map((item) => row([
-      quote(item.id), quote(item.type), quote(item.vendor), quote(item.name), quote(item.series), json(item.specs),
-      item.releaseDate ? `${quote(item.releaseDate)}::date` : 'null', quote(item.imageUrl), quote(item.source), textArray(item.integrated),
-    ])).join(',\n'),
-    'on conflict (id) do update set type = excluded.type, vendor = excluded.vendor, name = excluded.name, series = excluded.series, specs = excluded.specs, release_date = excluded.release_date, image_url = excluded.image_url, source = excluded.source, integrated = excluded.integrated;',
+function upsert(table, rows, key) {
+  const columns = Object.keys(rows[0])
+  const update = columns.filter((c) => !key.includes(c))
+  return [
+    `insert into public.${table} (${columns.join(', ')}) values`,
+    rows.map((row) => `  (${columns.map((c) => (literal[c] ?? quote)(row[c])).join(', ')})`).join(',\n'),
+    `on conflict (${key.join(', ')}) do ${update.length ? `update set ${update.map((c) => `${c} = excluded.${c}`).join(', ')}` : 'nothing'};`,
   ]
-  const statements = only === 'hardware' ? [...hardwareStatements, ''] : [
-    'begin;',
-    '',
-    'insert into public.quants (id, label, bits, format) values',
-    QUANTS.map((item) => row([quote(item.id), quote(item.label), item.bits, quote(item.format)])).join(',\n'),
-    'on conflict (id) do update set label = excluded.label, bits = excluded.bits, format = excluded.format;',
-    '',
-    'insert into public.models (id, name, family, params, architecture, active_params, source_url, logo_url, brand_color) values',
-    MODELS.map((item) => row([
-      quote(item.id), quote(item.name), quote(item.family), quote(item.params), quote(item.architecture),
-      quote(item.activeParams), quote(item.sourceUrl), quote(item.logoUrl), quote(item.brandColor),
-    ])).join(',\n'),
-    'on conflict (id) do update set name = excluded.name, family = excluded.family, params = excluded.params, architecture = excluded.architecture, active_params = excluded.active_params, source_url = excluded.source_url, logo_url = excluded.logo_url, brand_color = excluded.brand_color;',
-    '',
-    'insert into public.model_quants (model_id, quant_id) values',
-    MODELS.flatMap((model) => model.quants.map((quant) => row([quote(model.id), quote(quant)]))).join(',\n'),
-    'on conflict (model_id, quant_id) do nothing;',
-    '',
-    'insert into public.runtimes (id, name, logo_url, repo_url, color) values',
-    RUNTIMES.map((item) => row([quote(item.id), quote(item.name), quote(item.logoUrl), quote(item.repoUrl), quote(item.color)])).join(',\n'),
-    'on conflict (id) do update set name = excluded.name, logo_url = excluded.logo_url, repo_url = excluded.repo_url, color = excluded.color;',
-    '',
-    ...hardwareStatements,
-    '',
-    'commit;',
-    '',
-  ]
-
-  process.stdout.write(statements.join('\n'))
-} finally {
-  await server.close()
 }
+
+const snapshot = catalogSnapshot(await loadCatalog())
+const hardware = upsert('hardware', snapshot.hardware, ['id'])
+const statements = only === 'hardware' ? [...hardware, ''] : [
+  'begin;', '',
+  ...upsert('quants', snapshot.quants, ['id']), '',
+  ...upsert('models', snapshot.models, ['id']), '',
+  ...upsert('model_quants', snapshot.model_quants, ['model_id', 'quant_id']), '',
+  ...upsert('runtimes', snapshot.runtimes, ['id']), '',
+  ...hardware, '',
+  'commit;', '',
+]
+process.stdout.write(statements.join('\n'))
