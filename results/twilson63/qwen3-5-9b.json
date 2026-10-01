@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "9",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "qwen3-5-9b",
+  "quant": "q4_k_m",
+  "runtime": "llamacpp",
+  "runtimeVersion": "version: 0.5.0-dev (build 1, commit 526c43b)",
+  "runtimeFlags": "llama.cpp Vulkan backend, -ngl 99 (all layers on GPU), ctx 4096, batch 1",
+  "decodeTps": 70.2,
+  "promptTps": 119.0,
+  "ttftMs": 210.1,
+  "contextLength": 153,
+  "batchSize": 1,
+  "runDate": "2026-09-30",
+  "notes": "ReBAR on, 32GB BAR. 3 runs: decode 70.2/70.3/70.1. Unsloth Q4_K_M GGUF (5.28GB). Thinking traces in output, generation coherent. llama-bench tg128 cross-check: 71.1."
+}
