@@ -30,14 +30,16 @@ const overlaps = (a: Box, b: Box) => a.x < b.x + b.w && b.x < a.x + a.w && a.y <
 const textWidth = (s: string, size: number) => s.length * size * 0.64
 const num = (v: string | number | undefined, fallback: number) => (typeof v === 'number' ? v : fallback)
 
-/** The model number as printed on the part: B70, B580, RTX 4090, i7-14700K, 285K, w7-3465X, 6960P. */
+/** The model number as printed on the part: B70, B580, RTX 4090, RTX 5070 Ti, i7-14700K, 285K, w7-3465X, 6960P. */
 export function shortName(h: Pick<HardwareItem, 'name'>): string {
   const clean = h.name.replace(/\s*\(.*?\)/g, '').trim()
   const tokens = clean.split(/\s+/)
   const i = tokens.findIndex((t) => /^[A-Za-z]?\d{2,4}[A-Za-z0-9]*$/.test(t) || /^[a-z]\d-\d{4,5}[A-Z]*$/.test(t))
   if (i < 0) return clean
   const prev = tokens[i - 1]
-  return prev && /^(RTX|RX|PRO)$/.test(prev) ? `${prev} ${tokens[i]}` : tokens[i]
+  const next = tokens[i + 1]
+  const model = next && /^(Ti|SUPER|Super)$/.test(next) ? `${tokens[i]} ${next}` : tokens[i]
+  return prev && /^(RTX|RX|PRO)$/.test(prev) ? `${prev} ${model}` : model
 }
 
 // ---------- accelerators ----------

@@ -38,7 +38,7 @@ hw('intel-core-ultra-7-258v', 'cpu', 'Intel', 'Core Ultra 7 258V', { cores: 8, t
 ### Non-Intel parts
 
 Other vendors are welcome so the comparisons stay honest, but note that `VISIBLE_HARDWARE` at the bottom of
-`index.ts` currently narrows hardware browsing and the rig component picker to `Intel`, `AMD`, and `Generic`. A part from another vendor is a valid
+`index.ts` currently narrows hardware browsing and the rig component picker to `Intel`, `AMD`, `NVIDIA`, and `Generic`. A part from another vendor is a valid
 catalog entry and results can reference it; it will not appear in the hardware browser until that filter
 changes.
 
