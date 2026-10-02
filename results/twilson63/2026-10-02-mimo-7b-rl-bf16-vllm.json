@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "9",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "mimo-7b-rl",
+  "quant": "bf16",
+  "runtime": "vllm",
+  "runtimeVersion": "0.30.0 (vllm-openai-xpu image)",
+  "runtimeFlags": "XPU backend, bf16, --enforce-eager, --block-size 64, ctx 4096, 85% VRAM, --trust-remote-code",
+  "decodeTps": 39.8,
+  "promptTps": 297.4,
+  "ttftMs": 51.4,
+  "contextLength": 143,
+  "batchSize": 1,
+  "runDate": "2026-10-02",
+  "notes": "ReBAR on, 32GB BAR. 3 runs: decode 39.8/39.8/39.9, prompt 242.1/325.1/324.9, ttft 62.0/46.1/46.2ms. Native MiMoForCausalLM (trust-remote-code), bf16 full precision. Official vllm-openai-xpu Docker image (:latest = sha256:fc0e112a, vLLM 0.30.0), --device /dev/dri. First vLLM run on B70; coherent output with thinking traces."
+}
