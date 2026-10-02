@@ -105,7 +105,7 @@ export const MODELS: Model[] = [
   },
   {
     id: 'mimo-7b-rl', name: 'MiMo-7B-RL', family: 'MiMo', brand: 'Xiaomi', params: '7B', architecture: 'dense',
-    sourceUrl: 'https://huggingface.co/XiaomiMiMo/MiMo-7B-RL', brandColor: '#ff6900', quants: ['q4_k_m'],
+    sourceUrl: 'https://huggingface.co/XiaomiMiMo/MiMo-7B-RL', brandColor: '#ff6900', quants: ['q4_k_m', 'bf16'],
   },
   {
     id: 'minicpm5-2b', name: 'MiniCPM5-2B', family: 'MiniCPM5', brand: 'MiniCPM', params: '2.5B', architecture: 'dense',
