@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "9",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "mimo-7b-rl",
+  "quant": "q4_k_m",
+  "runtime": "llamacpp",
+  "runtimeVersion": "version: 0.5.0-dev (build 1, commit 526c43b)",
+  "runtimeFlags": "llama.cpp Vulkan backend, -ngl 99 (all layers on GPU), ctx 4096, batch 1",
+  "decodeTps": 91.0,
+  "promptTps": 204.9,
+  "ttftMs": 166.0,
+  "contextLength": 162,
+  "batchSize": 1,
+  "runDate": "2026-10-01",
+  "notes": "ReBAR on, 32GB BAR. 3 runs: decode 91.1/91.3/90.7. Community jedisct1 Q4_K_M GGUF (4.68GB, qwen2-mapped arch). 7B dense reasoning model; thinking traces, coherent. llama-bench tg128 cross-check: 92.3."
+}
