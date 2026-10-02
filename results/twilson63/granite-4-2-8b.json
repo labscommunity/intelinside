@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "9",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "granite-4-2-8b",
+  "quant": "q4_k_m",
+  "runtime": "llamacpp",
+  "runtimeVersion": "version: 0.5.0-dev (build 1, commit 526c43b)",
+  "runtimeFlags": "llama.cpp Vulkan backend, -ngl 99 (all layers on GPU), ctx 4096, batch 1",
+  "decodeTps": 75.2,
+  "promptTps": 157.5,
+  "ttftMs": 184.6,
+  "contextLength": 157,
+  "batchSize": 1,
+  "runDate": "2026-09-29",
+  "notes": "ReBAR on, 32GB BAR. 3 runs: decode 74.0/75.8/75.9. Official IBM Q4_K_M GGUF (5.35GB). llama-bench tg128 cross-check: 76.4."
+}

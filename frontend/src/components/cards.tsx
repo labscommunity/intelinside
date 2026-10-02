@@ -120,7 +120,7 @@ export function HardwareCard({ hardware, counts = true }: { hardware: HardwareIt
 /** The board page for a summary's board: the rigs board is the page's default, the components board is a query. */
 export const boardPath = (board: Pick<BoardMeta, 'modelId' | 'quant' | 'kind'>) => `/models/${board.modelId}/${board.quant}${board.kind === 'components' ? '?kind=components' : ''}`
 
-/** One chip per quant, each the link into that board with its result count. `lit` picks the chips drawn in full ink. */
+/** One chip per quant, with total submissions across both boards. `lit` picks the chips drawn in full ink. */
 export function QuantChips({ model, lit, className }: { model: Model; lit: (quant: string) => boolean; className?: string }) {
   return (
     <div className={cn('flex flex-wrap gap-1.5', className)}>
@@ -128,7 +128,7 @@ export function QuantChips({ model, lit, className }: { model: Model; lit: (quan
         <Link
           key={q}
           to={`/models/${model.id}/${q}`}
-          title={`${quantHint(q)} · ${model.resultCounts?.[q] ?? 0} results`}
+          title={`${quantHint(q)} · ${model.resultCounts?.[q] ?? 0} total submissions across rigs and components`}
           className={cn(
             'rounded-md border px-2 py-1 font-mono text-xs whitespace-nowrap transition-colors hover:border-foreground/30 hover:text-foreground',
             lit(q) ? 'border-foreground/30 text-foreground' : 'text-muted-foreground',

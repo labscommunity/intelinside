@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "9",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "qwen3-5-9b",
+  "quant": "int4",
+  "runtime": "openvino-genai",
+  "runtimeVersion": "2026.4.0.0-3407-7ea2546852a",
+  "runtimeFlags": "OpenVINO 2026.4.0, default GenAI VLMPipeline (text-only), batch 1",
+  "decodeTps": 82.3,
+  "promptTps": 86.2,
+  "ttftMs": 290.2,
+  "contextLength": 153,
+  "batchSize": 1,
+  "runDate": "2026-09-30",
+  "notes": "ReBAR on, 32GB BAR. 3 runs: decode 82.2/82.3/82.4. Self-exported VLM (optimum-intel 2.2 + transformers 5.2.0 + NNCF int4-sym/gs128/fallback-adjust), text-only. Thinking traces, coherent. vs llama.cpp Q4_K_M 70.2."
+}

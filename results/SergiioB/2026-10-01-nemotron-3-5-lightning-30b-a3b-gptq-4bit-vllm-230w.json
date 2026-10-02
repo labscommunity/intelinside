@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "1",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "nemotron-3-5-lightning-30b-a3b",
+  "quant": "gptq-4bit",
+  "runtime": "vllm",
+  "runtimeVersion": "0.26.1rc1.dev457+gc810e5ee9",
+  "runtimeFlags": "DFlash n7; XPU graphs on; --async-scheduling; fp16 KV; --no-enable-prefix-caching; gptq/float16; gpu-mem-util 0.90; max-num-seqs 16; stock vLLM no patch; Mamba2 SSU cache",
+  "decodeTps": 228.98,
+  "promptTps": 10323,
+  "ttftMs": 230,
+  "contextLength": 16384,
+  "batchSize": 1,
+  "runDate": "2026-10-01",
+  "notes": "Same configuration as the 150 W entry (stock vLLM, no router patch, DFlash n7, XPU graphs on, fp16 KV, cache off) at a 230 W configured cap (power1_cap=230000000, verified by read-back). Decode is the p2048/g128 C1 representative cell, median of 3 greedy reps: 228.98 (range 228.65-229.04, a 0.17% spread - the tightest cell measured), window acceptance 55.0%, all 3 reps byte-identical. promptTps 10323 is a genuine isolated engine prefill metric at p8192 content tokens (8208 prompt tokens), median of 3, TTFT 0.81 s. Power scaling on this config, 150 W to 230 W: decode +14.1% (200.72 to 228.98) and prefill +40.8% (7331 to 10323) - the extra watts buy prefill far more than decode. The power cap is set per card in microwatts at /sys/class/drm/card1/device/hwmon/hwmon6/power1_cap. Cross-checks on the same server: code HumanEval greedy natural EOS 192.88 median; prose wikitext greedy 213.75 median; card-recommended sampling (temp 1.0, top_p 0.95) 181.30 code / 182.56 prose. Caveats: local symmetric GPTQ INT4 G64 target, not an official HF quant; local NVFP4-to-BF16 draft; single card of a 2x B70 rig. IMPORTANT context caveat: this no-patch configuration boots only up to max-model-len 16384. Above that the engine fails at init inside a torch.compile MoE kernel (Assertion index out of bounds 0 <= tmp0 < 128, where 128 is n_routed_experts), before any KV cache is allocated - it is a compiled-kernel failure, not a memory limit; a full 262144-token context would need only ~1.5 GiB of fp16 KV because just 6 of the model's 52 layers carry KV. The local router patch avoids that assertion and is required for long context, but costs about 16% decode, so it is a real trade-off rather than a free win. Correctness: 5x identical greedy replay produced 1 distinct output on this run. Evidence and the full 22-config sweep are in the cookbook recipe listed under evidenceUrl.",
+  "evidenceUrl": "https://github.com/SergiioB/intel-arc-pro-b70-inference-cookbook/blob/master/docs/nemotron35-30a3/NEMOTRON-DFLASH-B70-VERIFIED-2C427EF4.md"
+}

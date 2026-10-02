@@ -84,6 +84,10 @@ export const MODELS: Model[] = [
     sourceUrl: 'https://huggingface.co/poolside/Laguna-XS-2.1', logoUrl: '/logos/models/poolside.png', brandColor: '#7fd4a8', quants: ['q4_k_m'],
   },
   {
+    id: 'moonlight-16b-a3b', name: 'Moonlight 16B-A3B', family: 'Moonlight', brand: 'Moonshot', params: '16B', architecture: 'moe', activeParams: '3B',
+    sourceUrl: 'https://huggingface.co/moonshotai/Moonlight-16B-A3B-Instruct', brandColor: '#9fc3e8', quants: ['q4_k_m'],
+  },
+  {
     id: 'lfm2-5-2-6b', name: 'LFM2.5-2.6B', family: 'LFM2.5', brand: 'LFM', params: '2.6B', architecture: 'dense',
     sourceUrl: 'https://huggingface.co/LiquidAI/LFM2.5-2.6B', logoUrl: '/logos/models/liquid.svg', brandColor: '#6fc3d6', quants: ['int4', 'int8', 'q4_k_m', 'q8_0', 'fp16'],
   },
@@ -94,6 +98,10 @@ export const MODELS: Model[] = [
   {
     id: 'llama-3-1-8b', name: 'Llama 3.1 8B Instruct', family: 'Llama 3.1', brand: 'Llama', params: '8B', architecture: 'dense',
     sourceUrl: 'https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct', logoUrl: '/logos/models/llama.svg', brandColor: '#73b0ee', quants: ['int4', 'q4_k_m', 'q8_0', 'fp16'],
+  },
+  {
+    id: 'medgemma-4b-it', name: 'MedGemma 4B IT', family: 'MedGemma', brand: 'MedGemma', params: '4B', architecture: 'dense',
+    sourceUrl: 'https://huggingface.co/google/medgemma-4b-it', brandColor: '#4fc3a1', quants: ['q4_k_m'],
   },
   {
     id: 'mimo-7b-rl', name: 'MiMo-7B-RL', family: 'MiMo', brand: 'Xiaomi', params: '7B', architecture: 'dense',
@@ -122,6 +130,10 @@ export const MODELS: Model[] = [
   {
     id: 'ornith-1-5-9b', name: 'Ornith 1.5 9B', family: 'Ornith 1.5', brand: 'Ornith', params: '9B', architecture: 'dense',
     sourceUrl: 'https://huggingface.co/ornith-ai/Ornith-1.5-9B', logoUrl: '/logos/models/ornith.webp', brandColor: '#7fb5d9', quants: ['int4'],
+  },
+  {
+    id: 'qwen3-1-7b', name: 'Qwen3-1.7B', family: 'Qwen3', brand: 'Qwen', params: '1.7B', architecture: 'dense',
+    sourceUrl: 'https://huggingface.co/Qwen/Qwen3-1.7B', logoUrl: '/logos/models/qwen.svg', brandColor: '#b699eb', quants: ['int4'],
   },
   {
     id: 'qwen3-30b-a3b', name: 'Qwen3-30B-A3B', family: 'Qwen3', brand: 'Qwen', params: '30B', architecture: 'moe', activeParams: '3B',

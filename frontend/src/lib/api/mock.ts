@@ -197,7 +197,7 @@ function bestRows(modelId: string, quant: string, kind: BoardKind, p: Partial<Bo
   const items = visibleResults().filter(
     (r) => r.modelId === modelId && r.quant === quant && (kind === 'rigs' ? !r.componentId : !!r.componentId) && matchesFilter(r, p),
   )
-  return bestPerKey(items, unitKey)
+  return bestPerKey(items, p.allSubmissions ? (result) => result.id : unitKey)
 }
 
 function boardRows(modelId: string, quant: string, p: BoardParams): BoardRow[] {

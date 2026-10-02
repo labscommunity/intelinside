@@ -12,6 +12,8 @@ on:
       - 'frontend/src/catalog/**'
       - 'frontend/package*.json'
       - 'supabase/migrations/**'
+      - 'custom-runtimes/**'
+      - 'results/schema.json'
       - '.github/workflows/*result*.yml'
 permissions:
   contents: read

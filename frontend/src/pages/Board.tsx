@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { BarChart3, ExternalLink, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { PageHeader } from '@/components/PageHeader'
 import { LeaderboardTable } from '@/components/LeaderboardTable'
+import { ResultsTable } from '@/components/ResultsTable'
 import { TpsBarChart } from '@/components/TpsBarChart'
 import { RuntimeMark } from '@/components/RuntimeMark'
 import { ModelLogo } from '@/components/ModelLogo'
@@ -22,7 +23,7 @@ import { useCatalog } from '@/hooks/useCatalog'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useSession } from '@/hooks/useSession'
 import { api } from '@/lib/api'
-import type { BoardKind, BoardRow, HardwareType, VerificationStatus } from '@/lib/api/types'
+import type { BoardKind, HardwareType, VerificationStatus } from '@/lib/api/types'
 import { HARDWARE_TYPE_LABEL, HARDWARE_TYPES, QUANT_BY_ID, VENDORS, quantHint } from '@/catalog'
 import { cn } from '@/lib/utils'
 
@@ -43,6 +44,7 @@ export default function Board() {
   const model = cat.data?.models.find((m) => m.id === modelId)
 
   const kind = (sp.get('kind') as BoardKind) || 'rigs'
+  const allSubmissions = sp.get('view') === 'submissions'
   const runtime = sp.get('runtime')?.split(',').filter(Boolean) ?? []
   const vendor = sp.get('vendor') ?? ''
   const type = sp.get('type') ?? ''
@@ -60,6 +62,7 @@ export default function Board() {
   }
   const params = {
     kind,
+    allSubmissions,
     runtime,
     vendor: vendor || undefined,
     type: (type || undefined) as HardwareType | undefined,
@@ -71,17 +74,24 @@ export default function Board() {
   const quantLabel = quant ? QUANT_BY_ID[quant]?.label ?? quant : ''
   usePageTitle(model ? `${model.name} ${quantLabel}` : 'Board')
 
-  const board = useAsync(
-    () => (quant ? api.board(modelId, quant, params) : Promise.reject(new Error('no quant'))),
-    [modelId, quant, kind, runtime.join(','), vendor, type, verification, includeModified, q],
+  // Keep both boards ready so changing tabs does not refetch or clear their counts.
+  const rigsBoard = useAsync(
+    () => (quant ? api.board(modelId, quant, { ...params, kind: 'rigs', type: undefined }) : Promise.reject(new Error('no quant'))),
+    [modelId, quant, allSubmissions, runtime.join(','), vendor, verification, includeModified, q],
   )
-  const [extra, setExtra] = useState<BoardRow[]>([])
-  const [cursor, setCursor] = useState<string | undefined>()
+  const componentsBoard = useAsync(
+    () => (quant ? api.board(modelId, quant, { ...params, kind: 'components' }) : Promise.reject(new Error('no quant'))),
+    [modelId, quant, allSubmissions, runtime.join(','), vendor, type, verification, includeModified, q],
+  )
+  const board = kind === 'rigs' ? rigsBoard : componentsBoard
+  const otherKind: BoardKind = kind === 'rigs' ? 'components' : 'rigs'
+  const otherBoard = kind === 'rigs' ? componentsBoard : rigsBoard
+  const otherCount = otherBoard.loading || otherBoard.error ? undefined : otherBoard.data?.board.total
+  const counts = {
+    rigs: rigsBoard.error ? undefined : rigsBoard.data?.board.total,
+    components: componentsBoard.error ? undefined : componentsBoard.data?.board.total,
+  }
   const [showChart, setShowChart] = useState(false)
-  useEffect(() => {
-    setExtra([])
-    setCursor(board.data?.nextCursor)
-  }, [board.data])
 
   if (!quant) {
     if (cat.loading)
@@ -100,7 +110,8 @@ export default function Board() {
     return <Navigate replace to={`/models/${model.id}/${best}`} />
   }
 
-  const rows = [...(board.data?.items ?? []), ...extra]
+  const rows = board.data?.items ?? []
+  const cursor = board.data?.nextCursor
   const runtimes = cat.data?.runtimes ?? []
   const filtered = runtime.length > 0 || !!vendor || !!type || !!verification || !!q
   const submit = user ? (
@@ -144,22 +155,41 @@ export default function Board() {
                 label: <span className="font-mono">{QUANT_BY_ID[qid]?.label ?? qid}</span>,
                 count: model.resultCounts?.[qid] ?? 0,
                 to: `/models/${model.id}/${qid}${sp.toString() ? `?${sp}` : ''}`,
-                hint: `${quantHint(qid)} · ${model.resultCounts?.[qid] ?? 0} results`,
+                hint: `${quantHint(qid)} · ${model.resultCounts?.[qid] ?? 0} total submissions across rigs and components`,
               }))}
             />
+            <p className="mt-2 text-xs text-muted-foreground">
+              Quantization counts include all submissions across rigs and components, before filters.
+              Each leaderboard ranks only the best entry per rig or component and quantity.
+              Choose All submissions to see every matching run on the selected board.
+            </p>
           </div>
         ) : null}
       </PageHeader>
 
       <Section>
         <Toolbar>
+          <PillTabs
+            className="-ml-3"
+            value={allSubmissions ? 'submissions' : 'leaderboard'}
+            onChange={(v) => update({ view: v === 'submissions' ? v : undefined })}
+            items={[
+              { value: 'leaderboard', label: 'Leaderboard' },
+              { value: 'submissions', label: 'All submissions' },
+            ]}
+          />
+          <span className="text-xs text-muted-foreground">
+            {allSubmissions ? 'Every matching submission, fastest first' : 'Best entry per rig or component and quantity'}
+          </span>
+        </Toolbar>
+        <Toolbar>
           <PillTabs<BoardKind>
             className="-ml-3"
             value={kind}
             onChange={(v) => update({ kind: v, type: undefined })}
             items={[
-              { value: 'rigs', label: 'Rigs' },
-              { value: 'components', label: 'Components' },
+              { value: 'rigs', label: 'Rigs', count: counts.rigs, hint: allSubmissions ? 'Rig submissions matching the filters' : 'Ranked rigs matching the filters' },
+              { value: 'components', label: 'Components', count: counts.components, hint: allSubmissions ? 'Component submissions matching the filters' : 'Ranked component and quantity combinations matching the filters' },
             ]}
           />
           <div className="relative">
@@ -188,9 +218,9 @@ export default function Board() {
             />
             Include modified
           </label>
-          <Button variant="outline" size="sm" className="md:hidden" onClick={() => setShowChart((s) => !s)}>
+          {!allSubmissions ? <Button variant="outline" size="sm" className="md:hidden" onClick={() => setShowChart((s) => !s)}>
             <BarChart3 data-icon="inline-start" /> {showChart ? 'Hide chart' : 'Chart'}
-          </Button>
+          </Button> : null}
         </Toolbar>
         <Toolbar>
           <ToggleGroup multiple value={runtime} onValueChange={(v) => update({ runtime: (v as string[]).join(',') })} variant="outline" size="sm" className="flex-wrap">
@@ -208,7 +238,7 @@ export default function Board() {
           </Block>
         ) : null}
 
-        {board.loading && !board.data ? (
+        {board.loading ? (
           <Block className="space-y-4">
             <Skeleton className="h-64" />
             <Skeleton className="h-96" />
@@ -216,23 +246,29 @@ export default function Board() {
         ) : board.data ? (
           rows.length ? (
             <>
-              <div className={cn(showChart ? 'block' : 'hidden md:block', 'border-b')}>
+              {!allSubmissions ? <div className={cn(showChart ? 'block' : 'hidden md:block', 'border-b')}>
                 <Framed>
                   <TpsBarChart bars={board.data.chart} runtimes={runtimes} />
                 </Framed>
-              </div>
+              </div> : null}
               <div className={cn('border-b py-2.5 text-xs text-muted-foreground', inset)}>
-                {board.data.board.total} {kind === 'rigs' ? 'rigs' : 'components'} ranked · best entry per {kind === 'rigs' ? 'rig' : 'part and quantity'} · earliest run wins ties
+                {allSubmissions
+                  ? `${board.data.board.total} ${kind === 'rigs' ? 'rig' : 'component'} submissions · fastest first · filters apply`
+                  : `${board.data.board.total} ${kind} ranked · best entry per ${kind === 'rigs' ? 'rig' : 'part and quantity'} · earliest run wins ties`}
               </div>
-              <LeaderboardTable rows={rows} runtimes={runtimes} />
+              {allSubmissions ? (
+                <ResultsTable results={rows.map((row) => row.result)} runtimes={runtimes} models={cat.data?.models ?? []} quants={cat.data?.quants ?? []} />
+              ) : <LeaderboardTable rows={rows} runtimes={runtimes} />}
               {cursor ? (
                 <Block className="py-4">
                   <LoadMore
                     hasMore={!!cursor}
                     onLoad={async () => {
+                      const previous = board.data
                       const page = await api.board(modelId, quant, { ...params, cursor })
-                      setExtra((e) => [...e, ...page.items])
-                      setCursor(page.nextCursor)
+                      board.setData((current) => current && current === previous
+                        ? { ...current, items: [...current.items, ...page.items], nextCursor: page.nextCursor }
+                        : current!)
                     }}
                   />
                 </Block>
@@ -240,7 +276,17 @@ export default function Board() {
             </>
           ) : (
             // A filter that matches nothing is not an empty board, so it keeps the plain message.
-            filtered ? (
+            (otherCount ?? 0) > 0 ? (
+              <EmptyState
+                title={`No matching entries on the ${kind} board`}
+                description={`${otherCount} ${allSubmissions ? (otherCount === 1 ? 'submission is' : 'submissions are') : (otherCount === 1 ? 'ranked entry is' : 'ranked entries are')} available on the ${otherKind} board.`}
+                action={
+                  <Button onClick={() => update({ kind: otherKind, type: undefined })}>
+                    View {otherKind}
+                  </Button>
+                }
+              />
+            ) : filtered ? (
               <EmptyState
                 title={`Nothing matches on the ${model?.name ?? modelId} ${quantLabel} ${kind} board`}
                 description="Try clearing a filter."
@@ -249,7 +295,7 @@ export default function Board() {
             ) : (
               <EmptyBoard
                 variant="chart"
-                lead={`No results yet for ${model?.name ?? modelId} ${quantLabel}.`}
+                lead={`No eligible results yet on the ${model?.name ?? modelId} ${quantLabel} ${kind} board.`}
                 submitTo={`/submit?model=${modelId}&quant=${quant}`}
               />
             )
