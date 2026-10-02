@@ -257,8 +257,13 @@ export const HARDWARE: HardwareItem[] = [
   hw('intel-gaudi-3', 'gpu', 'Intel', 'Gaudi 3', { vramGb: 128, memoryType: 'HBM2e', tdpW: 900 }, '2024-04-09', 'Gaudi'),
   // Other GPUs
   hw('nvidia-geforce-rtx-5090', 'gpu', 'NVIDIA', 'GeForce RTX 5090', { vramGb: 32, memoryType: 'GDDR7', tdpW: 575 }, '2025-01-30', 'GeForce 50'),
+  hw('nvidia-geforce-rtx-5080', 'gpu', 'NVIDIA', 'GeForce RTX 5080', { vramGb: 16, memoryType: 'GDDR7', tdpW: 360 }, '2025-01-30', 'GeForce 50'),
+  hw('nvidia-geforce-rtx-5070-ti', 'gpu', 'NVIDIA', 'GeForce RTX 5070 Ti', { vramGb: 16, memoryType: 'GDDR7', tdpW: 300 }, '2025-02-20', 'GeForce 50'),
+  hw('nvidia-geforce-rtx-5060-ti-16gb', 'gpu', 'NVIDIA', 'GeForce RTX 5060 Ti 16GB', { vramGb: 16, memoryType: 'GDDR7', tdpW: 180 }, '2025-04-16', 'GeForce 50'),
   hw('nvidia-geforce-rtx-4090', 'gpu', 'NVIDIA', 'GeForce RTX 4090', { vramGb: 24, memoryType: 'GDDR6X', tdpW: 450 }, '2022-10-12', 'GeForce 40'),
+  hw('nvidia-geforce-rtx-4060-ti-16gb', 'gpu', 'NVIDIA', 'GeForce RTX 4060 Ti 16GB', { vramGb: 16, memoryType: 'GDDR6', tdpW: 165 }, '2023-07-18', 'GeForce 40'),
   hw('nvidia-geforce-rtx-3090', 'gpu', 'NVIDIA', 'GeForce RTX 3090', { vramGb: 24, memoryType: 'GDDR6X', tdpW: 350 }, '2020-09-24', 'GeForce 30'),
+  hw('nvidia-geforce-rtx-3060-12gb', 'gpu', 'NVIDIA', 'GeForce RTX 3060 12GB', { vramGb: 12, memoryType: 'GDDR6', tdpW: 170 }, '2021-02-25', 'GeForce 30'),
   hw('nvidia-rtx-pro-6000-blackwell', 'gpu', 'NVIDIA', 'RTX PRO 6000 Blackwell', { vramGb: 96, memoryType: 'GDDR7', tdpW: 600 }, '2025-03-18', 'RTX PRO'),
   hw('amd-radeon-rx-7900-xtx', 'gpu', 'AMD', 'Radeon RX 7900 XTX', { vramGb: 24, memoryType: 'GDDR6', tdpW: 355 }, '2022-12-13', 'Radeon 7000'),
   // Integrated GPUs
@@ -287,7 +292,7 @@ export const HARDWARE: HardwareItem[] = [
 
 export const HARDWARE_BY_ID: Record<string, HardwareItem> = Object.fromEntries(HARDWARE.map((h) => [h.id, h]))
 /** Hardware currently exposed in browsing and rig-building UIs. */
-export const VISIBLE_HARDWARE = HARDWARE.filter((h) => h.vendor === 'Intel' || h.vendor === 'AMD' || h.vendor === 'Generic')
+export const VISIBLE_HARDWARE = HARDWARE.filter((h) => h.vendor === 'Intel' || h.vendor === 'AMD' || h.vendor === 'NVIDIA' || h.vendor === 'Generic')
 export const RUNTIME_BY_ID: Record<string, Runtime> = Object.fromEntries(RUNTIMES.map((r) => [r.id, r]))
 export const MODEL_BY_ID: Record<string, Model> = Object.fromEntries(MODELS.map((m) => [m.id, m]))
 export const QUANT_BY_ID: Record<string, Quant> = Object.fromEntries(QUANTS.map((q) => [q.id, q]))
