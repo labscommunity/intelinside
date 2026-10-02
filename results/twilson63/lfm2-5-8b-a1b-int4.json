@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "9",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "lfm2-5-8b-a1b",
+  "quant": "int4",
+  "runtime": "openvino-genai",
+  "runtimeVersion": "2026.4.0.0-3407-7ea2546852a",
+  "runtimeFlags": "OpenVINO 2026.4.0, default GenAI LLMPipeline, batch 1, chat-templated stock prompt (21 tokens)",
+  "decodeTps": 209.7,
+  "promptTps": 170.1,
+  "ttftMs": 123.5,
+  "contextLength": 149,
+  "batchSize": 1,
+  "runDate": "2026-10-01",
+  "notes": "ReBAR on, 32GB BAR. 3 runs: decode 215.6/207.1/206.4. Official OpenVINO INT4 IRs (4.3GB), 8B-A1B MoE. Chat-templated prompt (raw prompt loops); thinking traces, coherent. vs llama.cpp Q4_K_M 238.0."
+}
