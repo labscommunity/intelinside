@@ -48,6 +48,10 @@ export const MODELS: Model[] = [
     sourceUrl: 'https://huggingface.co/prism-ml/Bonsai-27B-gguf', logoUrl: '/logos/models/prismml.jpg', brandColor: '#4e9e5c', quants: ['u1'],
   },
   {
+    id: 'deephat-v1-7b', name: 'DeepHat V1 7B', family: 'DeepHat V1', brand: 'DeepHat', params: '7B', architecture: 'dense',
+    sourceUrl: 'https://huggingface.co/DeepHat/DeepHat-V1-7B', brandColor: '#d96a6a', quants: ['int4', 'q4_k_m'],
+  },
+  {
     id: 'gemma-3-12b', name: 'Gemma 3 12B IT', family: 'Gemma 3', brand: 'Gemma', params: '12B', architecture: 'dense',
     sourceUrl: 'https://huggingface.co/google/gemma-3-12b-it', logoUrl: '/logos/models/gemma.svg', brandColor: '#6dc799', quants: ['int4', 'q4_k_m', 'q8_0'],
   },
