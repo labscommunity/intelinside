@@ -100,3 +100,10 @@ owners, used here only to identify what a result ran on.
 Intelinside is an independent community project. Intel, Arc, Core Ultra, Xeon, and Gaudi are trademarks of
 Intel Corporation. We are not affiliated with, endorsed by, or sponsored by Intel Corporation, or by any
 other vendor or project named here.
+
+### Agent access
+
+Users can create personal API keys at `/settings/api-keys`, then give their agent
+[the API guide](frontend/public/docs/agents.md). The API supports rigs, custom runtimes,
+results, photos, confirmations, and flags. Maintainer setup and reproducible tests
+are in [the operations guide](docs/AGENT_API_OPERATIONS.md).

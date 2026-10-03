@@ -114,6 +114,7 @@ export function TopNav() {
                   </Link>
                   <Link role="menuitem" to={`/u/${user.handle}?tab=rigs`} className="flex rounded-md px-1.5 py-1 text-sm hover:bg-accent" onClick={() => setAccountOpen(false)}>My rigs</Link>
                   <Link role="menuitem" to={`/u/${user.handle}?tab=results`} className="flex rounded-md px-1.5 py-1 text-sm hover:bg-accent" onClick={() => setAccountOpen(false)}>My results</Link>
+                  <Link role="menuitem" to="/settings/api-keys" className="flex rounded-md px-1.5 py-1 text-sm hover:bg-accent" onClick={() => setAccountOpen(false)}>API keys</Link>
                   <div className="-mx-1 my-1 h-px bg-border" />
                   <button role="menuitem" type="button" className="flex w-full items-center gap-1.5 rounded-md px-1.5 py-1 text-left text-sm hover:bg-accent" onClick={() => void handleSignOut()}>
                     <LogOut className="size-4" /> Sign out
