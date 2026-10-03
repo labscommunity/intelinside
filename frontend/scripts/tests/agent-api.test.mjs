@@ -102,6 +102,10 @@ test('signed photo allocation, upload completion, attachment, and ownership work
 test('catalog relationships, result edits, pagination, and hidden rows keep website rules',async()=>{
  assert.equal((await call('/api/v1/results',{method:'POST',body:{...resultInput(),componentId:'intel-arc-b390',componentQuantity:12}})).status,400)
  assert.equal((await call('/api/v1/results',{method:'POST',body:{...resultInput(),runtimeId:'vllm'}})).status,400)
+ const unknownModel=await call('/api/v1/results',{method:'POST',body:{...resultInput(),modelId:'not-a-model'}})
+ assert.equal(unknownModel.status,400);assert.match(unknownModel.body.error.message,/Unknown model: not-a-model/)
+ assert.match((await call('/api/v1/results',{method:'POST',body:{...resultInput(),quant:'ptq1_0'}})).body.error.message,/does not support quant ptq1_0/)
+ assert.equal((await call('/api/v1/results/batch',{method:'POST',body:{items:[resultInput(),{...resultInput(),runtimeId:'not-a-runtime'}]}})).status,400)
  assert.equal((await call(`/api/v1/custom-runtimes/${runtime.id}`,{method:'PATCH',body:{runtimeId:'vllm'},version:runtime.updatedAt})).status,409)
  const first=okay(await call('/api/v1/results?owner=me&limit=1'))
  assert.equal(first.items.length,1);assert.ok(first.nextCursor)

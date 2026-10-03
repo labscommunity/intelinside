@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
 import { ApiError } from '../lib/api/types.js'
-import { HARDWARE_BY_ID, MODELS, QUANTS, RUNTIMES, VISIBLE_HARDWARE } from '../catalog/index.js'
+import { HARDWARE_BY_ID, MODEL_BY_ID, MODELS, QUANT_BY_ID, QUANTS, RUNTIME_BY_ID, RUNTIMES, VISIBLE_HARDWARE } from '../catalog/index.js'
 import { fromDatabase, keySchema, matchRoute, moderateBody, openApiDocument, toDatabase, validate } from './contract.js'
 
 export type Backend = {
@@ -97,6 +97,19 @@ function normalizeComponents(body: Record<string, unknown>) {
     }
   }
 }
+// Reject unknown catalog IDs with a useful message instead of a raw foreign-key error.
+// The database constraints remain the authority; PATCH bodies are checked field by field.
+function checkCatalog(body: Record<string, unknown>) {
+  if (Array.isArray(body.items)) return body.items.forEach((item) => checkCatalog(item as Record<string, unknown>))
+  const unknown = (what: string, id: unknown) => fail('validation', `Unknown ${what}: ${id}. Read /catalog for available IDs.`, 400)
+  if (typeof body.modelId === 'string' && !MODEL_BY_ID[body.modelId]) unknown('model', body.modelId)
+  if (typeof body.quant === 'string' && !QUANT_BY_ID[body.quant]) unknown('quant', body.quant)
+  if (typeof body.runtimeId === 'string' && !RUNTIME_BY_ID[body.runtimeId]) unknown('runtime', body.runtimeId)
+  if (typeof body.componentId === 'string' && !HARDWARE_BY_ID[body.componentId]) unknown('hardware', body.componentId)
+  if (typeof body.modelId === 'string' && typeof body.quant === 'string' && !MODEL_BY_ID[body.modelId].quants.includes(body.quant)) {
+    fail('validation', `${body.modelId} does not support quant ${body.quant}. Supported: ${MODEL_BY_ID[body.modelId].quants.join(', ')}.`, 400)
+  }
+}
 
 export function createHandler(getBackend: () => Backend | null = configuredBackend) {
   return async function handle(request: Request): Promise<Response> {
@@ -146,7 +159,7 @@ export function createHandler(getBackend: () => Backend | null = configuredBacke
       }
       if (route.schema) {
         const body = await readBody(request)
-        validate(route.schema, body); moderateBody(body); normalizeComponents(body)
+        validate(route.schema, body); moderateBody(body); normalizeComponents(body); checkCatalog(body)
         params.body = toDatabase(body)
       }
       const response = await rpc(backend, 'agent_request', { p_token_hash: hashKey(token), p_action: route.action, p_params: params, p_request_key: requestKey }) as { status: number; body: unknown }

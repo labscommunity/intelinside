@@ -8,7 +8,7 @@ adapter contract, not these versioned HTTP routes.
 
 ## Deployment order
 
-1. Apply `supabase/migrations/20260928090000_personal_api_keys.sql` using the normal
+1. Apply `supabase/migrations/20261003120000_personal_api_keys.sql` using the normal
    migration workflow. It adds private key, receipt, activity, limit, and upload
    tables; service-only RPCs; and a NOLOGIN/NOBYPASSRLS executor role.
 2. Set `SUPABASE_URL` (or reuse `VITE_SUPABASE_URL`) and **server-only**
