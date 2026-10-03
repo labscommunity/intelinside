@@ -61,7 +61,8 @@ a fork — name the custom runtime it ran on and the revision behind it:
 ```
 
 `customRuntime` is the number at the end of its URL on the site, or its exact name, the same way `rig` works.
-Register it once on the site and every later result just names it. You can post against anyone's, not
+Register it once [by PR](../custom-runtimes/README.md) or on the site and every later result just names it.
+For a registration added in the same PR, use `customRuntimeFile` with its repository-relative path instead of `customRuntime`. You can post against anyone's, not
 only your own — a public fork is a real thing anyone can run, and one object per fork is what keeps those runs
 comparable.
 
@@ -72,7 +73,7 @@ Boards rank stock runs against each other and keep custom runtimes out unless a 
 changed stack is never mistaken for faster silicon. Custom runtimes are not lesser and nothing is hidden — they answer a
 different question, rank among each other on the same board, and collect on their own pages.
 
-The pull request stays as the public record of the run. Closing without merging does not submit anything. Account signup and rig registration are still one-time site steps. Register custom runtimes on the site too, when needed.
+The pull request stays as the public record of the run. Closing without merging does not submit anything. Account signup and rig registration are still one-time site steps. Custom runtimes can be registered in the same PR or in a standalone registration PR.
 
 If ingestion fails after merge, no partial batch is committed. Fix the missing account, rig, or catalog configuration, then ask a maintainer to rerun **Validate and ingest result files**, or run it manually with the PR number. Retries read the original merge commit, not the current branch contents. A correction to invalid merged JSON requires a new result file in a new PR.
 
@@ -86,7 +87,7 @@ Every freshly submitted result offers **Add to the results repo**, which opens G
 
 - Files live at `results/<your-github-handle>/<name>.json`. The check fails if the folder does not match the pull request author.
 - Results are your own runs on your own rig. The site enforces rig ownership when the result is submitted.
-- One result per new file, at most 100 per PR and 64 KiB per file. The entire batch succeeds or fails together.
+- One result per new file, at most 100 combined result/registration files per PR and 64 KiB per file. The entire batch succeeds or fails together.
 - Each imported repository path is recorded permanently. Rerunning the same PR is safe, including after a live result is deleted. Use a fresh path for each new run; renames and edits cannot submit or overwrite runs. Edit existing live results on the site. Removing a file never deletes a live result.
 - Names must resolve to exactly one rig owned by you or one custom runtime for the selected runtime. Prefer numeric IDs when names are ambiguous.
 - A successful pre-merge check is a point-in-time validation; merge rechecks the account and current database state.

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "9",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "deephat-v1-7b",
+  "quant": "q4_k_m",
+  "runtime": "llamacpp",
+  "runtimeVersion": "version: 0.5.0-dev (build 1, commit 526c43b)",
+  "runtimeFlags": "llama.cpp Vulkan backend, -ngl 99 (all layers on GPU), ctx 4096, batch 1",
+  "decodeTps": 93.6,
+  "promptTps": 941.7,
+  "ttftMs": 145.5,
+  "contextLength": 265,
+  "batchSize": 1,
+  "runDate": "2026-10-02",
+  "notes": "ReBAR on, 32GB BAR. 3 runs: decode 93.6/93.7/93.6, prompt 945.3/952.4/927.3, ttft 144.9/143.8/147.7ms. mradermacher Q4_K_M GGUF (4.68GB, qwen2 arch, stock build). Qwen2.5-Coder-7B fine-tune (security/red-team); benign stock prompt, coherent. Needed --ignore-eos (stops at 37 tokens otherwise). llama-bench tg128 cross-check: 94.5."
+}

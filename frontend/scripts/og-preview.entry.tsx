@@ -9,6 +9,7 @@ import { Resvg } from '@resvg/resvg-js'
 import { loadCardAssets, loadFonts, runtimeLogoAsset, type AssetSource } from '../src/og/assets.js'
 import { ResultCardImage, RigCardImage } from '../src/og/cards.js'
 import type { ResultCardData, RigCardData } from '../src/og/data.js'
+import { cardParts } from '../src/og/data.js'
 import { RUNTIMES } from '../src/catalog/index.js'
 
 const root = path.resolve(process.cwd())
@@ -90,6 +91,13 @@ const rigAssets = await loadCardAssets(disk, 'dots-side.svg')
 await write('result', <ResultCardImage data={result} assets={resultAssets} />, fonts)
 await write('rig', <RigCardImage data={rig} assets={{ ...rigAssets, photo: samplePhoto() }} />, fonts)
 await write('rig-no-photo', <RigCardImage data={rig} assets={rigAssets} />, fonts)
+const fleetComponents = ['intel-core-ultra-x7-358h', 'intel-arc-b390', 'intel-ai-boost-npu-5', 'ddr5-4800-64gb-ecc']
+  .map((hardwareId) => ({ hardwareId, quantity: 11 }))
+await write('rig-panther-lake-fleet', <RigCardImage data={{
+  ...rig, id: '8', name: 'Panther Lake Lab', best: undefined, resultsCount: 0,
+  owner: { handle: 't8', initials: 'TB' }, components: fleetComponents,
+  parts: cardParts(fleetComponents.map((c) => ({ hardware_id: c.hardwareId, quantity: c.quantity }))),
+}} assets={rigAssets} />, fonts)
 await write(
   'result-long',
   <ResultCardImage data={{ ...result, model: 'Llama 3.1 8B Instruct', quant: 'Q4_K_M', runtime: 'OpenVINO GenAI', runtimeId: 'openvino-genai', runtimeLogo: undefined, runtimeVersion: '2026.1.0', hardware: 'NUC charlie', inRig: undefined, verified: false, rank: { position: 17, size: 41, kind: 'rigs' } }} assets={{ ...resultAssets, runtimeLogo: undefined }} />,

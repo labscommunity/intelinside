@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "9",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "qwen3-8b",
+  "quant": "int4",
+  "runtime": "cascadia",
+  "runtimeVersion": "0.2.4",
+  "runtimeFlags": "prebuilt bundle, ov-genai engine, device GPU, batch 1, OpenAI API",
+  "decodeTps": 91.4,
+  "contextLength": 143,
+  "batchSize": 1,
+  "runDate": "2026-09-28",
+  "notes": "ReBAR on, 32GB BAR. 2 runs: 128 tokens in 1.417s/1.381s wall. End-to-end wall incl. prefill; TTFT not exposed by API (streams single buffered chunk), so true decode is slightly higher."
+}

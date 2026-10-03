@@ -123,8 +123,9 @@ The code has a voice; match the file you are editing rather than a general stand
 
 ### Database changes
 
-Migrations live in `supabase/migrations/`. Validate them with the isolated local tests before a reviewed production deployment; the configured hosted database is production. If your change adds
-catalog rows, regenerate the seed rather than hand-writing SQL:
+Migrations live in `supabase/migrations/`. Validate them with the isolated local tests before a reviewed production deployment; the configured hosted database is production. Catalog rows need no
+migration: merging a change to `frontend/src/catalog/` syncs it to the database. To seed a fresh local database
+after its migrations, generate the SQL rather than hand-writing it:
 
 ```bash
 npm --prefix frontend run catalog:seed
@@ -153,3 +154,5 @@ offering that work under the same licence, and confirming it is yours to give. T
 
 The brand assets are the exception. The Intelinside lockup and the Cascadia wordmark in
 `frontend/public/logos/` are not covered by the licence, and neither are the vendor logos beside them.
+
+Custom runtimes can also be registered with a [JSON-only PR](custom-runtimes/README.md), independently of benchmark results.

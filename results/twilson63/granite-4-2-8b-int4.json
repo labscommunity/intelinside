@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "9",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "granite-4-2-8b",
+  "quant": "int4",
+  "runtime": "openvino-genai",
+  "runtimeVersion": "2026.4.0.0-3407-7ea2546852a",
+  "runtimeFlags": "OpenVINO 2026.4.0, default GenAI pipeline, batch 1",
+  "decodeTps": 85.4,
+  "promptTps": 119.9,
+  "ttftMs": 117.1,
+  "contextLength": 142,
+  "batchSize": 1,
+  "runDate": "2026-09-29",
+  "notes": "ReBAR on, 32GB BAR. 3 runs: decode 85.4/86.4/84.4. Self-exported with optimum-intel 2.2 + NNCF int4-sym group-128 (no public INT4 OV export exists)."
+}

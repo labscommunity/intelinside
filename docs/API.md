@@ -34,7 +34,7 @@ The front end talks to the network only through `src/lib/api.ts`, whose function
 | GET | `/api/hardware?type=&vendor=&q=&limit=&cursor=` | `HardwareItem[]` with `resultsCount` and `rigsCount` |
 | GET | `/api/hardware/:hardwareId` | `HardwareItem` plus `chart: ChartBar[]`, `rigs: RigSummary[]`, `results: Result[]` (component-level results naming this part, best first) |
 
-Catalog data is seeded from `frontend/src/catalog/`, the source of truth in this repo, via generated migrations. The front end never writes catalog data.
+Catalog data comes from `frontend/src/catalog/`, the source of truth in this repo, which is synced to the database on merge (see [SUPABASE.md](SUPABASE.md#catalog-sync)). The front end never writes catalog data.
 
 A CPU's `integrated` list is catalog data too. Results only ever name one part, so `GET /api/hardware/:hardwareId` for an iGPU or NPU returns the runs on that unit alone; the front end fetches a CPU's integrated parts separately to show the cores, iGPU, and NPU side by side. `componentHost` on a result is the rig's CPU whose `integrated` list contains `componentId`, or absent.
 
@@ -42,7 +42,9 @@ A CPU's `integrated` list is catalog data too. Results only ever name one part, 
 
 | Method | Path | Returns |
 |---|---|---|
-| GET | `/api/boards/:modelId/:quant?kind=rigs\|components&runtime=&vendor=&type=&verification=&q=&limit=&cursor=` | `{ board: BoardMeta, items: BoardRow[], nextCursor, chart: ChartBar[] }` |
+| GET | `/api/boards/:modelId/:quant?kind=rigs\|components&allSubmissions=&includeModified=&runtime=&vendor=&type=&verification=&q=&limit=&cursor=` | `{ board: BoardMeta, items: BoardRow[], nextCursor, chart: ChartBar[] }` |
+
+By default, boards keep only the best submission per rig or component and quantity. Set `allSubmissions=true` to return every published submission for the selected kind, ordered by decode tok/s descending with earliest run winning ties. Filters, stock-only defaults, and pagination apply to both views. `board.total` counts entries after filtering and grouping (or individual submissions in the all-submissions view), before pagination. The UI displays all submissions as an unranked results list; result-detail ranks continue to use the grouped leaderboard.
 
 `chart` is the top ten rows of the same filtered view, so the chart and the table always agree.
 

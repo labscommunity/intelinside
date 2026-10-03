@@ -63,6 +63,47 @@ npm --prefix frontend run supabase:db:push:prod
 Both commands explicitly target `ujlacyedspjfekotemmd` and skip unrelated Vault
 updates. There is no production reset script. Never treat this project as disposable.
 
+## Catalog sync
+
+`frontend/src/catalog/index.ts` is the source of truth for `quants`, `models`,
+`model_quants`, `runtimes`, and `hardware`. Catalog changes need no data migration:
+on every push to `main` that touches the catalog, `.github/workflows/sync-catalog.yml`
+sends the merged catalog to `public.sync_catalog`, which applies it in one
+transaction. Schema changes still need migrations.
+
+Apply `20261001200000_sync_catalog.sql` once, then run the workflow manually as a
+dry run and review its summary before the first real sync. Until the function
+exists, catalog pushes fail the workflow visibly and write nothing.
+
+- It adds rows and updates catalog-owned columns. It never deletes: rows missing
+  from the catalog are listed in the run summary, and retiring them takes a
+  reviewed migration, since results may reference them. A code revert therefore
+  restores old metadata but does not remove rows the reverted change added.
+- Any invalid row (unknown quant, repeated id, unresolved `integrated` part,
+  unexpected field) fails the whole sync, and nothing is written.
+- After writing, it verifies with a dry run that nothing is left to change, then
+  rechecks open result PRs whose **Result ingestion** status is failing.
+- Runs share one concurrency group and each syncs `main` as it is when the run
+  starts, so a rerun of an old run cannot restore older metadata.
+- `sync_catalog` is `security definer`, executable only by `service_role`, and
+  uses the existing `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` settings. The
+  workflow only runs merged default-branch code, never PR code.
+
+To preview or retry, run the workflow manually (**Run workflow**, optionally with
+**dry run**), or locally with production credentials:
+
+```sh
+SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... node frontend/scripts/sync-catalog.mjs --dry-run
+```
+
+A failed sync shows as a failed workflow run with the reason in its summary.
+Rerun it after fixing the cause. A frontend deploy does not prove the sync
+succeeded; check the workflow run.
+
+A fresh database gets the catalog by running `npm --prefix frontend run catalog:seed`
+after its migrations; it generates the same rows from the same mapping
+(`frontend/scripts/catalog-snapshot.mjs`).
+
 ## GitHub OAuth
 
 Register this Supabase callback URL in the GitHub OAuth app:
@@ -123,9 +164,25 @@ from existing import receipts without changing evidence, verification, or edit t
 Apply `20260918090000_optional_result_evidence.sql` before deploying the updated frontend
 and PR parser. An omitted link on create is stored as NULL; clearing it on edit sends NULL.
 
-Rig registration and custom-runtime registration remain site operations. Referenced
+Apply `20260930120000_pr_custom_runtimes.sql` **before** deploying the updated trusted
+workflow/parser and frontend. It extends the existing `ingest_pr_results` RPC
+compatibly; no Edge Function or new Actions secret is needed. This is a one-time
+migration, not a per-submission operation. The current service-role REST client
+cannot install database functions or tables, so code deployment alone cannot
+enable transactional registration imports.
+
+[Custom-runtime registration](../custom-runtimes/README.md) works without results.
+Registrations are inserted before results so `customRuntimeFile` references resolve
+inside the same transaction, including dry runs. Private registration receipts
+survive deletion, and browser column grants exclude `source_pr_url`. A repository
+advisory lock serializes imports; a table lock on custom runtimes also prevents
+concurrent site writes during duplicate detection and insertion. Matching sources
+use the conservative normalization policy documented in the registration guide.
+
+Rig registration remains a site operation. Referenced
 catalog entries must already exist in both the trusted default-branch catalog and
-the target database; merge/deploy catalog additions before submitting runs that use them.
+the target database. Merge catalog additions, and let the catalog sync finish, before
+submitting runs that use them; the sync rechecks failed result PRs when it completes.
 
 The configured project is production. Use the isolated local ingestion tests for
 validation before deploying migrations. A live integration test requires an

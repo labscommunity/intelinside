@@ -1,5 +1,6 @@
 import type { CustomRuntime, FlagReason, HardwareType, Result, Rig, User } from '@/lib/api/types'
 import { HARDWARE_BY_ID, MODEL_BY_ID, RUNTIMES } from '@/catalog'
+import { rigSummaryLine } from '@/lib/rig-summary'
 
 // Deterministic seed so the same rigs and numbers show up on every reload.
 
@@ -94,24 +95,6 @@ export type SeedDb = {
   results: Result[]
   confirmations: Map<string, Set<string>> // resultId -> userIds
   flags: Map<string, Map<string, FlagReason>> // resultId -> userId -> reason
-}
-
-export function rigSummaryLine(components: { hardwareId: string; quantity: number }[]): string {
-  const parts: string[] = []
-  const cpu = components.find((c) => HARDWARE_BY_ID[c.hardwareId]?.type === 'cpu')
-  if (cpu) parts.push(HARDWARE_BY_ID[cpu.hardwareId].name)
-  const gpus = components.filter((c) => HARDWARE_BY_ID[c.hardwareId]?.type === 'gpu')
-  for (const g of gpus) parts.push(`${g.quantity}× ${HARDWARE_BY_ID[g.hardwareId].name}`)
-  if (gpus.length === 0) {
-    const igpu = components.find((c) => HARDWARE_BY_ID[c.hardwareId]?.type === 'igpu')
-    if (igpu) parts.push(HARDWARE_BY_ID[igpu.hardwareId].name)
-  }
-  const ram = components.filter((c) => HARDWARE_BY_ID[c.hardwareId]?.type === 'ram')
-  if (ram.length) {
-    const total = ram.reduce((n, r) => n + r.quantity * Number(HARDWARE_BY_ID[r.hardwareId].specs.capacityGb ?? 0), 0)
-    parts.push(`${total} GB ${HARDWARE_BY_ID[ram[0].hardwareId].specs.type}`)
-  }
-  return parts.join(' · ')
 }
 
 export function createSeed(): SeedDb {

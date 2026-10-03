@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "9",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "ornith-1-5-9b",
+  "quant": "int4",
+  "runtime": "cascadia",
+  "runtimeVersion": "0.2.4",
+  "runtimeFlags": "prebuilt bundle, ov-genai engine, device GPU, batch 1, OpenAI API",
+  "decodeTps": 76.3,
+  "contextLength": 143,
+  "batchSize": 1,
+  "runDate": "2026-09-28",
+  "notes": "ReBAR on, 32GB BAR. 2 runs: 128 tokens in 1.695s/1.659s wall. End-to-end wall incl. prefill; TTFT not exposed by API."
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "9",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "qwen3-1-7b",
+  "quant": "int4",
+  "runtime": "openvino-genai",
+  "runtimeVersion": "2026.4.0.0-3407-7ea2546852a",
+  "runtimeFlags": "OpenVINO 2026.4.0, default GenAI pipeline, batch 1",
+  "decodeTps": 189.9,
+  "promptTps": 149.5,
+  "ttftMs": 100.5,
+  "contextLength": 143,
+  "batchSize": 1,
+  "runDate": "2026-10-01",
+  "notes": "ReBAR on, 32GB BAR. 3-run mean, decode 184.9/192.6/192.1. OpenVINO official Qwen3-1.7B-int4-ov, full 128-token gens. prompt_tps = input_tokens/TTFT."
+}

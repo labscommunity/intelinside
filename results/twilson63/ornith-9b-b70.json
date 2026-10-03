@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "9",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "ornith-1-5-9b",
+  "quant": "int4",
+  "runtime": "openvino-genai",
+  "runtimeVersion": "2026.4.0.0-3407-7ea2546852a",
+  "runtimeFlags": "OpenVINO 2026.4.0, VLMPipeline text-only, default GenAI pipeline, batch 1",
+  "decodeTps": 83.5,
+  "promptTps": 89.4,
+  "ttftMs": 282.5,
+  "contextLength": 153,
+  "batchSize": 1,
+  "runDate": "2026-09-28",
+  "notes": "ReBAR on, 32GB BAR. 2-run mean (83.7/83.4). Community OV convert vonvonhero/Ornith-1.5-9B-Uncensored-OpenVINO-INT4, run text-only via VLMPipeline. prompt_tps = input_tokens/TTFT."
+}

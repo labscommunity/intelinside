@@ -38,7 +38,7 @@ hw('intel-core-ultra-7-258v', 'cpu', 'Intel', 'Core Ultra 7 258V', { cores: 8, t
 ### Non-Intel parts
 
 Other vendors are welcome so the comparisons stay honest, but note that `VISIBLE_HARDWARE` at the bottom of
-`index.ts` currently narrows the browse pages to `Intel` and `Generic`. A part from another vendor is a valid
+`index.ts` currently narrows hardware browsing and the rig component picker to `Intel`, `AMD`, `NVIDIA`, and `Generic`. A part from another vendor is a valid
 catalog entry and results can reference it; it will not appear in the hardware browser until that filter
 changes.
 
@@ -83,5 +83,9 @@ is drawn from `specs` and `series` (`frontend/src/lib/schematic.ts`) — and fai
 cannot fit, which usually means the `name` needs a shorter model token. `npm --prefix frontend run typecheck`
 catches shape errors. Both run on your pull request, and the catalog check comments the result on it.
 
-Nothing else is needed from you. A maintainer regenerates the seed migration with `npm --prefix frontend run
-catalog:seed`, and the entry is live with the next deploy.
+Nothing else is needed from you. When the pull request merges, the **Sync the catalog to Supabase** workflow
+writes the entry to the database, and the site shows it with the next deploy. Results that use a new entry
+can be submitted once that sync has run.
+
+Removing or renaming an id is different: the sync never deletes, because results may reference the old id. It
+lists such rows in its summary, and retiring them takes a reviewed migration.

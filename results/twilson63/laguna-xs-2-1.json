@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "9",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "laguna-xs-2-1",
+  "quant": "q4_k_m",
+  "runtime": "llamacpp",
+  "runtimeVersion": "0.5.0-dev (build 1, commit 526c43b)",
+  "runtimeFlags": "llama.cpp Vulkan backend, -ngl 99 (all 40 layers on GPU), ctx 4096, batch 1",
+  "decodeTps": 114.6,
+  "promptTps": 151.8,
+  "ttftMs": 369.2,
+  "contextLength": 184,
+  "batchSize": 1,
+  "runDate": "2026-09-28",
+  "notes": "ReBAR on, 32GB BAR. 3 runs: decode 117.7/108.4/117.8. Official poolside Q4_K_M GGUF (20.27GB). Prompt includes chat template (56 tokens). llama-bench tg128 cross-check: 119.0."
+}

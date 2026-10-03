@@ -30,14 +30,16 @@ const overlaps = (a: Box, b: Box) => a.x < b.x + b.w && b.x < a.x + a.w && a.y <
 const textWidth = (s: string, size: number) => s.length * size * 0.64
 const num = (v: string | number | undefined, fallback: number) => (typeof v === 'number' ? v : fallback)
 
-/** The model number as printed on the part: B70, B580, RTX 4090, i7-14700K, 285K, w7-3465X, 6960P. */
+/** The model number as printed on the part: B70, B580, RTX 4090, RTX 5070 Ti, i7-14700K, 285K, w7-3465X, 6960P. */
 export function shortName(h: Pick<HardwareItem, 'name'>): string {
   const clean = h.name.replace(/\s*\(.*?\)/g, '').trim()
   const tokens = clean.split(/\s+/)
   const i = tokens.findIndex((t) => /^[A-Za-z]?\d{2,4}[A-Za-z0-9]*$/.test(t) || /^[a-z]\d-\d{4,5}[A-Z]*$/.test(t))
   if (i < 0) return clean
   const prev = tokens[i - 1]
-  return prev && /^(RTX|RX|PRO)$/.test(prev) ? `${prev} ${tokens[i]}` : tokens[i]
+  const next = tokens[i + 1]
+  const model = next && /^(Ti|SUPER|Super)$/.test(next) ? `${tokens[i]} ${next}` : tokens[i]
+  return prev && /^(RTX|RX|PRO)$/.test(prev) ? `${prev} ${model}` : model
 }
 
 // ---------- accelerators ----------
@@ -224,24 +226,33 @@ const shift = (prims: Prim[], dx: number, dy: number): Prim[] =>
     }
   })
 
+const MAX_CPUS = 4
 const MAX_GPUS = 4
 const MAX_STICKS = 8
 type Column = { w: number; h: number; gap?: number; prims: Prim[] }
 type Part = { hardwareId: string; quantity: number }
 
 /**
- * The rig as a picture of its parts: the CPU, a stack of its accelerators, its memory. Draws up to four
- * accelerators and eight sticks, then adds ×N. Integrated parts (iGPU, NPU) are skipped: they are on the package.
+ * The rig as a picture of its parts: CPU packages, accelerators and memory. Draws up to four CPUs per model,
+ * four accelerators and eight sticks, then adds ×N. Integrated parts are carried by their CPU package.
  */
 export function drawRig(components: Part[], byId: Record<string, HardwareItem | undefined>): { viewBox: string; prims: Prim[] } {
   const parts = components.map((c) => ({ h: byId[c.hardwareId], q: c.quantity })).filter((p): p is { h: HardwareItem; q: number } => !!p.h)
-  const cpu = parts.find((p) => p.h.type === 'cpu')
+  const cpus = parts.filter((p) => p.h.type === 'cpu')
   const gpus = parts.filter((p) => p.h.type === 'gpu')
   const ram = parts.find((p) => p.h.type === 'ram')
   const cols: Column[] = []
-  if (cpu) {
+  for (const cpu of cpus) {
     const d = drawCpu(cpu.h)
-    cols.push({ w: d.w, h: d.h, prims: d.prims })
+    const n = Math.min(cpu.q, MAX_CPUS)
+    const columns = Math.min(n, 2), rows = Math.ceil(n / columns)
+    const w = columns * d.w + (columns - 1) * 8
+    const h = rows * d.h + (rows - 1) * 8
+    const prims: Prim[] = []
+    for (let i = 0; i < n; i++) prims.push(...shift(d.prims, (i % columns) * (d.w + 8), Math.floor(i / columns) * (d.h + 8)))
+    const extra = cpu.q > MAX_CPUS ? 22 : 0
+    if (extra) prims.push({ kind: 'text', x: w / 2, y: h + 16, text: `×${cpu.q}`, size: 12, ink: 'label', anchor: 'middle' })
+    cols.push({ w, h: h + extra, prims })
   }
   if (ram && ramClass(ram.h).onPackage) {
     const d = drawRam(ram.h, Math.min(ram.q, 4))

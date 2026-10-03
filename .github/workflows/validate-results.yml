@@ -1,4 +1,4 @@
-name: Validate and ingest result files
+name: Validate and ingest result files and custom runtimes
 
 on:
   pull_request_target:
@@ -36,7 +36,7 @@ jobs:
         with:
           node-version: 22
       - run: npm ci --prefix frontend --ignore-scripts
-      - name: Validate or ingest the immutable PR result files
+      - name: Validate or ingest the immutable PR submission files
         run: node frontend/scripts/pr-results.mjs
         env:
           GITHUB_TOKEN: ${{ github.token }}

@@ -13,31 +13,13 @@ import { useAsync } from '@/hooks/useAsync'
 import { api } from '@/lib/api'
 import { ApiError, type HardwareItem, type HardwareType, type Rig, type RigInput } from '@/lib/api/types'
 import { UNIT_LABEL, integratedParts, nestParts } from '@/lib/hardware'
+import { rigSummaryLine } from '@/lib/rig-summary'
 import { cn } from '@/lib/utils'
 import { HARDWARE_TYPE_LABEL, HARDWARE_TYPES } from '@/catalog'
 
 type Picked = { hardware: HardwareItem; quantity: number }
 type TypeFilter = 'all' | HardwareType
 const OS_SUGGESTIONS = ['Windows 11', 'Ubuntu 24.04', 'Ubuntu 22.04', 'Fedora 42', 'macOS 15', 'Arch Linux']
-
-/** One-line summary of a parts list, same shape the API derives for a rig. */
-export function summaryLine(picked: Picked[]): string {
-  const parts: string[] = []
-  const cpu = picked.find((p) => p.hardware.type === 'cpu')
-  if (cpu) parts.push(cpu.hardware.name)
-  const gpus = picked.filter((p) => p.hardware.type === 'gpu')
-  for (const g of gpus) parts.push(`${g.quantity}× ${g.hardware.name}`)
-  if (gpus.length === 0) {
-    const igpu = picked.find((p) => p.hardware.type === 'igpu')
-    if (igpu) parts.push(igpu.hardware.name)
-  }
-  const ram = picked.filter((p) => p.hardware.type === 'ram')
-  if (ram.length) {
-    const total = ram.reduce((n, r) => n + r.quantity * Number(r.hardware.specs.capacityGb ?? 0), 0)
-    parts.push(`${total} GB ${ram[0].hardware.specs.type}`)
-  }
-  return parts.join(' · ')
-}
 
 function FieldError({ message }: { message?: string }) {
   return message ? <p className="text-xs text-destructive">{message}</p> : null
@@ -93,6 +75,11 @@ export function RigForm({ initial, submitLabel = 'Save rig', onSaved, onCancel, 
       return rest.filter((x) => !orphaned.has(x.hardware.id))
     })
   const nested = nestParts(picked.map((p) => ({ ...p, hardwareId: p.hardware.id })))
+  const components = nested.map(({ part, host }) => ({
+    hardwareId: part.hardware.id,
+    // Keep the preview and saved quantities aligned with the CPU carrying each integrated part.
+    quantity: host ? picked.find((p) => p.hardware.id === host.id)?.quantity ?? part.quantity : part.quantity,
+  }))
 
   const validate = () => {
     const e: Record<string, string> = {}
@@ -113,11 +100,7 @@ export function RigForm({ initial, submitLabel = 'Save rig', onSaved, onCancel, 
         os: os.trim(),
         notes: notes.trim() || undefined,
         photoUrl,
-        components: nested.map(({ part, host }) => ({
-          hardwareId: part.hardware.id,
-          // An integrated part has as many units as the CPU that carries it.
-          quantity: host ? picked.find((p) => p.hardware.id === host.id)?.quantity ?? part.quantity : part.quantity,
-        })),
+        components,
       }
       const rig = initial ? await api.updateRig(initial.id, input) : await api.createRig(input)
       toast.success(initial ? 'Rig updated.' : 'Rig created.')
@@ -213,7 +196,7 @@ export function RigForm({ initial, submitLabel = 'Save rig', onSaved, onCancel, 
           <p className="text-sm text-muted-foreground">No components yet. Search the catalog and add what is in the machine.</p>
         )}
         <FieldError message={errors.components} />
-        {picked.length ? <p className="text-xs text-muted-foreground">Summary line: {summaryLine(picked)}</p> : null}
+        {picked.length ? <p className="text-xs text-muted-foreground">Summary line: {rigSummaryLine(components)}</p> : null}
         <div className="rounded-lg border">
           <div className="flex flex-wrap items-center gap-2 border-b p-2">
             <div className="relative">

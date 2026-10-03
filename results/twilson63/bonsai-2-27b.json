@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "9",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "bonsai-2-27b",
+  "quant": "ptq1_0",
+  "runtime": "llamacpp",
+  "customRuntime": "2",
+  "revision": "adfffbe41b2cabcd51fff326ab045662265062bb",
+  "runtimeVersion": "0.2.0-dev (build 10743, commit adfffbe41)",
+  "runtimeFlags": "PrismML llama.cpp fork, Vulkan backend, -ngl 99 (all layers on GPU), ctx 4096, batch 1",
+  "decodeTps": 36.6,
+  "promptTps": 25.3,
+  "ttftMs": 2648.5,
+  "contextLength": 195,
+  "batchSize": 1,
+  "runDate": "2026-09-28",
+  "notes": "ReBAR on, 32GB BAR. 3 runs: decode 36.7/36.6/36.6. Official PTQ1_0 GGUF (5.95GB). TTFT includes cold Vulkan pipeline compile per process. Fork llama-bench tg128 cross-check: 37.4."
+}

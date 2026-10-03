@@ -117,6 +117,7 @@ export type CustomRuntime = {
   runtime?: Runtime
   name: string
   repoUrl: string
+  sourcePrUrl?: string
   /** One line on what changed. Shown on board rows and in the picker, so it is required. */
   summary: string
   notes?: string
@@ -212,6 +213,8 @@ export type CollectionInput = Pick<Collection, 'title' | 'description' | 'coverI
 export type Page<T> = { items: T[]; nextCursor?: string }
 export type BoardParams = {
   kind: BoardKind
+  /** Keep every submission instead of only the best per hardware configuration. */
+  allSubmissions?: boolean
   runtime?: string[]
   vendor?: string
   type?: HardwareType

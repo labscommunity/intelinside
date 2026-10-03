@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "9",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "gemma-4-26b-a4b",
+  "quant": "int4",
+  "runtime": "openvino-genai",
+  "runtimeVersion": "2026.4.0.0-3407-7ea2546852a",
+  "runtimeFlags": "OpenVINO 2026.4.0, default GenAI VLMPipeline (text-only), batch 1",
+  "decodeTps": 92.7,
+  "promptTps": 63.9,
+  "ttftMs": 424.7,
+  "contextLength": 155,
+  "batchSize": 1,
+  "runDate": "2026-09-29",
+  "notes": "ReBAR on, 32GB BAR. 3 runs: decode 91.8/94.3/91.9. Official OpenVINO int4 VLM export (OpenVINO/gemma-4-26b-a4b-it-int4-ov), text-only. One-sentence prompt EOS'd at 32-38 out."
+}

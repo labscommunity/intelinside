@@ -1,6 +1,7 @@
 import { supabase, signOutSupabase } from '@/lib/auth'
 import { moderateText } from './moderation'
 import { hostIn } from '@/lib/hardware'
+import { rigSummaryLine } from '@/lib/rig-summary'
 import { HARDWARE_BY_ID, MODELS, MODEL_BY_ID, QUANTS, QUANT_BY_ID, RUNTIMES, RUNTIME_BY_ID, VISIBLE_HARDWARE } from '@/catalog'
 import type {
   Api, BestRank, BoardKind, BoardParams, BoardResponse, BoardRow, BoardUnit, ChartBar, FlagReason,
@@ -65,6 +66,7 @@ type CustomRuntimeRow = {
   runtime_id: string
   name: string
   repo_url: string
+  source_pr_url?: string | null
   summary: string
   notes: string | null
   created_at: string
@@ -191,21 +193,7 @@ function publicUser(row: ProfileRow): User {
 }
 
 function summaryLine(components: ComponentRow[]): string {
-  const parts: string[] = []
-  const cpu = components.find((part) => HARDWARE_BY_ID[part.hardware_id]?.type === 'cpu')
-  if (cpu) parts.push(HARDWARE_BY_ID[cpu.hardware_id].name)
-  const gpus = components.filter((part) => HARDWARE_BY_ID[part.hardware_id]?.type === 'gpu')
-  for (const gpu of gpus) parts.push(`${gpu.quantity}× ${HARDWARE_BY_ID[gpu.hardware_id].name}`)
-  if (!gpus.length) {
-    const integrated = components.find((part) => HARDWARE_BY_ID[part.hardware_id]?.type === 'igpu')
-    if (integrated) parts.push(HARDWARE_BY_ID[integrated.hardware_id].name)
-  }
-  const memory = components.filter((part) => HARDWARE_BY_ID[part.hardware_id]?.type === 'ram')
-  if (memory.length) {
-    const total = memory.reduce((sum, part) => sum + part.quantity * Number(HARDWARE_BY_ID[part.hardware_id].specs.capacityGb ?? 0), 0)
-    parts.push(`${total} GB ${HARDWARE_BY_ID[memory[0].hardware_id].specs.type ?? ''}`.trim())
-  }
-  return parts.join(' · ')
+  return rigSummaryLine(components.map((c) => ({ hardwareId: c.hardware_id, quantity: c.quantity })))
 }
 
 function view(snapshot: Snapshot) {
@@ -230,6 +218,7 @@ function view(snapshot: Snapshot) {
       runtime: RUNTIME_BY_ID[row.runtime_id],
       name: row.name,
       repoUrl: row.repo_url,
+      sourcePrUrl: optional(row.source_pr_url),
       summary: row.summary,
       notes: optional(row.notes),
       createdAt: row.created_at,
@@ -378,7 +367,7 @@ function boardItems(results: Result[], modelId: string, quant: string, params: P
     }
     return true
   })
-  return bestPerKey(filtered, unitKey)
+  return bestPerKey(filtered, params.allSubmissions ? (result) => result.id : unitKey)
 }
 
 function boardRows(results: Result[], modelId: string, quant: string, params: BoardParams): BoardRow[] {

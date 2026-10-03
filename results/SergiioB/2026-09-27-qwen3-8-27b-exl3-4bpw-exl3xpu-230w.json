@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "1",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "qwen3-8-27b",
+  "quant": "exl3-4bpw",
+  "runtime": "exl3xpu",
+  "runtimeVersion": "turboderp 113cf7ab; image ghcr.io/0xsero/exl3xpu@sha256:21412bdd",
+  "runtimeFlags": "fp8 KV, MTP3 speculative, prefix caching on, gmu 0.90, 230 W cap (stock max)",
+  "decodeTps": 24.6,
+  "ttftMs": 340,
+  "contextLength": 65536,
+  "batchSize": 1,
+  "runDate": "2026-09-27",
+  "notes": "Same stack as the 150 W result at the card's stock 230 W cap: sustained n=3 decode 24.02-24.64 post-first stream rate at p512/g128 (+33-42% over 150 W; clock/power-limited ESIMD decode path, not bandwidth-floor). p8192/g128 sustained 23.5. Package temps 72-74 C. Prompt-prefix repeats show ~5x TTFT acceleration via prefix caching; decode number is uncached. Self-reported, E2.",
+  "evidenceUrl": "https://github.com/SergiioB/intel-arc-pro-b70-inference-cookbook/blob/master/docs/qwen38-27b/EXL3-XPU.md"
+}

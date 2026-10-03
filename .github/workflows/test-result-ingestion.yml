@@ -6,9 +6,14 @@ on:
       - 'frontend/src/lib/pr.ts'
       - 'frontend/src/lib/evidence.ts'
       - 'frontend/src/lib/api/**'
+      - 'frontend/src/lib/rig-summary.ts'
+      - 'frontend/src/lib/schematic.ts'
+      - 'frontend/src/components/RigForm.tsx'
       - 'frontend/src/catalog/**'
       - 'frontend/package*.json'
       - 'supabase/migrations/**'
+      - 'custom-runtimes/**'
+      - 'results/schema.json'
       - '.github/workflows/*result*.yml'
 permissions:
   contents: read

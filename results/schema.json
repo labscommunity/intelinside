@@ -99,7 +99,7 @@
     },
     "notes": {
       "type": "string",
-      "maxLength": 2000
+      "maxLength": 5000
     },
     "evidenceUrl": {
       "type": "string",
@@ -111,6 +111,17 @@
       "type": "string",
       "format": "uri",
       "description": "The result's URL on the site once submitted. Added when the file is written from a result page."
+    },
+    "customRuntimeFile": {
+      "type": "string",
+      "pattern": "^custom-runtimes/[a-zA-Z0-9-]+/[a-zA-Z0-9][a-zA-Z0-9._-]*\\.json$",
+      "description": "Registration file added in this PR. Mutually exclusive with customRuntime."
     }
+  },
+  "not": {
+    "required": [
+      "customRuntime",
+      "customRuntimeFile"
+    ]
   }
 }

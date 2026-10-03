@@ -18,10 +18,21 @@ export async function loadResultParser() {
     bundle: true, write: false, platform: 'node', format: 'esm', logLevel: 'silent',
   })
   const module = await import(`data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].contents).toString('base64')}`)
-  return module.parseResultFile
+  return Object.assign(module.parseResultFile, { parseCustomRuntimeFile: module.parseCustomRuntimeFile })
 }
 
 export function prepareFile(path, status, raw, author, parseResultFile) {
+  if (path.startsWith('custom-runtimes/')) {
+    const location = path.match(/^custom-runtimes\/([a-z0-9-]+)\/[a-z0-9][a-z0-9._-]*\.json$/i)
+    if (!location || location[1].toLowerCase() !== author.toLowerCase()) throw new Error(`${path}: put the file under custom-runtimes/${author}/.`)
+    if (status !== 'added') throw new Error(`${path}: Only new files register runtimes. Edit existing registrations on the site.`)
+    const { file, problems } = parseResultFile.parseCustomRuntimeFile(raw)
+    for (const field of ['name', 'summary', 'notes']) {
+      if (file[field] && matcher.hasMatch(file[field])) problems.push(`${field}: please remove offensive or profane language.`)
+    }
+    if (problems.length) throw new Error(`${path}: ${problems.join(' ')}`)
+    return { path, file }
+  }
   const location = path.match(/^results\/([^/]+)\/[^/]+\.json$/)
   if (!location || location[1].toLowerCase() !== author.toLowerCase()) {
     throw new Error(`${path}: put the file under results/${author}/.`)
@@ -42,19 +53,19 @@ export function prepareFile(path, status, raw, author, parseResultFile) {
 export async function collectFiles(github, repository, pr, parseResultFile) {
   const changed = []
   // GitHub caps this endpoint at 3,000 files. Refuse truncated submissions.
-  if (pr.changed_files > 3000) throw new Error('This PR has too many changed files. Submit results in a smaller PR.')
+  if (pr.changed_files > 3000) throw new Error('This PR has too many changed files. Submit in a smaller PR.')
   for (let page = 1; page <= 30; page++) {
     const files = await github(`/repos/${repository}/pulls/${pr.number}/files?per_page=100&page=${page}`)
     changed.push(...files)
     if (files.length < 100) break
   }
   if (changed.length !== pr.changed_files) throw new Error('GitHub returned an incomplete or changing file list. Rerun this check.')
-  const candidates = changed.filter((f) => f.status !== 'removed' && f.filename.startsWith('results/') && f.filename.endsWith('.json') && f.filename !== 'results/schema.json')
-  if (candidates.length > 100) throw new Error('Submit at most 100 result files per PR.')
+  const candidates = changed.filter((f) => f.status !== 'removed' && (f.filename.startsWith('results/') || f.filename.startsWith('custom-runtimes/')) && f.filename.endsWith('.json') && f.filename !== 'results/schema.json' && f.filename !== 'custom-runtimes/schema.json')
+  if (candidates.length > 100) throw new Error('Submit at most 100 submission files per PR.')
   const files = []
   if (!candidates.length) return files
   const sha = pr.merged ? pr.merge_commit_sha : pr.head.sha
-  if (!/^[a-f0-9]{40}$/.test(sha ?? '')) throw new Error('GitHub did not return an immutable result revision.')
+  if (!/^[a-f0-9]{40}$/.test(sha ?? '')) throw new Error('GitHub did not return an immutable submission revision.')
   const sourceRepo = pr.merged ? repository : pr.head.repo?.full_name
   if (!sourceRepo) throw new Error('The PR source repository is unavailable.')
   for (const candidate of candidates) {
@@ -75,14 +86,15 @@ export async function collectFiles(github, repository, pr, parseResultFile) {
 export async function processPr({ github, database, repository, number, defaultBranch, parseResultFile, expectedHead }) {
   const pr = await github(`/repos/${repository}/pulls/${number}`)
   if (expectedHead && pr.head.sha !== expectedHead) throw new Error('The PR changed before validation. Rerun this check.')
-  if (pr.base.repo.full_name !== repository || pr.base.ref !== defaultBranch) throw new Error('Results must target the default branch.')
-  if (pr.state === 'closed' && !pr.merged) return { pr, lines: ['Closed without merging; no results imported.'] }
+  if (pr.base.repo.full_name !== repository || pr.base.ref !== defaultBranch) throw new Error('Submissions must target the default branch.')
+  if (pr.state === 'closed' && !pr.merged) return { pr, lines: ['Closed without merging; no submissions imported.'] }
   const files = await collectFiles(github, repository, pr, parseResultFile)
-  if (!files.length) return { pr, lines: ['No result files to import.'] }
+  if (!files.length) return { pr, lines: ['No submission files to import.'] }
   if (pr.user.type !== 'User') throw new Error('Open this PR using the GitHub account you used to sign up on the site. Bot-authored submissions cannot be attributed to a user.')
   if (!database) throw new Error('Maintainer setup required: configure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY and apply the PR ingestion migration.')
   const current = await github(`/repos/${repository}/pulls/${number}`)
   if (current.head.sha !== pr.head.sha || current.merged !== pr.merged || current.state !== pr.state
+    || current.merge_commit_sha !== pr.merge_commit_sha || current.changed_files !== pr.changed_files || current.user.id !== pr.user.id || current.user.login !== pr.user.login || current.user.type !== pr.user.type
     || current.base.ref !== pr.base.ref || current.base.repo.full_name !== repository) {
     throw new Error('The PR changed during validation. Rerun the check on its latest revision.')
   }
@@ -91,10 +103,15 @@ export async function processPr({ github, database, repository, number, defaultB
     p_files: files, p_dry_run: !pr.merged,
   })
   if (error) throw new Error(error.message)
-  const lines = data.map((entry) => `- ${entry.path}: ${entry.status}${entry.id ? ` (result ${entry.id})` : ''}`)
+  const site = (process.env.SITE_URL || 'https://intelinside-blond.vercel.app').replace(/\/$/, '')
+  const lines = data.map((entry) => {
+    const registration = files.find((f) => f.path === entry.path && f.path.startsWith('custom-runtimes/'))
+    const url = entry.id ? `${site}/${registration ? `runtimes/${registration.file.runtime}/custom` : 'results'}/${entry.id}` : null
+    return `- ${entry.path}: ${entry.status}${url ? ` (${url})` : ''}`
+  })
   lines.push(pr.merged
-    ? 'Merge ingestion completed. Rerunning this workflow will not duplicate these results.'
-    : 'Ready for merge: the author has a linked GitHub account and the database accepted the results in a rolled-back validation transaction. Merging submits them automatically; no web form is needed.')
+    ? 'Merge ingestion completed. Rerunning this workflow will not duplicate these submissions.'
+    : 'Ready for merge: the author has a linked GitHub account and the database accepted the submissions in a rolled-back validation transaction. Merging submits them automatically; no web form is needed.')
   return { pr, lines }
 }
 

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "9",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "moonlight-16b-a3b",
+  "quant": "q4_k_m",
+  "runtime": "llamacpp",
+  "runtimeVersion": "0.5.0-dev (build 1, commit 526c43b)",
+  "runtimeFlags": "llama.cpp Vulkan backend, -ngl 99 (all 27 layers on GPU), ctx 4096, batch 1",
+  "decodeTps": 135.7,
+  "promptTps": 339.4,
+  "ttftMs": 120.8,
+  "contextLength": 169,
+  "batchSize": 1,
+  "runDate": "2026-09-29",
+  "notes": "ReBAR on, 32GB BAR. 3-run mean; decode_tps runs: 135.8/135.9/135.4. Community mmnga Q4_K_M GGUF (9.9GB). Longer-form prompt to fill 128 out (one-sentence prompt EOS'd at 40). llama-bench tg128 cross-check: 139.8."
+}

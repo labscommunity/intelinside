@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "1",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "nemotron-3-5-lightning-30b-a3b",
+  "quant": "gptq-4bit",
+  "runtime": "vllm",
+  "runtimeVersion": "0.26.1rc1.dev457+gc810e5ee9",
+  "runtimeFlags": "DFlash n7; XPU graphs on; --async-scheduling; fp16 KV; --no-enable-prefix-caching; gptq/float16; gpu-mem-util 0.90; max-num-seqs 16; stock vLLM no patch; Mamba2 SSU cache",
+  "decodeTps": 200.72,
+  "promptTps": 7331,
+  "ttftMs": 270,
+  "contextLength": 16384,
+  "batchSize": 1,
+  "runDate": "2026-10-01",
+  "notes": "Re-verification of the 2026-08-13 entry on image 2c427ef4 (vLLM 0.26.1rc1.dev457+gc810e5ee9). Stock vLLM with NO router patch, DFlash n7, XPU graphs on, fp16 KV, prefix cache explicitly off (--no-enable-prefix-caching), 150 W configured cap. Reported decode is the p2048/g128 C1 cell - the representative cell used by the 2026-08-13 entry - as the median of 3 greedy reps: 200.72 (range 200.28-202.98), window acceptance 55.0%, all 3 reps byte-identical. That is +7.6% over the 186.61 in the 2026-08-13 entry, measured on the same cell with the same method and the same configured power cap. promptTps 7331 is a GENUINE isolated engine prefill metric (vllm:request_prefill_time_seconds delta at p8192 content tokens, 8208 prompt tokens including template), median of 3, TTFT 0.81 s. This replaces the 7160 figure in the 2026-08-13 entry, which its own notes describe as a TTFT-derived cold-input rate and explicitly NOT isolated engine prefill. Cross-checks on the same 150 W server, real chat path on real datasets: code (HumanEval, greedy, natural EOS, 714-2048 tokens) 184.92 median; prose (wikitext-103) 202.88 median at 61-62% acceptance. Caveats: the target is a local symmetric GPTQ INT4 G64 conversion, not an official HF quant; the draft is a local NVFP4-to-BF16 reconstruction; single card of a 2x B70 rig; context capped at 16384 in this no-patch configuration (see the 230 W entry for the patch/context trade-off). Correctness: 5x identical greedy replay produced 1 distinct output here, but the unpatched build reproduced only intermittently across sessions (1, 2 and 3 distinct outputs observed in three separate replays), so byte-reproducible temperature-0 replay is NOT guaranteed on this path. Throughput is strongly content-dependent: acceptance ranged 30-78% and decode 136-315 tok/s depending on prompt. Evidence and the full 22-config knob sweep are in the cookbook recipe listed under evidenceUrl.",
+  "evidenceUrl": "https://github.com/SergiioB/intel-arc-pro-b70-inference-cookbook/blob/master/docs/nemotron35-30a3/NEMOTRON-DFLASH-B70-VERIFIED-2C427EF4.md"
+}

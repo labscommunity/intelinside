@@ -12,11 +12,13 @@ export const RUNTIMES: Runtime[] = [
   { id: 'ollama', name: 'Ollama', logoUrl: '', repoUrl: 'https://github.com/ollama/ollama', color: '#b4b7bf' },
   { id: 'openvino-genai', name: 'OpenVINO GenAI', logoUrl: '', repoUrl: 'https://github.com/openvinotoolkit/openvino.genai', color: '#6ab8e4' },
   { id: 'ipex-llm', name: 'IPEX-LLM', logoUrl: '', repoUrl: 'https://github.com/intel/ipex-llm', color: '#64c6ad' },
+  { id: 'exl3xpu', name: 'EXL3 XPU', logoUrl: '', repoUrl: 'https://github.com/0xSero/exl3xpu', color: '#e8875a' },
 ]
 
 export const QUANTS: Quant[] = [
   { id: 'int4', label: 'INT4', bits: 4, format: 'OpenVINO and IPEX weight-only, used by Cascadia and Intel runtimes' },
   { id: 'int8', label: 'INT8', bits: 8, format: 'OpenVINO / IPEX weight-only' },
+  { id: 'u1', label: 'U1', bits: 1, format: 'OpenVINO INTBIT g128 1-bit, needs the custom Intel GPU plugin' },
   { id: 'fp8', label: 'FP8', bits: 8, format: 'FP8 e4m3' },
   { id: 'fp16', label: 'FP16', bits: 16, format: 'Half precision, the unquantized weights' },
   { id: 'bf16', label: 'BF16', bits: 16, format: 'Brain float' },
@@ -28,13 +30,27 @@ export const QUANTS: Quant[] = [
   { id: 'q5_k_m', label: 'Q5_K_M', bits: 5, format: 'GGUF' },
   { id: 'q6_k', label: 'Q6_K', bits: 6, format: 'GGUF' },
   { id: 'q8_0', label: 'Q8_0', bits: 8, format: 'GGUF, used by llama.cpp and Ollama' },
+  { id: 'ptq1_0', label: 'PTQ1_0', bits: 2, format: 'GGUF ternary (PrismML PTQ1_0, 1.75 bits/weight), fork-only packing' },
   { id: 'awq-4bit', label: 'AWQ 4-bit', bits: 4, format: 'AWQ' },
   { id: 'gptq-4bit', label: 'GPTQ 4-bit', bits: 4, format: 'GPTQ' },
   { id: 'nf4', label: 'NF4', bits: 4, format: 'bitsandbytes' },
   { id: 'mxfp4', label: 'MXFP4', bits: 4, format: 'Microscaling FP4' },
+  { id: 'exl3-4bpw', label: 'EXL3 4bpw', bits: 4, format: 'EXL3 trellis quantization (ExLlamaV3), ~4 bits per weight' },
 ]
 
 export const MODELS: Model[] = [
+  {
+    id: 'bonsai-2-27b', name: 'Bonsai 2 27B', family: 'Bonsai 2', brand: 'PrismML', params: '27B', architecture: 'dense',
+    sourceUrl: 'https://huggingface.co/prism-ml/Ternary-Bonsai-2-27B-gguf', logoUrl: '/logos/models/prismml.jpg', brandColor: '#4e9e5c', quants: ['ptq1_0'],
+  },
+  {
+    id: 'bonsai-27b', name: 'Bonsai 27B', family: 'Bonsai', brand: 'PrismML', params: '27B', architecture: 'dense',
+    sourceUrl: 'https://huggingface.co/prism-ml/Bonsai-27B-gguf', logoUrl: '/logos/models/prismml.jpg', brandColor: '#4e9e5c', quants: ['u1'],
+  },
+  {
+    id: 'deephat-v1-7b', name: 'DeepHat V1 7B', family: 'DeepHat V1', brand: 'DeepHat', params: '7B', architecture: 'dense',
+    sourceUrl: 'https://huggingface.co/DeepHat/DeepHat-V1-7B', brandColor: '#d96a6a', quants: ['int4', 'q4_k_m'],
+  },
   {
     id: 'gemma-3-12b', name: 'Gemma 3 12B IT', family: 'Gemma 3', brand: 'Gemma', params: '12B', architecture: 'dense',
     sourceUrl: 'https://huggingface.co/google/gemma-3-12b-it', logoUrl: '/logos/models/gemma.svg', brandColor: '#6dc799', quants: ['int4', 'q4_k_m', 'q8_0'],
@@ -64,6 +80,18 @@ export const MODELS: Model[] = [
     sourceUrl: 'https://huggingface.co/ibm-granite/granite-4.2-8b', logoUrl: '/logos/models/granite.svg', brandColor: '#8fa8d8', quants: ['int4', 'q4_k_m', 'q8_0', 'fp16'],
   },
   {
+    id: 'inkling', name: 'Inkling', family: 'Inkling', brand: 'Inkling', params: '975B', architecture: 'moe', activeParams: '41B',
+    sourceUrl: 'https://huggingface.co/thinkingmachines/Inkling', logoUrl: '/logos/models/thinking-machines.webp', brandColor: '#e89960', quants: ['int4'],
+  },
+  {
+    id: 'laguna-xs-2-1', name: 'Laguna XS 2.1', family: 'Laguna XS', brand: 'Poolside', params: '33B', architecture: 'moe', activeParams: '3B',
+    sourceUrl: 'https://huggingface.co/poolside/Laguna-XS-2.1', logoUrl: '/logos/models/poolside.png', brandColor: '#7fd4a8', quants: ['q4_k_m'],
+  },
+  {
+    id: 'moonlight-16b-a3b', name: 'Moonlight 16B-A3B', family: 'Moonlight', brand: 'Moonshot', params: '16B', architecture: 'moe', activeParams: '3B',
+    sourceUrl: 'https://huggingface.co/moonshotai/Moonlight-16B-A3B-Instruct', brandColor: '#9fc3e8', quants: ['q4_k_m'],
+  },
+  {
     id: 'lfm2-5-2-6b', name: 'LFM2.5-2.6B', family: 'LFM2.5', brand: 'LFM', params: '2.6B', architecture: 'dense',
     sourceUrl: 'https://huggingface.co/LiquidAI/LFM2.5-2.6B', logoUrl: '/logos/models/liquid.svg', brandColor: '#6fc3d6', quants: ['int4', 'int8', 'q4_k_m', 'q8_0', 'fp16'],
   },
@@ -74,6 +102,14 @@ export const MODELS: Model[] = [
   {
     id: 'llama-3-1-8b', name: 'Llama 3.1 8B Instruct', family: 'Llama 3.1', brand: 'Llama', params: '8B', architecture: 'dense',
     sourceUrl: 'https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct', logoUrl: '/logos/models/llama.svg', brandColor: '#73b0ee', quants: ['int4', 'q4_k_m', 'q8_0', 'fp16'],
+  },
+  {
+    id: 'medgemma-4b-it', name: 'MedGemma 4B IT', family: 'MedGemma', brand: 'MedGemma', params: '4B', architecture: 'dense',
+    sourceUrl: 'https://huggingface.co/google/medgemma-4b-it', brandColor: '#4fc3a1', quants: ['q4_k_m'],
+  },
+  {
+    id: 'mimo-7b-rl', name: 'MiMo-7B-RL', family: 'MiMo', brand: 'Xiaomi', params: '7B', architecture: 'dense',
+    sourceUrl: 'https://huggingface.co/XiaomiMiMo/MiMo-7B-RL', brandColor: '#ff6900', quants: ['q4_k_m', 'bf16'],
   },
   {
     id: 'minicpm5-2b', name: 'MiniCPM5-2B', family: 'MiniCPM5', brand: 'MiniCPM', params: '2.5B', architecture: 'dense',
@@ -89,7 +125,19 @@ export const MODELS: Model[] = [
   },
   {
     id: 'muse-glimmer-30b', name: 'Muse Glimmer 30B', family: 'Muse', brand: 'Muse', params: '30B', architecture: 'dense',
-    sourceUrl: 'https://huggingface.co/facebook/Muse-Glimmer-30B', logoUrl: '/logos/models/llama.svg', brandColor: '#73b0ee', quants: ['q4_k_xl'],
+    sourceUrl: 'https://huggingface.co/facebook/Muse-Glimmer-30B', logoUrl: '/logos/models/llama.svg', brandColor: '#73b0ee', quants: ['int4', 'q4_k_xl'],
+  },
+  {
+    id: 'ornith-1-5-35b-a3b', name: 'Ornith 1.5 35B A3B', family: 'Ornith 1.5', brand: 'Ornith', params: '35B', architecture: 'moe', activeParams: '3B',
+    sourceUrl: 'https://huggingface.co/ornith-ai/Ornith-1.5-35B-A3B', logoUrl: '/logos/models/ornith.webp', brandColor: '#7fb5d9', quants: ['int4'],
+  },
+  {
+    id: 'ornith-1-5-9b', name: 'Ornith 1.5 9B', family: 'Ornith 1.5', brand: 'Ornith', params: '9B', architecture: 'dense',
+    sourceUrl: 'https://huggingface.co/ornith-ai/Ornith-1.5-9B', logoUrl: '/logos/models/ornith.webp', brandColor: '#7fb5d9', quants: ['int4'],
+  },
+  {
+    id: 'qwen3-1-7b', name: 'Qwen3-1.7B', family: 'Qwen3', brand: 'Qwen', params: '1.7B', architecture: 'dense',
+    sourceUrl: 'https://huggingface.co/Qwen/Qwen3-1.7B', logoUrl: '/logos/models/qwen.svg', brandColor: '#b699eb', quants: ['int4'],
   },
   {
     id: 'qwen3-30b-a3b', name: 'Qwen3-30B-A3B', family: 'Qwen3', brand: 'Qwen', params: '30B', architecture: 'moe', activeParams: '3B',
@@ -157,7 +205,7 @@ export const MODELS: Model[] = [
   },
   {
     id: 'qwen3-8-27b', name: 'Qwen3.8-27B', family: 'Qwen3.8', brand: 'Qwen', params: '27B', architecture: 'dense',
-    sourceUrl: 'https://huggingface.co/Qwen/Qwen3.8-27B', logoUrl: '/logos/models/qwen.svg', brandColor: '#b699eb', quants: ['int4', 'int8', 'q4_k_m', 'q4_k_l', 'q8_0'],
+    sourceUrl: 'https://huggingface.co/Qwen/Qwen3.8-27B', logoUrl: '/logos/models/qwen.svg', brandColor: '#b699eb', quants: ['int4', 'int8', 'q4_k_m', 'q4_k_l', 'q8_0', 'exl3-4bpw'],
   },
   {
     id: 'qwen3-8-flash-next', name: 'Qwen3.8-Flash-Next', family: 'Qwen3.8', brand: 'Qwen', params: '125B', architecture: 'moe', activeParams: '6B',
@@ -200,6 +248,7 @@ export const HARDWARE: HardwareItem[] = [
   // Other CPUs
   hw('amd-ryzen-9-9950x', 'cpu', 'AMD', 'Ryzen 9 9950X', { cores: 16, threads: 32, boostGhz: 5.7, tdpW: 170, platform: 'Zen 5' }, '2024-08-15', 'Ryzen 9000'),
   hw('amd-ryzen-7-9800x3d', 'cpu', 'AMD', 'Ryzen 7 9800X3D', { cores: 8, threads: 16, boostGhz: 5.2, tdpW: 120, platform: 'Zen 5' }, '2024-11-07', 'Ryzen 9000'),
+  hw('amd-ryzen-7-5800xt', 'cpu', 'AMD', 'Ryzen 7 5800XT', { cores: 8, threads: 16, boostGhz: 4.8, tdpW: 105, platform: 'Zen 3' }, '2024-07-31', 'Ryzen 5000'),
   hw('apple-m4-max', 'cpu', 'Apple', 'M4 Max (16-core)', { cores: 16, threads: 16, boostGhz: 4.5, tdpW: 90, platform: 'Apple silicon' }, '2024-10-30', 'M4', ['apple-m4-max-gpu-40c']),
   // Intel discrete GPUs
   hw('intel-arc-pro-b70', 'gpu', 'Intel', 'Arc Pro B70', { vramGb: 32, memoryType: 'GDDR6', xeCores: 32, tdpW: 240 }, '2026-03-10', 'Arc Pro B'),
@@ -212,8 +261,13 @@ export const HARDWARE: HardwareItem[] = [
   hw('intel-gaudi-3', 'gpu', 'Intel', 'Gaudi 3', { vramGb: 128, memoryType: 'HBM2e', tdpW: 900 }, '2024-04-09', 'Gaudi'),
   // Other GPUs
   hw('nvidia-geforce-rtx-5090', 'gpu', 'NVIDIA', 'GeForce RTX 5090', { vramGb: 32, memoryType: 'GDDR7', tdpW: 575 }, '2025-01-30', 'GeForce 50'),
+  hw('nvidia-geforce-rtx-5080', 'gpu', 'NVIDIA', 'GeForce RTX 5080', { vramGb: 16, memoryType: 'GDDR7', tdpW: 360 }, '2025-01-30', 'GeForce 50'),
+  hw('nvidia-geforce-rtx-5070-ti', 'gpu', 'NVIDIA', 'GeForce RTX 5070 Ti', { vramGb: 16, memoryType: 'GDDR7', tdpW: 300 }, '2025-02-20', 'GeForce 50'),
+  hw('nvidia-geforce-rtx-5060-ti-16gb', 'gpu', 'NVIDIA', 'GeForce RTX 5060 Ti 16GB', { vramGb: 16, memoryType: 'GDDR7', tdpW: 180 }, '2025-04-16', 'GeForce 50'),
   hw('nvidia-geforce-rtx-4090', 'gpu', 'NVIDIA', 'GeForce RTX 4090', { vramGb: 24, memoryType: 'GDDR6X', tdpW: 450 }, '2022-10-12', 'GeForce 40'),
+  hw('nvidia-geforce-rtx-4060-ti-16gb', 'gpu', 'NVIDIA', 'GeForce RTX 4060 Ti 16GB', { vramGb: 16, memoryType: 'GDDR6', tdpW: 165 }, '2023-07-18', 'GeForce 40'),
   hw('nvidia-geforce-rtx-3090', 'gpu', 'NVIDIA', 'GeForce RTX 3090', { vramGb: 24, memoryType: 'GDDR6X', tdpW: 350 }, '2020-09-24', 'GeForce 30'),
+  hw('nvidia-geforce-rtx-3060-12gb', 'gpu', 'NVIDIA', 'GeForce RTX 3060 12GB', { vramGb: 12, memoryType: 'GDDR6', tdpW: 170 }, '2021-02-25', 'GeForce 30'),
   hw('nvidia-rtx-pro-6000-blackwell', 'gpu', 'NVIDIA', 'RTX PRO 6000 Blackwell', { vramGb: 96, memoryType: 'GDDR7', tdpW: 600 }, '2025-03-18', 'RTX PRO'),
   hw('amd-radeon-rx-7900-xtx', 'gpu', 'AMD', 'Radeon RX 7900 XTX', { vramGb: 24, memoryType: 'GDDR6', tdpW: 355 }, '2022-12-13', 'Radeon 7000'),
   // Integrated GPUs
@@ -242,7 +296,7 @@ export const HARDWARE: HardwareItem[] = [
 
 export const HARDWARE_BY_ID: Record<string, HardwareItem> = Object.fromEntries(HARDWARE.map((h) => [h.id, h]))
 /** Hardware currently exposed in browsing and rig-building UIs. */
-export const VISIBLE_HARDWARE = HARDWARE.filter((h) => h.vendor === 'Intel' || h.vendor === 'Generic')
+export const VISIBLE_HARDWARE = HARDWARE.filter((h) => h.vendor === 'Intel' || h.vendor === 'AMD' || h.vendor === 'NVIDIA' || h.vendor === 'Generic')
 export const RUNTIME_BY_ID: Record<string, Runtime> = Object.fromEntries(RUNTIMES.map((r) => [r.id, r]))
 export const MODEL_BY_ID: Record<string, Model> = Object.fromEntries(MODELS.map((m) => [m.id, m]))
 export const QUANT_BY_ID: Record<string, Quant> = Object.fromEntries(QUANTS.map((q) => [q.id, q]))

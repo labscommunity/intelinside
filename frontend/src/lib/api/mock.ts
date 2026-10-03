@@ -9,7 +9,8 @@ import { hardwareChart } from './hardware-chart'
 import { isEvidenceUrl } from '@/lib/evidence'
 import { hostIn } from '@/lib/hardware'
 import { HARDWARE_BY_ID, MODELS, MODEL_BY_ID, QUANTS, QUANT_BY_ID, RUNTIMES, RUNTIME_BY_ID, VISIBLE_HARDWARE } from '@/catalog'
-import { createSeed, rigSummaryLine, type SeedDb } from '@/mocks/seed'
+import { createSeed, type SeedDb } from '@/mocks/seed'
+import { rigSummaryLine } from '@/lib/rig-summary'
 
 // In-memory implementation of the API contract. Same ranking, thresholds, and
 // permission rules the backend will enforce, so every flow is clickable offline.
@@ -196,7 +197,7 @@ function bestRows(modelId: string, quant: string, kind: BoardKind, p: Partial<Bo
   const items = visibleResults().filter(
     (r) => r.modelId === modelId && r.quant === quant && (kind === 'rigs' ? !r.componentId : !!r.componentId) && matchesFilter(r, p),
   )
-  return bestPerKey(items, unitKey)
+  return bestPerKey(items, p.allSubmissions ? (result) => result.id : unitKey)
 }
 
 function boardRows(modelId: string, quant: string, p: BoardParams): BoardRow[] {

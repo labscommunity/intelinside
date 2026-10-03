@@ -25,6 +25,8 @@ export type ResultFile = {
   runtimeFlags?: string
   /** The custom runtime this ran on: the number at the end of its URL on the site, or its exact name. Omit for stock. */
   customRuntime?: string
+  /** Repository-relative registration path added in the same PR. Mutually exclusive with customRuntime. */
+  customRuntimeFile?: string
   /** Custom runtimes only: the exact revision behind the number — a commit, a tag, or a build id. */
   revision?: string
   decodeTps: number
@@ -108,10 +110,14 @@ export function parseResultFile(raw: unknown): { file: Partial<ResultFile>; prob
   file.runtimeFlags = str('runtimeFlags')
   if (file.runtimeFlags && file.runtimeFlags.length > RUNTIME_FLAGS_MAX) problems.push(`"runtimeFlags" must be ${RUNTIME_FLAGS_MAX} characters or fewer.`)
   file.customRuntime = str('customRuntime')
+  file.customRuntimeFile = str('customRuntimeFile')
+  if ('customRuntimeFile' in data && !file.customRuntimeFile) problems.push('customRuntimeFile must be nonempty text.')
+  if (file.customRuntimeFile && !/^custom-runtimes\/[a-z0-9-]+\/[a-z0-9][a-z0-9._-]*\.json$/i.test(file.customRuntimeFile)) problems.push('"customRuntimeFile" must be a registration path in this PR, without traversal.')
+  if (data.customRuntimeFile !== undefined && data.customRuntime !== undefined) problems.push('Use customRuntime or customRuntimeFile, not both.')
   file.revision = str('revision')
   if (file.revision && file.revision.length > REVISION_MAX) problems.push(`"revision" must be ${REVISION_MAX} characters or fewer.`)
   // It is resolved against the site when the form loads, so the file only has to be shaped right here.
-  if (file.revision && !file.customRuntime) problems.push('"revision" needs a "customRuntime"; a stock run has no revision.')
+  if (file.revision && !file.customRuntime && !file.customRuntimeFile) problems.push('"revision" needs "customRuntime" or "customRuntimeFile"; a stock run has no revision.')
   file.decodeTps = num('decodeTps', true)
   file.promptTps = num('promptTps')
   file.ttftMs = num('ttftMs')
@@ -206,4 +212,25 @@ export function newResultFileUrl(handle: string, file: ResultFile): string {
   const name = `${file.runDate}-${file.model}-${file.quant}-${file.runtime}`.replace(/[^a-z0-9-]+/gi, '-').toLowerCase()
   const params = new URLSearchParams({ filename: `${RESULTS_DIR}/${handle}/${name}.json`, value: `${JSON.stringify(file, null, 2)}\n` })
   return `https://github.com/${REPO}/new/main?${params}`
+}
+
+export function parseCustomRuntimeFile(raw: unknown): { file: Record<string, string>; problems: string[] } {
+  const file: Record<string, string> = {}
+  const problems: string[] = []
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { file, problems: ['The file must be a JSON object.'] }
+  const data = raw as Record<string, unknown>
+  const limits: Record<string, number> = { runtime: 120, name: 120, repoUrl: 8192, summary: 280, notes: 5000 }
+  for (const key of Object.keys(data)) {
+    if (key !== '$schema' && !Object.hasOwn(limits, key)) problems.push(`Unknown field: ${key}.`)
+  }
+  if ('$schema' in data && typeof data.$schema !== 'string') problems.push('$schema must be text.')
+  for (const [key, limit] of Object.entries(limits)) {
+    if (key === 'notes' && data[key] === undefined) continue
+    if (typeof data[key] !== 'string' || !data[key].trim()) { problems.push(`${key} must be nonempty text.`); continue }
+    file[key] = data[key].trim()
+    if (file[key].length > limit) problems.push(`${key} must be ${limit} characters or fewer.`)
+  }
+  if (file.runtime && !RUNTIME_BY_ID[file.runtime]) problems.push('runtime must be an existing catalog runtime ID.')
+  if (file.repoUrl && !isEvidenceUrl(file.repoUrl.replace(/^http:/i, 'https:'))) problems.push('repoUrl must be a full HTTP(S) URL without credentials.')
+  return { file, problems }
 }

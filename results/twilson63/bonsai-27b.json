@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "9",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "bonsai-27b",
+  "quant": "u1",
+  "runtime": "openvino-genai",
+  "runtimeVersion": "2026.2.0.0-3121-adf73e80e66",
+  "runtimeFlags": "OpenVINO GenAI 2026.2 + Wondernutts INTBIT custom GPU plugin (dpas), batch 1",
+  "decodeTps": 21.4,
+  "promptTps": 305.6,
+  "ttftMs": 3161.0,
+  "contextLength": 1030,
+  "batchSize": 1,
+  "runDate": "2026-09-28",
+  "notes": "ReBAR on, 32GB BAR. Publisher release point (966 in, 64 out), 3 reps: decode 21.30/21.42/21.42 via their benchmark.py. Publisher's B70: 34.0/545; we reproduce ~60% (desktop shares the B70)."
+}

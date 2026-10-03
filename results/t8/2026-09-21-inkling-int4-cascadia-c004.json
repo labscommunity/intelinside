@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "8",
+  "model": "inkling",
+  "quant": "int4",
+  "runtime": "cascadia",
+  "runtimeVersion": "autolab release 1790016660; OpenVINO 2026.3.1",
+  "runtimeFlags": "11-stage CPU+iGPU pipeline; INT4 group-32 experts; INT8 attention/head; FP16 fused MoE; 8-row prefill; 4 concurrent requests; temp=0; max_tokens=128; learned speculation for lone stream",
+  "customRuntime": "1",
+  "revision": "sha256:9084392040688eaa6aa9ff6cf6d222f84e24e119e528d91920d12ddd106563c2",
+  "decodeTps": 9.158301145030464,
+  "ttftMs": 3308.1440925598145,
+  "batchSize": 4,
+  "runDate": "2026-09-21",
+  "evidenceUrl": "https://github.com/labscommunity/cascadia/blob/3189a189fe3428f5a6315a7eb67b13148ec314e2/autolab/experiments/046_final_performance/report.md",
+  "notes": "Whole 11-node fleet: 11x Core Ultra X7 358H / Arc B390, nominal 64 GB RAM per node, 1 GbE. CPU+iGPU execution; NPU unused. Text-only Inkling 975B/41B active, 66 layers, 6 per node. Experiment 046, mixed_a_c004 and mixed_b_c004: 24 requests total, 128 generated tokens each (reasoning and answer tokens), temperature 0, 15 ms arrival spacing; 12 prompt families. decodeTps is the arithmetic mean of two phase rates over shared decode intervals across 4 concurrent stream(s); observed phase range 9.135497-9.181106 tok/s. Whole-phase throughput including admission/prefill/drain: 8.644399 tok/s; mean decode per stream: 2.289575 tok/s. ttftMs is the pooled request median; p95 4033.863 ms. batchSize denotes concurrent requests. Deterministic prompts recur and phrase learning stays enabled. Capture writes were enabled on ascending 1-15 stream phases and disabled thereafter. Completed runs only; interrupted attempts are excluded and documented in the evidence. runDate uses America/Chicago. The 128-token cap is below the site recommendation of 256."
+}

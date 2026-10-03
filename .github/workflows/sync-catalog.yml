@@ -1,0 +1,65 @@
+name: Sync the catalog to Supabase
+
+# Merged catalog changes reach production through the sync_catalog database function, so catalog pull requests
+# need no data migration. Adds and updates rows; never deletes. See docs/SUPABASE.md.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/src/catalog/**'
+      - 'frontend/src/lib/api/types.ts'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Report what would change without writing'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  actions: write
+  pull-requests: read
+  statuses: read
+
+# One production catalog writer at a time. A queued run syncs whatever main is when it starts, so a stale event
+# or an old rerun can never write an older catalog over a newer one.
+concurrency:
+  group: catalog-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.repository == 'labscommunity/intelinside'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Privileged workflow: only trusted, merged default-branch code runs here.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --prefix frontend --ignore-scripts
+      - name: Sync the catalog
+        run: node frontend/scripts/sync-catalog.mjs ${{ inputs.dry_run && '--dry-run' || '' }}
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      # Result PRs that failed only because a catalog entry was missing can pass now.
+      - name: Recheck failed result submissions
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh pr list --repo "$REPO" --state open --limit 100 --json number,headRefOid,files \
+            --jq '.[] | select(any(.files[]; .path | test("^(results|custom-runtimes)/"))) | "\(.number) \(.headRefOid)"' |
+          while read -r number sha; do
+            state=$(gh api "repos/$REPO/commits/$sha/status" --jq '[.statuses[] | select(.context == "Result ingestion")][0].state')
+            if [ "$state" = failure ]; then
+              gh workflow run validate-results.yml --repo "$REPO" -f pr_number="$number"
+              echo "- Rechecking #$number" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done

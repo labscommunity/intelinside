@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "9",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "muse-glimmer-30b",
+  "quant": "int4",
+  "runtime": "openvino-genai",
+  "runtimeVersion": "2026.4.0.0-3407-7ea2546852a",
+  "runtimeFlags": "OpenVINO 2026.4.0, VLMPipeline text-only, default GenAI pipeline, batch 1",
+  "decodeTps": 29.6,
+  "promptTps": 147.0,
+  "ttftMs": 475.4,
+  "contextLength": 197,
+  "batchSize": 1,
+  "runDate": "2026-09-28",
+  "notes": "ReBAR on, 32GB BAR. 3-run mean; decode_tps runs: 27.8/31.2/29.9. VLM export run text-only via VLMPipeline. prompt_tps = input_tokens/TTFT."
+}

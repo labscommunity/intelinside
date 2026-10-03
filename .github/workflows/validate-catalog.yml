@@ -41,7 +41,7 @@ jobs:
             const marker = '<!-- intelinside-catalog -->'
             const report = fs.existsSync('report.md') ? fs.readFileSync('report.md', 'utf8') : 'The catalog check did not run.'
             const number = context.payload.pull_request.number
-            const body = `${marker}\n${report}\nThe entry shows up on the site with the next deploy. Format notes are in [frontend/src/catalog/README.md](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/frontend/src/catalog/README.md).`
+            const body = `${marker}\n${report}\nOnce merged, the entry is synced to the database automatically and shows up on the site with the next deploy. Format notes are in [frontend/src/catalog/README.md](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/frontend/src/catalog/README.md).`
             const { data: comments } = await github.rest.issues.listComments({ ...context.repo, issue_number: number, per_page: 100 })
             const existing = comments.find((c) => c.body && c.body.startsWith(marker))
             if (existing) await github.rest.issues.updateComment({ ...context.repo, comment_id: existing.id, body })

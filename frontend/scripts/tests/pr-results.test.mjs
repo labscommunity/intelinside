@@ -1,7 +1,7 @@
 import { test, before, after } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { createDatabase } from '../agent-api/database.mjs'
+import { createDatabase, migrations } from '../agent-api/database.mjs'
 import { prepareFile, collectFiles, processPr, loadResultParser } from '../pr-results.mjs'
 
 const repository = 'labscommunity/intelinside'
@@ -10,7 +10,6 @@ const other = '00000000-0000-0000-0000-000000000002'
 const raw = { rig: '1', model: 'qwen3-8b', quant: 'q4_k_m', runtime: 'llamacpp', runtimeVersion: 'b6512', decodeTps: 34.2, runDate: '2026-09-04' }
 const entry = (name, changes = {}) => ({ path: `results/alice/${name}.json`, file: { ...raw, ...changes } })
 let db, parseResultFile
-const migrations = new URL('../../../supabase/migrations/', import.meta.url)
 const evidenceMigration = '20260918090000_optional_result_evidence.sql'
 before(async () => {
   parseResultFile = await loadResultParser()
@@ -248,7 +247,7 @@ test('unrelated PRs pass without a site account or database configuration', asyn
   const pr = prFixture({ user: { id: 42, login: 'dependency-bot', type: 'Bot' } })
   const result = await processPr({ repository, number: 50, defaultBranch: 'main', parseResultFile, database: null,
     github: githubFixture(pr, { changed: [{ filename: 'README.md', status: 'modified' }] }) })
-  assert.deepEqual(result.lines, ['No result files to import.'])
+  assert.deepEqual(result.lines, ['No submission files to import.'])
 })
 test('malformed result paths and incomplete file lists fail instead of silently skipping runs', async () => {
   await assert.rejects(collectFiles(githubFixture(prFixture(), { changed: [{ filename: 'results/run.json', status: 'added' }] }), repository, prFixture(), parseResultFile), /put the file/)
@@ -268,4 +267,179 @@ test('runner and real database integrate for validation, merge and retry', async
   assert.equal(await count('public.results'), before + 1)
   await processPr(merged)
   assert.equal(await count('public.results'), before + 1)
+})
+
+const registration = (name, changes = {}) => ({ path: `custom-runtimes/alice/${name}.json`, file: {
+  runtime: 'llamacpp', name: `Build ${name}`, repoUrl: `https://github.com/alice/${name}`, summary: 'A faster kernel', ...changes,
+} })
+
+test('registration parser enforces ownership, creation-only, strict shape, URLs, limits and moderation', () => {
+  const { path, file } = registration('parser')
+  const prepare = (value, status = 'added', filename = path) => prepareFile(filename, status, value, 'alice', parseResultFile)
+  assert.equal(prepare({ ...file, name: '  Example  ' }).file.name, 'Example')
+  for (const change of [ { ownerId: owner }, { githubId: '123' }, { revision: '123' }, { surprise: true },
+    { name: ' ' }, { name: 'x'.repeat(121) }, { summary: 'x'.repeat(281) }, { notes: 'x'.repeat(5001) },
+    { runtime: 'missing' }, { repoUrl: 'javascript:alert(1)' }, { repoUrl: 'https://' },
+    { repoUrl: 'https://user:pass@example.com' }, { repoUrl: 'https://example.com/a b' }, { repoUrl: 'https://example.com\\path' },
+    { name: 'fuck' }, { notes: null }, { $schema: 123 },
+  ]) assert.throws(() => prepare({ ...file, ...change }))
+  for (const status of ['modified', 'renamed', 'copied']) assert.throws(() => prepare(file, status), /Only new/)
+  for (const filename of ['custom-runtimes/bob/a.json', 'custom-runtimes/alice/../a.json', 'custom-runtimes/alice/.json']) {
+    assert.throws(() => prepare(file, 'added', filename), /put the file/)
+  }
+  assert.equal(prepare({ ...file, repoUrl: 'http://example.com/source' }).file.repoUrl, 'http://example.com/source')
+  for (const customRuntimeFile of [null, '', '../a.json', 'custom-runtimes/alice/../a.json']) {
+    assert.ok(parseResultFile({ ...raw, customRuntimeFile }).problems.length)
+  }
+  assert.ok(parseResultFile({ ...raw, customRuntime: '1', customRuntimeFile: path }).problems.length)
+  assert.deepEqual(parseResultFile({ ...raw, customRuntimeFile: path, revision: 'abc' }).problems, [])
+})
+
+test('standalone registration resolves OAuth identity, rolls back dry runs and preserves provenance and receipts', async () => {
+  const file = registration('standalone')
+  const before = await count('public.custom_runtimes')
+  await assert.rejects(rpc([file], { id: '999' }), /Sign up/)
+  assert.equal((await rpc([file], { dry: true }))[0].status, 'validated')
+  assert.equal(await count('public.custom_runtimes'), before)
+  assert.equal(await count('private.pr_custom_runtime_imports'), 0)
+  const [created] = await rpc([file])
+  const row = (await db.query('select owner_id,source_pr_url,repo_url from public.custom_runtimes where id=$1', [created.id])).rows[0]
+  assert.deepEqual(row, { owner_id: owner, source_pr_url: `https://github.com/${repository}/pull/42`, repo_url: file.file.repoUrl })
+  assert.equal((await rpc([file]))[0].id, created.id)
+  await assert.rejects(rpc([registration('standalone', { summary: 'Changed' })]), /already imported/)
+  await assert.rejects(rpc([file], { pr: 43 }), /already imported/)
+  await db.query('delete from public.custom_runtimes where id=$1', [created.id])
+  assert.equal((await rpc([file]))[0].id, null)
+  assert.equal(await count('public.custom_runtimes'), before)
+})
+
+test('mixed imports resolve references in any file order and roll back both types on failure', async () => {
+  const reg = registration('mixed')
+  const files = [entry('mixed-result', { customRuntimeFile: reg.path, revision: 'abc' }), reg]
+  const before = [await count('public.custom_runtimes'), await count('public.results'), await count('private.pr_custom_runtime_imports')]
+  for (const dry of [true, false]) {
+    await assert.rejects(rpc([...files, entry('mixed-bad', { decodeTps: -1 })], { dry }), /check constraint/)
+    assert.deepEqual([await count('public.custom_runtimes'), await count('public.results'), await count('private.pr_custom_runtime_imports')], before)
+  }
+  assert.ok((await rpc(files, { dry: true })).every((r) => r.status === 'validated'))
+  assert.deepEqual([await count('public.custom_runtimes'), await count('public.results'), await count('private.pr_custom_runtime_imports')], before)
+  const created = await rpc(files)
+  const result = created.find((r) => r.path.startsWith('results/'))
+  const build = created.find((r) => r.path.startsWith('custom-runtimes/'))
+  assert.equal(String((await db.query('select custom_runtime_id from public.results where id=$1', [result.id])).rows[0].custom_runtime_id), build.id)
+  assert.deepEqual((await rpc(files)).map((r) => r.id), created.map((r) => r.id))
+  // A later PR can reference the numeric ID, including by a different user's rig.
+  assert.equal((await rpc([entry('later', { rig: '2', customRuntime: build.id })], { id: '456', pr: 301, dry: true }))[0].status, 'validated')
+})
+
+test('invalid references, spoofed fields and duplicate paths fail atomically', async () => {
+  const reg = registration('references')
+  for (const changes of [ { customRuntimeFile: 'custom-runtimes/alice/missing.json' },
+    { customRuntimeFile: reg.path, customRuntime: '1' }, { customRuntimeFile: '../references.json' },
+    { customRuntimeFile: reg.path, runtime: 'vllm' }, { customRuntimeFile: null },
+  ]) await assert.rejects(rpc([reg, entry('bad-reference', changes)]), /customRuntimeFile/)
+  await assert.rejects(rpc([reg, reg]), /Duplicate/)
+  for (const changes of [{ ownerId: other }, { source_pr_url: 'https://github.com/fake' }, { name: '' }, { runtime: 'missing' }, { name: 'a'.repeat(121) }, { repoUrl: 'https://' }]) {
+    await assert.rejects(rpc([registration('invalid-registration', changes)]))
+  }
+})
+
+test('source matching reports existing IDs without claiming ownership, including queued competing imports', async () => {
+  await assert.rejects(rpc([registration('duplicate', { repoUrl: 'https://GITHUB.COM/example/llama.git/' })]), /IDs 1/)
+  const reg = registration('concurrent')
+  // PGlite queues one connection; this checks competing import outcomes, not multi-session lock contention.
+  const attempts = await Promise.allSettled([rpc([reg], { pr: 310 }), rpc([reg], { pr: 310 }), rpc([registration('concurrent-other', { repoUrl: reg.file.repoUrl })], { pr: 311 })])
+  assert.equal(attempts[0].status, 'fulfilled')
+  assert.equal(attempts[1].status, 'fulfilled')
+  assert.equal(attempts[0].value[0].id, attempts[1].value[0].id)
+  assert.equal(attempts[2].status, 'rejected')
+  assert.match(attempts[2].reason.message, /already registered/)
+  const normalize = async (url) => (await db.query('select private.pr_runtime_source($1) as url', [url])).rows[0].url
+  assert.equal(await normalize('HTTPS://EXAMPLE.COM/Repo.git/'), 'https://example.com/Repo')
+  assert.equal(await normalize('https://EXAMPLE.COM/Repo.git/?x=A#B'), 'https://example.com/Repo?x=A#B')
+  assert.notEqual(await normalize('http://example.com/repo'), await normalize('https://example.com/Repo'))
+})
+
+test('browser roles cannot forge runtime provenance or read receipts, while owner writes still work', async () => {
+  for (const role of ['anon', 'authenticated']) {
+    await db.exec(`set role ${role}`)
+    try { await assert.rejects(db.query('select * from private.pr_custom_runtime_imports'), /permission denied/) }
+    finally { await db.exec('reset role') }
+  }
+  await db.exec(`create or replace function auth.uid() returns uuid language sql as $$ select '${owner}'::uuid $$; set role authenticated;`)
+  try {
+    const { rows } = await db.query(`insert into public.custom_runtimes(owner_id,runtime_id,name,repo_url,summary)
+      values ($1,'llamacpp','UI registration','https://example.com/ui','UI summary') returning id`, [owner])
+    await db.query('update public.custom_runtimes set summary=$1 where id=$2', ['Updated', rows[0].id])
+    await assert.rejects(db.query('update public.custom_runtimes set source_pr_url=$1 where id=$2', [`https://github.com/${repository}/pull/42`, rows[0].id]), /permission denied/)
+    await assert.rejects(db.query(`insert into public.custom_runtimes(owner_id,runtime_id,name,repo_url,summary,source_pr_url)
+      values ($1,'llamacpp','Forged','https://example.com/forged','Summary',$2)`, [owner, `https://github.com/${repository}/pull/42`]), /permission denied/)
+  } finally { await db.exec('reset role; create or replace function auth.uid() returns uuid language sql as $$ select null::uuid $$;') }
+})
+
+test('registration-only runner integrates with database for open, merged, retry, and closed PRs', async () => {
+  const reg = registration('runner')
+  const database = { rpc: async (_, args) => ({ data: await rpc(args.p_files, { id: args.p_github_id, pr: args.p_pr_number, dry: args.p_dry_run }) }) }
+  const options = { repository, number: 50, defaultBranch: 'main', parseResultFile, database }
+  const fixture = (changes) => githubFixture(prFixture(changes), { changed: [{ filename: reg.path, status: 'added' }], content: reg.file })
+  const before = await count('public.custom_runtimes')
+  await processPr({ ...options, github: fixture({}) })
+  await processPr({ ...options, github: fixture({ state: 'closed' }) })
+  assert.equal(await count('public.custom_runtimes'), before)
+  const merged = { ...options, github: fixture({ merged: true, state: 'closed' }) }
+  assert.ok((await processPr(merged)).lines.some((line) => /\/runtimes\/llamacpp\/custom\/\d+/.test(line)))
+  await processPr(merged)
+  assert.equal(await count('public.custom_runtimes'), before + 1)
+})
+
+test('combined file limits, oversized blobs, stale merge SHA and changed authors prevent ingestion', async () => {
+  const changed = Array.from({ length: 101 }, (_, i) => ({ filename: i % 2 ? `results/alice/${i}.json` : `custom-runtimes/alice/${i}.json`, status: 'added' }))
+  const pr = prFixture({ changed_files: 101 })
+  await assert.rejects(collectFiles(async (path) => path.endsWith('page=1') ? changed.slice(0,100) : changed.slice(100), repository, pr, parseResultFile), /100 submission/)
+  await assert.rejects(collectFiles(async (path) => path.includes('/contents/') ? { type: 'file', encoding: 'base64', size: 65537, content: '' } : [{ filename: registration('size').path, status: 'added' }], repository, prFixture(), parseResultFile), /64 KiB/)
+  for (const change of [{ merge_commit_sha: 'c'.repeat(40) }, { user: { id: 456, login: 'alice', type: 'User' } }]) {
+    let reads = 0
+    const github = githubFixture(prFixture())
+    await assert.rejects(processPr({ repository, number: 50, defaultBranch: 'main', parseResultFile,
+      database: { rpc: () => assert.fail('must not import stale data') }, github: async (path) => {
+        if (path === `/repos/${repository}/pulls/50` && ++reads > 1) return prFixture(change)
+        return github(path)
+      } }), /changed during validation/)
+  }
+})
+
+test('mixed runner executes real service-role RPC and rejects deleted registration references', async () => {
+  const reg = registration('mixed-runner')
+  const run = entry('mixed-runner', { customRuntimeFile: reg.path })
+  const files = [run, reg]
+  const github = async (path) => {
+    if (path.includes('/files?')) return files.map((f) => ({ filename: f.path, status: 'added' }))
+    if (path.includes('/contents/')) {
+      const file = files.find((f) => path.includes(`/contents/${f.path}?`)).file
+      return { type: 'file', encoding: 'base64', size: 500, content: Buffer.from(JSON.stringify(file)).toString('base64') }
+    }
+    return prFixture({ changed_files: 2, merged: true, state: 'closed' })
+  }
+  const database = { rpc: async (_, args) => {
+    await db.exec('set role service_role')
+    try { return { data: await rpc(args.p_files, { pr: args.p_pr_number, dry: args.p_dry_run }) } }
+    finally { await db.exec('reset role') }
+  } }
+  await processPr({ repository, number: 50, defaultBranch: 'main', parseResultFile, github, database })
+  const imported = await rpc(files, { pr: 50 })
+  await db.query('delete from public.results where id=$1', [imported.find((r) => r.path === run.path).id])
+  await db.query('delete from public.custom_runtimes where id=$1', [imported.find((r) => r.path === reg.path).id])
+  await assert.rejects(rpc([reg, entry('deleted-reference', { customRuntimeFile: reg.path })], { pr: 50 }), /deleted registration/)
+})
+
+test('registration collection rejects malformed JSON and oversized decoded content, and ignores removals', async () => {
+  const reg = registration('invalid-blob')
+  for (const content of ['{invalid', ' '.repeat(65537)]) {
+    const github = async (path) => path.includes('/contents/')
+      ? { type: 'file', encoding: 'base64', size: 1, content: Buffer.from(content).toString('base64') }
+      : [{ filename: reg.path, status: 'added' }]
+    await assert.rejects(collectFiles(github, repository, prFixture(), parseResultFile), /invalid JSON|too large/)
+  }
+  const files = await collectFiles(async () => [{ filename: reg.path, status: 'removed' }], repository, prFixture(), parseResultFile)
+  assert.deepEqual(files, [])
 })

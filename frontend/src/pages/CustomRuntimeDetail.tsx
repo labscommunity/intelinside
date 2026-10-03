@@ -72,6 +72,7 @@ export default function CustomRuntimeDetail() {
                 <Pencil />
               </IconAction>
             ) : null}
+            {b?.sourcePrUrl ? <Button variant="outline" render={<a href={b.sourcePrUrl} target="_blank" rel="noreferrer" />} nativeButton={false}>Submission PR <ExternalLink /></Button> : null}
             {submit}
           </>
         }

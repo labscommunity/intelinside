@@ -132,6 +132,7 @@ function toInput(f: Form): ResultInput {
 /** Fills the form from a result file. Ids the catalog does not know stay blank and are reported, so the rest still lands. */
 function formFromFile(file: Partial<ResultFile>, rigs: RigSummary[], customRuntimes: CustomRuntime[], prev: Form): { form: Form; problems: string[] } {
   const problems: string[] = []
+  if (file.customRuntimeFile) problems.push(`Custom runtime ${file.customRuntimeFile} resolves when this PR is merged. This preview cannot resolve an unmerged registration.`)
   const wanted = file.rig?.toLowerCase()
   const rig = wanted ? rigs.find((r) => r.id.toLowerCase() === wanted) ?? rigs.find((r) => r.name.toLowerCase() === wanted) : undefined
   if (file.rig && !rig) problems.push(`The file names rig "${file.rig}", which is not one of your rigs. Pick one below.`)
