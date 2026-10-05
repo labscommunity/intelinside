@@ -1,7 +1,10 @@
 {
   "rewrites": [
+    { "source": "/api/openapi.json", "destination": "/api/openapi" },
+    { "source": "/api/keys/:route", "destination": "/api/keys?route=:route" },
+    { "source": "/api/v1/:route*", "destination": "/api/v1/handler?route=:route*" },
     { "source": "/api/og/rigs/(\\d+)\\.png", "destination": "/api/og/rig?id=$1" },
     { "source": "/api/og/results/(\\d+)\\.png", "destination": "/api/og/result?id=$1" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    { "source": "/((?!api/|docs/).*)", "destination": "/index.html" }
   ]
 }

@@ -1,0 +1,36 @@
+name: Test agent API
+on:
+  pull_request:
+    paths:
+      - 'frontend/**'
+      - 'supabase/migrations/**'
+      - 'docs/AGENT*'
+      - '.github/workflows/test-agent-api.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --prefix frontend --ignore-scripts
+      - run: npm --prefix frontend run typecheck
+      - run: npm --prefix frontend run results:test
+      - run: npm --prefix frontend run agents:docs:check
+      - run: npx --prefix frontend playwright install --with-deps chromium
+      - run: npm --prefix frontend run agents:e2e
+      - run: npm --prefix frontend run build
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: agent-api-browser-results
+          path: frontend/test-results/
+          retention-days: 7

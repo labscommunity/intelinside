@@ -1,7 +1,7 @@
 import { test, before, after } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { createDatabase, migrations } from './database.mjs'
+import { createDatabase, migrations } from '../agent-api/database.mjs'
 import { prepareFile, collectFiles, processPr, loadResultParser } from '../pr-results.mjs'
 
 const repository = 'labscommunity/intelinside'

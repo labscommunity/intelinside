@@ -1,5 +1,5 @@
 import { supabase, signOutSupabase } from '@/lib/auth'
-import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from 'obscenity'
+import { moderateText } from './moderation'
 import { hostIn } from '@/lib/hardware'
 import { rigSummaryLine } from '@/lib/rig-summary'
 import { HARDWARE_BY_ID, MODELS, MODEL_BY_ID, QUANTS, QUANT_BY_ID, RUNTIMES, RUNTIME_BY_ID, VISIBLE_HARDWARE } from '@/catalog'
@@ -85,11 +85,6 @@ type Snapshot = {
   flags: FlagRow[]
 }
 
-const textMatcher = new RegExpMatcher({
-  ...englishDataset.build(),
-  ...englishRecommendedTransformers,
-})
-
 const RIG_PHOTOS_BUCKET = 'rig-photos'
 
 const requiredClient = () => {
@@ -121,18 +116,6 @@ async function optionalRows<T>(what: string, request: PromiseLike<{ data: unknow
   } catch (error) {
     console.error(`Could not load ${what}; continuing without it.`, error)
     return []
-  }
-}
-
-function moderateText(entries: Array<[field: string, value: string | null | undefined, maxLength: number]>) {
-  const fields: Record<string, string> = {}
-  for (const [field, value, maxLength] of entries) {
-    if (!value) continue
-    if (value.length > maxLength) fields[field] = `Use ${maxLength} characters or fewer.`
-    else if (textMatcher.hasMatch(value)) fields[field] = 'Please remove offensive or profane language.'
-  }
-  if (Object.keys(fields).length) {
-    throw new ApiError('moderation_rejected', 'Please revise the highlighted text.', 400, fields)
   }
 }
 

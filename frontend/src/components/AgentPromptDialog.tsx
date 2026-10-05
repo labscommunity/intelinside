@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
 import { Check, Copy, ExternalLink, GitPullRequest } from 'lucide-react'
@@ -99,6 +100,7 @@ function AgentPromptBody({ handle, rigs, rigId, onRigChange, phone }: Omit<Props
 
   return (
     <div className="grid gap-4">
+      <p className="rounded-md border p-3 text-sm">Your agent can also register rigs, manage custom runtimes, and submit results directly. <Link to="/settings/api-keys" className="underline underline-offset-4">Create an API key and copy the agent instructions.</Link></p>
       <div className="grid gap-1.5">
         <Label htmlFor="agent-rig">Rig</Label>
         <NativeSelect className="w-full sm:w-72" id="agent-rig" value={rigId} onChange={(e) => onRigChange(e.target.value)}>
