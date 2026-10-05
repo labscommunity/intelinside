@@ -39,8 +39,8 @@ const resource = (path: string, action: string, schema: Schema): Route[] => [
   { method: 'GET', path, action: `${action}.list`, description: `List ${path.slice(1)}. Filter by owner=me, q, or resource-specific IDs.`, scope: 'read' },
   { method: 'GET', path: `${path}/{id}`, action: `${action}.get`, description: 'Read one record and its current updatedAt version.', scope: 'read' },
   { method: 'POST', path, action: `${action}.create`, description: 'Create a record owned by the authenticated user.', scope: 'write', schema },
-  { method: 'PATCH', path: `${path}/{id}`, action: `${action}.update`, description: 'Update your record. Requires If-Match with its updatedAt value.', scope: 'write', schema: { ...schema, required: [] }, version: true },
-  { method: 'DELETE', path: `${path}/{id}`, action: `${action}.delete`, description: 'Delete your record. Requires If-Match. Rig deletion with results also requires cascade=true.', scope: 'write', version: true },
+  { method: 'PATCH', path: `${path}/{id}`, action: `${action}.update`, description: 'Update your record. Requires X-Expected-Version with its updatedAt value.', scope: 'write', schema: { ...schema, required: [] }, version: true },
+  { method: 'DELETE', path: `${path}/{id}`, action: `${action}.delete`, description: 'Delete your record. Requires X-Expected-Version. Rig deletion with results also requires cascade=true.', scope: 'write', version: true },
 ]
 export const routes: Route[] = [
   { method: 'GET', path: '/catalog', action: 'catalog', description: 'Hardware, models with supported quant IDs, quantizations, and base runtimes. Public; no key required.', scope: 'public' },
@@ -121,7 +121,7 @@ export function openApiDocument() {
     const parameters: unknown[] = []
     for (const name of ['id', 'handle']) if (route.path.includes(`{${name}}`)) parameters.push({ name, in: 'path', required: true, schema: { type: 'string' } })
     if (route.method !== 'GET') parameters.push({ name: 'Idempotency-Key', in: 'header', required: true, schema: { type: 'string', minLength: 1, maxLength: 128 }, description: 'Unique per logical operation. Reuse only with exactly the same request. Receipts are retained for 30 days.' })
-    if (route.version) parameters.push({ name: 'If-Match', in: 'header', required: true, schema: { type: 'string' }, description: 'The quoted updatedAt timestamp from the last read.' })
+    if (route.version) parameters.push({ name: 'X-Expected-Version', in: 'header', required: true, schema: { type: 'string' }, description: 'The updatedAt timestamp from the last read. If-Match is rejected.' })
     if (route.action.endsWith('.list')) for (const name of ['owner', 'q', 'cursor', 'limit', 'rig', 'model', 'runtime', 'hardware']) parameters.push({ name, in: 'query', schema: { type: 'string' }, description: name === 'limit' ? '1–100; default 25.' : undefined })
     if (route.action === 'rigs.delete') parameters.push({ name: 'cascade', in: 'query', schema: { type: 'boolean' }, description: 'Explicitly delete the rig’s results too.' })
     paths[route.path] ??= {}

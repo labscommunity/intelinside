@@ -150,11 +150,14 @@ export function createHandler(getBackend: () => Backend | null = configuredBacke
       const params: Record<string, unknown> = { query: queryParams(url, route.action), ...(id ? { id } : {}), ...(handle ? { handle } : {}) }
       const requestKey = request.headers.get('idempotency-key')
       if (route.method !== 'GET' && (!requestKey || !/^[\x21-\x7e]{1,128}$/.test(requestKey))) fail('idempotency_required', 'Provide an Idempotency-Key of 1–128 printable non-space ASCII characters.', 400)
+      // Vercel's edge evaluates If-Match against every successful response and replaces it
+      // with its own 412, after the write has committed. Refuse it before anything runs.
+      if (request.headers.has('if-match')) fail('use_expected_version', 'If-Match is not supported. Send X-Expected-Version: <updatedAt> instead.', 400)
       if (route.version) {
-        const version = request.headers.get('if-match')
-        if (!version) fail('version_required', 'Read the record, then supply If-Match: "<updatedAt>".', 428)
+        const version = request.headers.get('x-expected-version')
+        if (!version) fail('version_required', 'Read the record, then supply X-Expected-Version: <updatedAt>.', 428)
         const timestamp = version!.replace(/^"|"$/g, '')
-        if (!/^\d{4}-\d{2}-\d{2}T/.test(timestamp) || !Number.isFinite(Date.parse(timestamp))) fail('validation', 'If-Match must contain the updatedAt timestamp.', 400)
+        if (!/^\d{4}-\d{2}-\d{2}T/.test(timestamp) || !Number.isFinite(Date.parse(timestamp))) fail('validation', 'X-Expected-Version must contain the updatedAt timestamp.', 400)
         params.expected_updated_at = timestamp
       }
       if (route.schema) {
@@ -172,9 +175,8 @@ export function createHandler(getBackend: () => Backend | null = configuredBacke
           body.method = 'PUT'; body.expiresInSeconds = 7200
         }
       }
-      const result = json(body, response.status)
-      if (typeof body.updatedAt === 'string') result.headers.set('etag', JSON.stringify(body.updatedAt))
-      return result
+      // No ETag: it would invite If-Match, which Vercel's edge mishandles (see above).
+      return json(body, response.status)
     } catch (error) {
       if (error instanceof ApiError) return json({ error: { code: error.code, message: error.message, ...(error.fields ? { fields: error.fields } : {}) } }, error.status)
       // Never log request headers, bodies, API keys, or upstream error objects.

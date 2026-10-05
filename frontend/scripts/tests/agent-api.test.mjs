@@ -8,7 +8,7 @@ const rigInput={name:'Panther Lake Lab',os:'Linux',components:[{hardwareId:'inte
 const buildInput={runtimeId:'llamacpp',name:'Fleet experimental build',repoUrl:'https://github.com/example/runtime',summary:'Experimental fleet build'}
 const resultInput=()=>({rigId:rig.id,modelId:'qwen3-8b',quant:'q4_k_m',runtimeId:'llamacpp',runtimeVersion:'test',customRuntimeId:runtime.id,revision:'abc123',decodeTps:7.959989,runDate:'2026-09-27'})
 async function call(path,{method='GET',body,token=key?.key,idem,version,headers={}}={}) {
- const response=await fetch(h.origin+path,{method,headers:{...(token?{authorization:`Bearer ${token}`} : {}),...(method!=='GET'?{'idempotency-key':idem??`test-${++counter}`} : {}),...(body?{'content-type':'application/json'} : {}),...(version?{'if-match':JSON.stringify(version)} : {}),...headers},...(body?{body:JSON.stringify(body)} : {})})
+ const response=await fetch(h.origin+path,{method,headers:{...(token?{authorization:`Bearer ${token}`} : {}),...(method!=='GET'?{'idempotency-key':idem??`test-${++counter}`} : {}),...(body?{'content-type':'application/json'} : {}),...(version?{'x-expected-version':version} : {}),...headers},...(body?{body:JSON.stringify(body)} : {})})
  return {status:response.status,body:await response.json(),headers:response.headers}
 }
 async function createKey(session='alice-test-session',scopes=['read','write','community'],name='Test agent') {
@@ -65,6 +65,11 @@ test('ownership policies prevent edits, deletes, and submissions on someone else
 
 test('version checks prevent lost edits and retries remain stable',async()=>{
  assert.equal((await call(`/api/v1/rigs/${rig.id}`,{method:'PATCH',body:{notes:'Updated'}})).status,428)
+ // Vercel's edge turns a successful If-Match write into its own 412, so it must never reach the database.
+ const ifMatch=await call(`/api/v1/rigs/${rig.id}`,{method:'PATCH',body:{notes:'Via If-Match'},headers:{'if-match':JSON.stringify(rig.updatedAt)}})
+ assert.equal(ifMatch.status,400);assert.equal(ifMatch.body.error.code,'use_expected_version')
+ assert.equal(okay(await call(`/api/v1/rigs/${rig.id}`)).updatedAt,rig.updatedAt)
+ assert.equal((await call(`/api/v1/rigs/${rig.id}`,{headers:{'if-match':'"x"'}})).status,400)
  const edit={method:'PATCH',body:{notes:'Updated'},version:rig.updatedAt,idem:'edit-rig'}
  const updated=okay(await call(`/api/v1/rigs/${rig.id}`,edit));assert.equal(updated.notes,'Updated')
  assert.deepEqual(okay(await call(`/api/v1/rigs/${rig.id}`,edit)),updated)

@@ -57,8 +57,8 @@ Receipts last 30 days and are shared across the user's keys. After that, check f
 existing records before attempting an old operation again. Failed operations that
 rolled back have no receipt and can be corrected and retried.
 
-PATCH and record DELETE also require `If-Match: "<updatedAt>"`, using the timestamp
-from the latest GET response. PATCH only changes supplied fields; `null` clears
+PATCH and record DELETE also require `X-Expected-Version: <updatedAt>`, using the
+timestamp from the latest GET response. Do not send `If-Match`; it is rejected with 400. PATCH only changes supplied fields; `null` clears
 nullable fields. A stale timestamp returns 412: fetch the record and reconcile the
 change before retrying with a new idempotency key. Deleting a rig that has results
 requires `?cascade=true`, which deletes those results too. Deleting a custom
@@ -134,7 +134,7 @@ stream measurement would misrepresent the run.
    does not permit overwrite, and expires after two hours. Treat it as a secret.
 3. POST `/uploads/complete` with `{ "photoPath": "<returned photoPath>" }` and a
    separate idempotency key. The server verifies the stored size/type and ownership.
-4. Set the rig's `photoPath` to that returned path, using PATCH and If-Match. Set
+4. Set the rig's `photoPath` to that returned path, using PATCH and X-Expected-Version. Set
    `photoPath` to null to remove a photo from a rig.
 
 If the upload response is lost, attempt completion first. If the object is absent,
@@ -157,7 +157,7 @@ rejected; do not send ownership, verification, moderation, or PR provenance fiel
 - 412: stale record version; read again and reconcile.
 - 413: JSON body exceeds 1 MiB; split result batches or use signed photo uploads.
 - 415: request body must be JSON.
-- 428: If-Match is required for this edit or deletion.
+- 428: X-Expected-Version is required for this edit or deletion.
 - 429: account limit of 120 authenticated requests per minute; respect Retry-After.
 - 5xx: service unavailable; retry with backoff and the same idempotency key.
 
@@ -177,19 +177,19 @@ All paths below are relative to `/api/v1`. Every route except `/catalog` require
 | GET | `/rigs` | read | List rigs. Filter by owner=me, q, or resource-specific IDs. |
 | GET | `/rigs/{id}` | read | Read one record and its current updatedAt version. |
 | POST | `/rigs` | write | Create a record owned by the authenticated user. |
-| PATCH | `/rigs/{id}` | write | Update your record. Requires If-Match with its updatedAt value. |
-| DELETE | `/rigs/{id}` | write | Delete your record. Requires If-Match. Rig deletion with results also requires cascade=true. |
+| PATCH | `/rigs/{id}` | write | Update your record. Requires X-Expected-Version with its updatedAt value. |
+| DELETE | `/rigs/{id}` | write | Delete your record. Requires X-Expected-Version. Rig deletion with results also requires cascade=true. |
 | GET | `/custom-runtimes` | read | List custom-runtimes. Filter by owner=me, q, or resource-specific IDs. |
 | GET | `/custom-runtimes/{id}` | read | Read one record and its current updatedAt version. |
 | POST | `/custom-runtimes` | write | Create a record owned by the authenticated user. |
-| PATCH | `/custom-runtimes/{id}` | write | Update your record. Requires If-Match with its updatedAt value. |
-| DELETE | `/custom-runtimes/{id}` | write | Delete your record. Requires If-Match. Rig deletion with results also requires cascade=true. |
+| PATCH | `/custom-runtimes/{id}` | write | Update your record. Requires X-Expected-Version with its updatedAt value. |
+| DELETE | `/custom-runtimes/{id}` | write | Delete your record. Requires X-Expected-Version. Rig deletion with results also requires cascade=true. |
 | POST | `/results/batch` | write | Create up to 100 results atomically. A failure rolls back the entire batch. |
 | GET | `/results` | read | List results. Filter by owner=me, q, or resource-specific IDs. |
 | GET | `/results/{id}` | read | Read one record and its current updatedAt version. |
 | POST | `/results` | write | Create a record owned by the authenticated user. |
-| PATCH | `/results/{id}` | write | Update your record. Requires If-Match with its updatedAt value. |
-| DELETE | `/results/{id}` | write | Delete your record. Requires If-Match. Rig deletion with results also requires cascade=true. |
+| PATCH | `/results/{id}` | write | Update your record. Requires X-Expected-Version with its updatedAt value. |
+| DELETE | `/results/{id}` | write | Delete your record. Requires X-Expected-Version. Rig deletion with results also requires cascade=true. |
 | PUT | `/results/{id}/confirmation` | community | Confirm another user’s result. Repeating this never removes a confirmation. |
 | DELETE | `/results/{id}/confirmation` | community | Remove your confirmation. |
 | PUT | `/results/{id}/flag` | community | Set or replace your flag on another user’s result. |
