@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "2",
+  "component": "intel-arc-b580",
+  "componentQuantity": 1,
+  "model": "qwen3-6-35b-a3b",
+  "quant": "q8_0",
+  "runtime": "llamacpp",
+  "runtimeVersion": "b10569-opt",
+  "customRuntimeFile": "custom-runtimes/lorenzoriti/llama-sycl-b580-tuning.json",
+  "revision": "b10569-opt",
+  "runtimeFlags": "-ngl 99, --n-cpu-moe 28, -c 163840, batch 2048, single Intel Arc B580, SYCL backend, Windows 11",
+  "decodeTps": 47.79,
+  "promptTps": 638.42,
+  "contextLength": 163840,
+  "batchSize": 1,
+  "runDate": "2026-09-22",
+  "evidenceUrl": "https://github.com/LorenzoRiti/llama-sycl-b580-tuning",
+  "notes": "Qwen3.6-35B-A3B (MoE, 35B total / 3B active) at Q8_0 (34.4 GB community GGUF of the same base model). Single Intel Arc B580 12 GB: MoE expert layers offloaded to CPU (--n-cpu-moe 28), attention/GDN/shared experts on the GPU; this is what makes a 35B model run on a 12 GB card. decodeTps is the mean of 3 short runs from llama-server timings (46.08 / 48.29 / 48.99 t/s, 250 tokens each after warmup). promptTps 638.42 t/s and decode 43.01 t/s measured at 43,560 input tokens in the same session. Runtime: local llama.cpp b10569 SYCL rebuild with the patches in the registered custom runtime. Windows 11, oneAPI 2026.0."
+}
