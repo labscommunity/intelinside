@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/custom-runtimes/schema.json",
+  "runtime": "llamacpp",
+  "name": "llama.cpp SYCL B580 tuning",
+  "repoUrl": "https://github.com/LorenzoRiti/llama-sycl-b580-tuning",
+  "summary": "Local llama.cpp SYCL rebuild with a flash-attention parallel-blocks knob (GGML_SYCL_FA_PB) and unsupported-type CPU fallback, tuned for Intel Arc B580 12 GB.",
+  "notes": "Build: oneAPI 2026.0, GGML_SYCL=ON, GGML_SYCL_F16=ON. Measured +7% decode at 44K context on 35B-A3B flash-attention shapes; unsupported quant types warn and fall back to CPU instead of aborting the process. See the repository for the patches and the full measurement detail."
+}
