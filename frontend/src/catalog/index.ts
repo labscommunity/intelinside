@@ -85,6 +85,10 @@ export const MODELS: Model[] = [
     sourceUrl: 'https://huggingface.co/thinkingmachines/Inkling', logoUrl: '/logos/models/thinking-machines.webp', brandColor: '#e89960', quants: ['int4'],
   },
   {
+    id: 'kolibri-1-78b-a3b', name: 'Kolibri 1 78B A3B', family: 'Kolibri 1', brand: 'Aleph Alpha', params: '78B', architecture: 'moe', activeParams: '3.46B',
+    sourceUrl: 'https://huggingface.co/Aleph-Alpha/Kolibri-1', brandColor: '#e8c84a', quants: ['q4_k_m'],
+  },
+  {
     id: 'laguna-xs-2-1', name: 'Laguna XS 2.1', family: 'Laguna XS', brand: 'Poolside', params: '33B', architecture: 'moe', activeParams: '3B',
     sourceUrl: 'https://huggingface.co/poolside/Laguna-XS-2.1', logoUrl: '/logos/models/poolside.png', brandColor: '#7fd4a8', quants: ['q4_k_m'],
   },
