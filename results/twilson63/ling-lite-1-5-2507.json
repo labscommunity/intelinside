@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "9",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "ling-lite-1-5-2507",
+  "quant": "q4_k_m",
+  "runtime": "llamacpp",
+  "runtimeVersion": "version: 0.5.0-dev (build 1, commit 526c43b)",
+  "runtimeFlags": "llama.cpp Vulkan backend, -ngl 99 (all layers on GPU), ctx 4096, batch 1",
+  "decodeTps": 142.7,
+  "promptTps": 186.5,
+  "ttftMs": 161.0,
+  "contextLength": 158,
+  "batchSize": 1,
+  "runDate": "2026-10-06",
+  "notes": "ReBAR on, 32GB BAR. 3 runs: decode 140.8/146.2/141.1. mradermacher i1 Q4_K_M GGUF (11.18GB, bailingmoe arch, loads stock). 16.8B total / 2.75B active MoE, fully GPU-resident (10.40 GiB). Coherent output. llama-bench tg128 cross-check: 149.3."
+}
