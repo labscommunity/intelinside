@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "9",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "kolibri-1-78b-a3b",
+  "quant": "q4_k_m",
+  "runtime": "llamacpp",
+  "runtimeVersion": "version: 0.5.0-dev (build 144, commit cf86f37)",
+  "runtimeFlags": "llama.cpp Vulkan backend, -ngl 36/51 (partial offload, max stable), ctx 4096, batch 1",
+  "decodeTps": 22.4,
+  "promptTps": 11.8,
+  "ttftMs": 5439.2,
+  "contextLength": 192,
+  "batchSize": 1,
+  "runDate": "2026-10-06",
+  "notes": "ReBAR on, 32GB BAR. 3 runs: decode 22.5/24.0/20.6. Hob-forge Q4_K_M GGUF (47.45GB, kolibri1 arch). 78.1B total / 3.46B active MoE, SWA hybrid (513 window + every 5th full attn). -ngl 36 max stable (37 fails compute buffers, 38 OOMs). Patched build: 836d571 + kolibri1 patch (Hob-forge). Coherent reasoning output. llama-bench tg128 cross-check: 25.2."
+}
