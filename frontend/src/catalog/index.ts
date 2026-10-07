@@ -101,6 +101,10 @@ export const MODELS: Model[] = [
     sourceUrl: 'https://huggingface.co/LiquidAI/LFM2.5-8B-A1B', logoUrl: '/logos/models/liquid.svg', brandColor: '#6fc3d6', quants: ['int4', 'q4_k_m', 'q8_0'],
   },
   {
+    id: 'ling-lite-1-5-2507', name: 'Ling Lite 1.5 2507', family: 'Ling Lite 1.5', brand: 'InclusionAI', params: '16.8B', architecture: 'moe', activeParams: '2.75B',
+    sourceUrl: 'https://huggingface.co/inclusionAI/Ling-lite-1.5-2507', brandColor: '#7fb8e8', quants: ['q4_k_m'],
+  },
+  {
     id: 'llama-3-1-8b', name: 'Llama 3.1 8B Instruct', family: 'Llama 3.1', brand: 'Llama', params: '8B', architecture: 'dense',
     sourceUrl: 'https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct', logoUrl: '/logos/models/llama.svg', brandColor: '#73b0ee', quants: ['int4', 'q4_k_m', 'q8_0', 'fp16'],
   },
