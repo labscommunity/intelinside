@@ -218,6 +218,20 @@ test('closed-unmerged PRs do not write; bot authors and missing configuration fa
     { changed: [{ filename: 'results/bot/run.json', status: 'added' }] }) }), /Bot-authored/)
   await assert.rejects(processPr({ ...options, database: null, github: githubFixture(prFixture()) }), /Maintainer setup/)
 })
+test('manual reruns ingest a closed PR only when its head already landed on the default branch', async () => {
+  const pr = prFixture({ state: 'closed' })
+  for (const [allowLanded, status, writes] of [[true, 'ahead', true], [true, 'identical', true], [true, 'diverged', false], [false, 'ahead', false]]) {
+    const reads = [], calls = []
+    const github = githubFixture(pr, { onRead: (p) => reads.push(p) })
+    const result = await processPr({ repository, number: 50, defaultBranch: 'main', parseResultFile, allowLanded,
+      database: { rpc: async (name, args) => { calls.push(args); return { data: [] } } },
+      github: async (path) => path.includes('/compare/') ? { status } : github(path) })
+    assert.equal(calls.length, writes ? 1 : 0)
+    if (!writes) { assert.deepEqual(result.lines, ['Closed without merging; no submissions imported.']); continue }
+    assert.equal(calls[0].p_dry_run, false)
+    assert.ok(reads.some((p) => p.includes(`/repos/${repository}/contents/`) && p.endsWith(pr.head.sha)))
+  }
+})
 test('file collection paginates, ignores deletions, and refuses invalid content', async () => {
   const seen = []
   const github = githubFixture(prFixture(), { onRead: (p) => seen.push(p) })

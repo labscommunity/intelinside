@@ -75,7 +75,7 @@ different question, rank among each other on the same board, and collect on thei
 
 The pull request stays as the public record of the run. Closing without merging does not submit anything. Account signup and rig registration are still one-time site steps. Custom runtimes can be registered in the same PR or in a standalone registration PR.
 
-If ingestion fails after merge, no partial batch is committed. Fix the missing account, rig, or catalog configuration, then ask a maintainer to rerun **Validate and ingest result files**, or run it manually with the PR number. Retries read the original merge commit, not the current branch contents. A correction to invalid merged JSON requires a new result file in a new PR.
+If ingestion fails after merge, no partial batch is committed. Fix the missing account, rig, or catalog configuration, then ask a maintainer to rerun **Validate and ingest result files**, or run it manually with the PR number. Retries read the original merge commit, not the current branch contents. A correction to invalid merged JSON requires a new result file in a new PR. If a merge reaches `main` but GitHub leaves the PR unmerged (or it was closed afterwards), a manual run with its PR number still ingests it, as long as the PR's head commit is on `main`.
 
 The legacy form can still preview a PR, including its optional evidence link. Submission is disabled while previewing a PR: merge submits it for you. Make changes in the PR's JSON file. If you already submitted through the old form, add a `result` URL to the JSON to make it an archive.
 

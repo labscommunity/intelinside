@@ -50,7 +50,7 @@ export function prepareFile(path, status, raw, author, parseResultFile) {
   return { path, file }
 }
 
-export async function collectFiles(github, repository, pr, parseResultFile) {
+export async function collectFiles(github, repository, pr, parseResultFile, { landed = false } = {}) {
   const changed = []
   // GitHub caps this endpoint at 3,000 files. Refuse truncated submissions.
   if (pr.changed_files > 3000) throw new Error('This PR has too many changed files. Submit in a smaller PR.')
@@ -66,7 +66,7 @@ export async function collectFiles(github, repository, pr, parseResultFile) {
   if (!candidates.length) return files
   const sha = pr.merged ? pr.merge_commit_sha : pr.head.sha
   if (!/^[a-f0-9]{40}$/.test(sha ?? '')) throw new Error('GitHub did not return an immutable submission revision.')
-  const sourceRepo = pr.merged ? repository : pr.head.repo?.full_name
+  const sourceRepo = pr.merged || landed ? repository : pr.head.repo?.full_name
   if (!sourceRepo) throw new Error('The PR source repository is unavailable.')
   for (const candidate of candidates) {
     const path = candidate.filename.split('/').map(encodeURIComponent).join('/')
@@ -83,12 +83,22 @@ export async function collectFiles(github, repository, pr, parseResultFile) {
   return files
 }
 
-export async function processPr({ github, database, repository, number, defaultBranch, parseResultFile, expectedHead }) {
+// A merge can land on the default branch while GitHub leaves the PR unmerged (e.g. after a 504 mid-merge).
+async function headLanded(github, repository, pr, defaultBranch) {
+  try {
+    const { status } = await github(`/repos/${repository}/compare/${pr.head.sha}...${defaultBranch}`)
+    return status === 'ahead' || status === 'identical'
+  } catch { return false }
+}
+
+export async function processPr({ github, database, repository, number, defaultBranch, parseResultFile, expectedHead, allowLanded = false }) {
   const pr = await github(`/repos/${repository}/pulls/${number}`)
   if (expectedHead && pr.head.sha !== expectedHead) throw new Error('The PR changed before validation. Rerun this check.')
   if (pr.base.repo.full_name !== repository || pr.base.ref !== defaultBranch) throw new Error('Submissions must target the default branch.')
-  if (pr.state === 'closed' && !pr.merged) return { pr, lines: ['Closed without merging; no submissions imported.'] }
-  const files = await collectFiles(github, repository, pr, parseResultFile)
+  const landed = pr.state === 'closed' && !pr.merged && allowLanded && await headLanded(github, repository, pr, defaultBranch)
+  if (pr.state === 'closed' && !pr.merged && !landed) return { pr, lines: ['Closed without merging; no submissions imported.'] }
+  const merged = pr.merged || landed
+  const files = await collectFiles(github, repository, pr, parseResultFile, { landed })
   if (!files.length) return { pr, lines: ['No submission files to import.'] }
   if (pr.user.type !== 'User') throw new Error('Open this PR using the GitHub account you used to sign up on the site. Bot-authored submissions cannot be attributed to a user.')
   if (!database) throw new Error('Maintainer setup required: configure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY and apply the PR ingestion migration.')
@@ -100,7 +110,7 @@ export async function processPr({ github, database, repository, number, defaultB
   }
   const { data, error } = await database.rpc('ingest_pr_results', {
     p_repository: repository, p_pr_number: pr.number, p_github_id: String(pr.user.id),
-    p_files: files, p_dry_run: !pr.merged,
+    p_files: files, p_dry_run: !merged,
   })
   if (error) throw new Error(error.message)
   const site = (process.env.SITE_URL || 'https://intelinside-blond.vercel.app').replace(/\/$/, '')
@@ -109,7 +119,7 @@ export async function processPr({ github, database, repository, number, defaultB
     const url = entry.id ? `${site}/${registration ? `runtimes/${registration.file.runtime}/custom` : 'results'}/${entry.id}` : null
     return `- ${entry.path}: ${entry.status}${url ? ` (${url})` : ''}`
   })
-  lines.push(pr.merged
+  lines.push(merged
     ? 'Merge ingestion completed. Rerunning this workflow will not duplicate these submissions.'
     : 'Ready for merge: the author has a linked GitHub account and the database accepted the submissions in a rolled-back validation transaction. Merging submits them automatically; no web form is needed.')
   return { pr, lines }
@@ -140,7 +150,8 @@ async function main() {
     const parseResultFile = await loadResultParser()
     const database = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
       ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } }) : null
-    const result = await processPr({ github, database, repository, number, defaultBranch: event.repository.default_branch, parseResultFile, expectedHead: pr.head.sha })
+    const result = await processPr({ github, database, repository, number, defaultBranch: event.repository.default_branch, parseResultFile, expectedHead: pr.head.sha,
+      allowLanded: process.env.GITHUB_EVENT_NAME === 'workflow_dispatch' })
     lines = result.lines
     succeeded = true
   } catch (error) {
