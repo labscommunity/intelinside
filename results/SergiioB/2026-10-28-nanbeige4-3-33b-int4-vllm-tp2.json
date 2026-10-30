@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "1",
+  "model": "nanbeige4-3-33b",
+  "runDate": "2026-10-28",
+  "batchSize": 1,
+  "evidenceUrl": "https://github.com/SergiioB/intel-arc-pro-b70-inference-cookbook/blob/master/docs/nanbeige43-33b/NANBEIGE43-33B-B70.md",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 2,
+  "quant": "int4",
+  "runtime": "vllm",
+  "runtimeVersion": "0.31.0 XPU (image 95ac8150)",
+  "runtimeFlags": "TP2, worker-affinity patch + oneCCL simple thresholds; compressed-tensors W4A16 g128; fp8 KV; max-model-len 262144; util 0.92",
+  "decodeTps": 41.01,
+  "promptTps": 1420,
+  "ttftMs": 141,
+  "contextLength": 262144,
+  "notes": "Two Arc Pro B70 cards, tensor parallel 2, compressed-tensors W4A16 g128 checkpoint (jeonghyeon00/Nanbeige4.3-33B-W4A16-AutoRound rev d71b1250). Client streamed timing: decode from first to last content chunk, exact counts from usage, median of 3 with one discarded warm-up, unique cold prefixes. promptTps is a 4,688-token cold prompt (TTFT 3,303 ms); the 238-token cell has TTFT 141 ms. KV ceiling 307,072 tokens. Measured 390 W across both cards (caps as found 180 W display card, 230 W compute card). Quality: 40/40 on the same 40-item suite, exact-answer canary sum(i*i for i in range(4)) = 14."
+}

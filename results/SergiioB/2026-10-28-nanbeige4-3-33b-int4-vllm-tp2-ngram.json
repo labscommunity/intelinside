@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "1",
+  "model": "nanbeige4-3-33b",
+  "runDate": "2026-10-28",
+  "batchSize": 1,
+  "evidenceUrl": "https://github.com/SergiioB/intel-arc-pro-b70-inference-cookbook/blob/master/docs/nanbeige43-33b/NANBEIGE43-33B-B70.md",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 2,
+  "quant": "int4",
+  "runtime": "vllm",
+  "runtimeVersion": "0.31.0 XPU (image 95ac8150)",
+  "runtimeFlags": "TP2; W4A16 g128; fp8 KV; ngram spec (5 drafted, lookup 2-4); max-model-len 131072; util 0.90",
+  "decodeTps": 30.31,
+  "promptTps": 694,
+  "ttftMs": 141775,
+  "contextLength": 131072,
+  "notes": "Same TP2 route with draft-free ngram speculation, measured at a 98,351-token cold prompt (TTFT 141,775 ms, decode 64 tokens). The model has no MTP heads (all 1,199 tensors scanned), so this is the only speculation lever that applies. Against the same cell without speculation: 23.83 -> 30.31 tok/s (+27%), and at a 49,198-token prompt 30.96 -> 37.72 (+22%); copy-heavy output 38.14 -> 53.84 (+41%); natural prose 37.04 -> 48.59 (+31%). Quality on the battery unchanged. Runner falls back from V2 to V1, so min_p and logit_bias stop working; --max-num-batched-tokens above default loses 14% decode."
+}

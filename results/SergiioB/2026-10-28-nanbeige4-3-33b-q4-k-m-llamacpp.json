@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "1",
+  "model": "nanbeige4-3-33b",
+  "runDate": "2026-10-28",
+  "batchSize": 1,
+  "evidenceUrl": "https://github.com/SergiioB/intel-arc-pro-b70-inference-cookbook/blob/master/docs/nanbeige43-33b/NANBEIGE43-33B-B70.md",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "quant": "q4_k_m",
+  "runtime": "llamacpp",
+  "runtimeVersion": "1692f9e50 (build 361), SYCL, GGML_SYCL_F16=ON",
+  "runtimeFlags": "-fa on -ctk q4_1 -ctv q4_1 -b 2048 -ub 2048 -ngl 99, SYCL backend",
+  "decodeTps": 23.48,
+  "promptTps": 1083.8,
+  "contextLength": 32768,
+  "notes": "Dense 33B, GGUF Q4_K_M (sha256 2cef7985...4c37, 20,788,825,216 B). Engine-native llama-bench: decode is tg128 at empty context, median of 3 reps; promptTps is pp8192 at empty context. One Arc Pro B70 card of a 2x B70 rig, as-found 230 W cap, not raised. Context 32768 is the served configuration. Quality on the same build: 40/40 on a 40-item deterministic suite (math, executed coding, JSON, instruction following, 4K-32K retrieval, tool calls, multilingual). KV q4_1/q4_1 ties f16 on speed at 32K and gives a 143,360-token ceiling; -ub 2048 is worth +43% pp8192 over 512."
+}
