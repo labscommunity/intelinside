@@ -151,6 +151,10 @@ export const MODELS: Model[] = [
     sourceUrl: 'https://huggingface.co/mistralai/Mistral-Small-3.2-24B-Instruct-2506', logoUrl: '/logos/models/mistral.svg', brandColor: '#eba36d', quants: ['int4', 'q4_k_m', 'q8_0'],
   },
   {
+    id: 'nanbeige4-3-33b', name: 'Nanbeige4.3-33B', family: 'Nanbeige4.3', brand: 'Nanbeige', params: '33B', architecture: 'dense',
+    sourceUrl: 'https://huggingface.co/Nanbeige/Nanbeige4.3-33B', brandColor: '#3f7d7a', quants: ['int4', 'q4_k_m'],
+  },
+  {
     id: 'nemotron-3-5-lightning-30b-a3b', name: 'Nemotron 3.5 Lightning 30B A3B', family: 'Nemotron 3.5', brand: 'Nemotron', params: '30B', architecture: 'moe', activeParams: '3B',
     sourceUrl: 'https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16', logoUrl: '/logos/models/nemotron.svg', brandColor: '#8fc25c', quants: ['gptq-4bit', 'q4_k_m', 'q8_0', 'bf16'],
   },
