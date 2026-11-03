@@ -119,6 +119,10 @@ export const MODELS: Model[] = [
     sourceUrl: 'https://huggingface.co/LiquidAI/LFM2.5-2.6B', logoUrl: '/logos/models/liquid.svg', brandColor: '#6fc3d6', quants: ['int4', 'int8', 'q4_k_m', 'q8_0', 'fp16'],
   },
   {
+    id: 'lfm3-1-7b', name: 'LFM3-1.7B', family: 'LFM3', brand: 'LFM', params: '1.7B', architecture: 'dense',
+    sourceUrl: 'https://huggingface.co/LiquidAI/LFM3-1.7B', logoUrl: '/logos/models/liquid.svg', brandColor: '#6fc3d6', quants: ['q8_0', 'q4_k_m'],
+  },
+  {
     id: 'lfm2-5-8b-a1b', name: 'LFM2.5-8B-A1B', family: 'LFM2.5', brand: 'LFM', params: '8B', architecture: 'moe', activeParams: '1B',
     sourceUrl: 'https://huggingface.co/LiquidAI/LFM2.5-8B-A1B', logoUrl: '/logos/models/liquid.svg', brandColor: '#6fc3d6', quants: ['int4', 'q4_k_m', 'q8_0'],
   },
