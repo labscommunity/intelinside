@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "9",
+  "component": "intel-arc-pro-b70",
+  "componentQuantity": 1,
+  "model": "lfm3-1-7b",
+  "quant": "q8_0",
+  "runtime": "llamacpp",
+  "runtimeVersion": "0.7.0-dev (build 604+, commit cf24317)",
+  "runtimeFlags": "llama.cpp Vulkan backend (Arc Pro B70 BMG), -ngl 99, ctx 131072, batch 1, --cache-reuse 4096, -ub 1024",
+  "decodeTps": 181.1,
+  "promptTps": 258.0,
+  "ttftMs": 89.2,
+  "contextLength": 151,
+  "batchSize": 1,
+  "runDate": "2026-10-27",
+  "notes": "LiquidAI LFM3-1.7B Q8_0 (1.72GB, tri-hybrid Mamba-attention, 512k native window). llama.cpp master cf24317 Vulkan, fully GPU-resident. bench_llamacpp.py 3-run median: decode 181.1 (181.1/181.2/180.4), prompt 258.0 (256.8/258.0/258.7), TTFT 89.2ms (89.5/89.2/88.9). 5-gate agent bench pass: parallel tool calls, hallucination refusal, 5k-prompt sequential tool hop, date discipline. First LFM3 result on the board."
+}
