@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "1",
+  "component": "intel-arc-pro-b70",
+  "batchSize": 1,
+  "runDate": "2026-11-08",
+  "model": "qwen3-8-27b",
+  "componentQuantity": 1,
+  "quant": "mlx-4bit",
+  "runtime": "tensorfold",
+  "runtimeVersion": "v1.2.4",
+  "evidenceUrl": "https://github.com/SergiioB/intel-arc-pro-b70-inference-cookbook/blob/7f9d65020456b968416f5ecf95ff8a459aa100f7/docs/qwen38-27b/TENSORFOLD-B70.md",
+  "runtimeFlags": "DFlash2 drafter (z-lab/Qwen3.8-27B-DFlash2); --parallel 1 --context 139264 --prompt-cache-gib 0 --no-thinking; bf16 KV; 230 W cap",
+  "decodeTps": 128.26,
+  "ttftMs": 120,
+  "contextLength": 68,
+  "notes": "TensorFold/Qwen3.8-27B-MLX-4bit @22d8d538. Greedy, thinking off, 68-token code prompt, 512-token answer, streamed decode rate after the first token, median of 2. LOSSLESS speculation: drafted output byte-identical to \"draft\": false output and to a repeat on the same prompts (8/8 cells, sha256). Drafts off: 32.0 tok/s. Same sweep at 8K / 32K / 131K: 85.1 / 37.3 / 11.4 tok/s. Exact-answer battery 9/9."
+}

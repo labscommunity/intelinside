@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/custom-runtimes/schema.json",
+  "runtime": "tensorfold",
+  "name": "TensorFold + B70 tree-attention row-split patch",
+  "repoUrl": "https://github.com/SergiioB/intel-arc-pro-b70-inference-cookbook/blob/7f9d65020456b968416f5ecf95ff8a459aa100f7/results/qwen38-27b/tensorfold-depth-20261108/patches/tree-attn-row-split.patch",
+  "summary": "TensorFold v1.2.4 Level Zero build with a two-change decode-attention patch: tree rows of a key slice dispatched back to back (L2 reuse) and per-row slice width (32/128/256 keys). +28% decode at 32K, +48% at 131K; drafted output stays identical to serial.",
+  "notes": "Patch SHA-256 308a9a7c15a4fc4a7603648154f382aa4f9188d6c087b5a8ec40ce1015777664, applies to TensorFold v1.2.4 (kernels/xpu/qwen27/decode.cl and src/xpu/forward.zig). Built with Zig 0.17.0 and ocloc 26.05 plus a one-line local change that drops a 128-GRF build flag for Gemma 4 kernels (ocloc 26.05 rejects it). Offered upstream to ashhart/TensorFold."
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "1",
+  "component": "intel-arc-pro-b70",
+  "batchSize": 1,
+  "runDate": "2026-11-08",
+  "model": "qwen3-8-27b",
+  "componentQuantity": 1,
+  "quant": "mlx-4bit",
+  "runtime": "tensorfold",
+  "runtimeVersion": "v1.2.4",
+  "evidenceUrl": "https://github.com/SergiioB/intel-arc-pro-b70-inference-cookbook/blob/7f9d65020456b968416f5ecf95ff8a459aa100f7/docs/qwen38-27b/TENSORFOLD-B70.md",
+  "customRuntimeFile": "custom-runtimes/SergiioB/tensorfold-tree-attn-row-split.json",
+  "revision": "308a9a7c15a4",
+  "runtimeFlags": "DFlash2 drafter (z-lab/Qwen3.8-27B-DFlash2); --parallel 1 --context 139264 --prompt-cache-gib 0 --no-thinking; bf16 KV; 230 W cap",
+  "decodeTps": 16.78,
+  "promptTps": 970,
+  "ttftMs": 134890,
+  "contextLength": 130856,
+  "notes": "Patched build at a 130,856-token code prompt: 16.8 tok/s vs 11.4 stock on the same card and cap (+48%); card draw 214 -> 194 W, J/token 18.9 -> 11.5. Drafts off on the patched build: 19.0 tok/s. Drafted == serial. Single sample per arm; 180 W repeat agrees (+49%)."
+}

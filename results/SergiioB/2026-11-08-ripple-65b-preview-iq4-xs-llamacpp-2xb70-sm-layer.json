@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "1",
+  "component": "intel-arc-pro-b70",
+  "batchSize": 1,
+  "runDate": "2026-11-08",
+  "model": "ripple-65b-preview",
+  "componentQuantity": 2,
+  "quant": "iq4_xs",
+  "runtime": "llamacpp",
+  "runtimeVersion": "b12195-3-gf477f795c",
+  "evidenceUrl": "https://github.com/SergiioB/intel-arc-pro-b70-inference-cookbook/blob/7f9d65020456b968416f5ecf95ff8a459aa100f7/docs/ripple-65b/README.md",
+  "contextLength": 32768,
+  "runtimeFlags": "SYCL; -sm layer -ngl 99 -fa 1 -ctk q8_0 -ctv q8_0 -t 8; llama-bench -p 512 -n 128 -d 0,16384,32768; caps 180 W + 230 W",
+  "decodeTps": 10.28,
+  "promptTps": 107,
+  "notes": "Same file, layer split: tg128 10.28 / 9.85 / 9.57 tok/s at depth 0 / 16K / 32K; pp512 107. f16 KV with -sm layer: 10.4 / 9.3 / 8.6. Mean of 2 repeats."
+}

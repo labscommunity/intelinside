@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "1",
+  "component": "intel-arc-pro-b70",
+  "batchSize": 1,
+  "runDate": "2026-11-08",
+  "model": "ripple-65b-preview",
+  "componentQuantity": 2,
+  "quant": "iq4_xs",
+  "runtime": "llamacpp",
+  "runtimeVersion": "b12195-3-gf477f795c",
+  "evidenceUrl": "https://github.com/SergiioB/intel-arc-pro-b70-inference-cookbook/blob/7f9d65020456b968416f5ecf95ff8a459aa100f7/docs/ripple-65b/README.md",
+  "contextLength": 32768,
+  "runtimeFlags": "SYCL; -sm tensor -ngl 99 -fa 1 -ctk f16 -ctv f16 -t 8; llama-bench -p 512 -n 128 -d 0,16384,32768; caps 180 W + 230 W",
+  "decodeTps": 13.3,
+  "promptTps": 189,
+  "notes": "AtomicChat/Ripple-65B-Preview-GGUF AD-IQ4_XS (38.7 GB) across two B70s. tg128 13.3 / 12.25 / 11.66 tok/s at depth 0 / 16K / 32K; pp512 189 / 176. -sm tensor is 29% faster decode and ~70% faster prefill than -sm layer. Exact-answer battery 9/9 and an executed coding answer pass on llama-server. Mean of 2 repeats."
+}
