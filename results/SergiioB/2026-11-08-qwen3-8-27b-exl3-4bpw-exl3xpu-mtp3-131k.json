@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "1",
+  "component": "intel-arc-pro-b70",
+  "batchSize": 1,
+  "runDate": "2026-11-08",
+  "model": "qwen3-8-27b",
+  "componentQuantity": 1,
+  "quant": "exl3-4bpw",
+  "runtime": "exl3xpu",
+  "customRuntimeFile": "custom-runtimes/SergiioB/exl3xpu-mixedk.json",
+  "revision": "244f57e5c220a5ea6e438869fa996c5b7e96ca75",
+  "runtimeVersion": "vLLM 0.26.1 fork, image 933eda54",
+  "evidenceUrl": "https://github.com/SergiioB/intel-arc-pro-b70-inference-cookbook/blob/7f9d65020456b968416f5ecf95ff8a459aa100f7/docs/qwen38-27b/TENSORFOLD-B70.md",
+  "runtimeFlags": "MTP3 speculation; fp8 KV; prefix cache off; max_model_len 139264; gpu_memory_utilization 0.92; 230 W cap",
+  "decodeTps": 48.16,
+  "promptTps": 1533,
+  "ttftMs": 85360,
+  "contextLength": 130856,
+  "notes": "Same route at a 130,856-token cold code prompt (frozen prompt set, llama.cpp source text): decode 48.2 tok/s, prefill 1,533 tok/s, TTFT 85.4 s. LOSSY speculation (output differs from MTP-off). MTP off at the same depth: 23.3 tok/s. Median of 2."
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "1",
+  "component": "intel-arc-pro-b70",
+  "batchSize": 1,
+  "runDate": "2026-11-08",
+  "model": "qwen3-8-27b",
+  "componentQuantity": 1,
+  "quant": "q4_k_m",
+  "runtime": "llamacpp",
+  "runtimeVersion": "b12195-3-gf477f795c",
+  "evidenceUrl": "https://github.com/SergiioB/intel-arc-pro-b70-inference-cookbook/blob/7f9d65020456b968416f5ecf95ff8a459aa100f7/docs/LLAMACPP-SYCL-KV-AT-DEPTH.md",
+  "contextLength": 65536,
+  "runtimeFlags": "SYCL, GGML_SYCL_GRAPH=ON, -ngl 99 -fa 1 -ctk q8_0 -ctv q8_0 -t 8; llama-bench -d 65536 -n 128 -p 512; 230 W cap",
+  "decodeTps": 22.26,
+  "promptTps": 283,
+  "notes": "Decode at 64K tokens of context (llama-bench depth). Same card on llama.cpp v0.7.0 (Oct 15): 12.67 tok/s; the Oct 29 SYCL flash-attention kernel (#31125) covers q8_0/q4_0 KV only. q5_0/q4_1 KV stays at 10.5. Empty context 27.8 tok/s. Mean of 2 repeats."
+}

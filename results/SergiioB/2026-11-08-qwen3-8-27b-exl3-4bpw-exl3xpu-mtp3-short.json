@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "1",
+  "component": "intel-arc-pro-b70",
+  "batchSize": 1,
+  "runDate": "2026-11-08",
+  "model": "qwen3-8-27b",
+  "componentQuantity": 1,
+  "quant": "exl3-4bpw",
+  "runtime": "exl3xpu",
+  "customRuntimeFile": "custom-runtimes/SergiioB/exl3xpu-mixedk.json",
+  "revision": "244f57e5c220a5ea6e438869fa996c5b7e96ca75",
+  "runtimeVersion": "vLLM 0.26.1 fork, image 933eda54",
+  "evidenceUrl": "https://github.com/SergiioB/intel-arc-pro-b70-inference-cookbook/blob/7f9d65020456b968416f5ecf95ff8a459aa100f7/docs/qwen38-27b/TENSORFOLD-B70.md",
+  "runtimeFlags": "MTP3 speculation; fp8 KV; prefix cache off; max_model_len 139264; gpu_memory_utilization 0.92; 230 W cap",
+  "decodeTps": 82.79,
+  "ttftMs": 180,
+  "contextLength": 68,
+  "notes": "turboderp/Qwen3.8-27B-exl3 4.00 bpw. Greedy, thinking off, 68-token code prompt, 512-token answer, streamed decode rate after the first token, median of 2. LOSSY speculation: MTP3 output differs from MTP-off output on the same prompts (8/8 cells, sha256). MTP off: 32.6 tok/s. Same sweep at 8K / 32K / 131K: 79.4 / 73.8 / 48.2 tok/s."
+}

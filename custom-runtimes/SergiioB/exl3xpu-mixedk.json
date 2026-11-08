@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/custom-runtimes/schema.json",
+  "runtime": "exl3xpu",
+  "name": "exl3xpu mixed-K (SergiioB)",
+  "repoUrl": "https://github.com/SergiioB/exl3xpu-mixedk",
+  "summary": "0xSero exl3xpu (vLLM 0.26 XPU fork with EXL3 trellis ESIMD kernels) plus patches that serve mixed-bit EXL3 (K=2..7 per tensor) and route small odd-K calls to the GEMV kernel.",
+  "notes": "Image ghcr.io/sergiiob/exl3xpu-mixedk@sha256:933eda54bb51a2e8a6669a70f5a2d7696fabd12a5f8b7c469df02fdfecc79d3a, built at patch commit 244f57e5c220a5ea6e438869fa996c5b7e96ca75. Flat 4.00 bpw EXL3 weights run through the same kernels as upstream exl3xpu."
+}
