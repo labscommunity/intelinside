@@ -14,6 +14,7 @@ export const RUNTIMES: Runtime[] = [
   { id: 'ipex-llm', name: 'IPEX-LLM', logoUrl: '', repoUrl: 'https://github.com/intel/ipex-llm', color: '#64c6ad' },
   { id: 'exl3xpu', name: 'EXL3 XPU', logoUrl: '', repoUrl: 'https://github.com/0xSero/exl3xpu', color: '#e8875a' },
   { id: 'strata', name: 'Strata', logoUrl: '', repoUrl: 'https://github.com/Niko1221/Strata', color: '#9ec773' },
+  { id: 'tensorfold', name: 'TensorFold', logoUrl: '', repoUrl: 'https://github.com/ashhart/TensorFold', color: '#7c9be8' },
 ]
 
 export const QUANTS: Quant[] = [
@@ -28,6 +29,7 @@ export const QUANTS: Quant[] = [
   { id: 'iq2_mix', label: 'IQ2_Mix', bits: 2, format: 'GGUF 2-bit i-quant mix, used by llama.cpp' },
   { id: 'iq3_xxs', label: 'IQ3_XXS', bits: 3, format: 'GGUF i-quant; GSQ-RCO mixed tensors retain their model-file quant label' },
   { id: 'iq3_s', label: 'IQ3_S', bits: 3, format: 'GGUF i-quant; GSQ-RCO mixed tensors retain their model-file quant label' },
+  { id: 'iq4_xs', label: 'IQ4_XS', bits: 4, format: 'GGUF i-quant, ~4.25 bits per weight' },
   { id: 'q3_k_m', label: 'Q3_K_M', bits: 3, format: 'GGUF, used by llama.cpp and Ollama' },
   { id: 'q4_k_m', label: 'Q4_K_M', bits: 4, format: 'GGUF, used by llama.cpp and Ollama' },
   { id: 'q4_k_l', label: 'Q4_K_L', bits: 4, format: 'GGUF' },
@@ -43,6 +45,7 @@ export const QUANTS: Quant[] = [
   { id: 'mxfp4', label: 'MXFP4', bits: 4, format: 'Microscaling FP4' },
   { id: 'exl3-4bpw', label: 'EXL3 4bpw', bits: 4, format: 'EXL3 trellis quantization (ExLlamaV3), ~4 bits per weight' },
   { id: 'exl3-5bpw', label: 'EXL3 5bpw', bits: 5, format: 'EXL3 trellis quantization (ExLlamaV3), mixed-bit ~5 bits per weight' },
+  { id: 'mlx-4bit', label: 'MLX 4-bit', bits: 4, format: 'MLX affine 4-bit, group size 64 (used by TensorFold)' },
 ]
 
 export const MODELS: Model[] = [
@@ -179,6 +182,10 @@ export const MODELS: Model[] = [
     sourceUrl: 'https://huggingface.co/ornith-ai/Ornith-1.5-9B', logoUrl: '/logos/models/ornith.webp', brandColor: '#7fb5d9', quants: ['int4'],
   },
   {
+    id: 'ripple-65b-preview', name: 'Ripple-65B Preview', family: 'Ripple', brand: 'Ricursive', params: '65B', architecture: 'dense',
+    sourceUrl: 'https://huggingface.co/ricursiveAI/Ripple-65B-Preview', brandColor: '#5aa6c8', quants: ['iq4_xs', 'q4_k_m', 'q5_k_m', 'q6_k', 'q8_0'],
+  },
+  {
     id: 'qwen3-1-7b', name: 'Qwen3-1.7B', family: 'Qwen3', brand: 'Qwen', params: '1.7B', architecture: 'dense',
     sourceUrl: 'https://huggingface.co/Qwen/Qwen3-1.7B', logoUrl: '/logos/models/qwen.svg', brandColor: '#b699eb', quants: ['int4'],
   },
@@ -252,7 +259,7 @@ export const MODELS: Model[] = [
   },
   {
     id: 'qwen3-8-27b', name: 'Qwen3.8-27B', family: 'Qwen3.8', brand: 'Qwen', params: '27B', architecture: 'dense',
-    sourceUrl: 'https://huggingface.co/Qwen/Qwen3.8-27B', logoUrl: '/logos/models/qwen.svg', brandColor: '#b699eb', quants: ['int4', 'int8', 'fp8', 'q4_k_m', 'q4_k_l', 'q8_0', 'exl3-4bpw', 'exl3-5bpw'],
+    sourceUrl: 'https://huggingface.co/Qwen/Qwen3.8-27B', logoUrl: '/logos/models/qwen.svg', brandColor: '#b699eb', quants: ['int4', 'int8', 'fp8', 'q4_k_m', 'q4_k_l', 'q8_0', 'exl3-4bpw', 'exl3-5bpw', 'mlx-4bit'],
   },
   {
     id: 'qwen3-8-flash-next', name: 'Qwen3.8-Flash-Next', family: 'Qwen3.8', brand: 'Qwen', params: '125B', architecture: 'moe', activeParams: '6B',
