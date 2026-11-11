@@ -76,8 +76,8 @@ npm --prefix frontend run catalog:validate
 ```
 
 Parts from any vendor are welcome — comparisons are only honest if the competition is on the board. One
-caveat worth knowing before you spend time on it: the browse pages currently show only `Intel` and `Generic`
-parts. See the note in the catalog README.
+caveat worth knowing before you spend time on it: the browse pages currently show only `Intel`, `AMD`, `NVIDIA`,
+`Apple` and `Generic` parts. See the note in the catalog README.
 
 If you cannot write TypeScript, open an issue with the part and its specs instead and someone will add it.
 
