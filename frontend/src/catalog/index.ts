@@ -14,6 +14,7 @@ export const RUNTIMES: Runtime[] = [
   { id: 'ipex-llm', name: 'IPEX-LLM', logoUrl: '', repoUrl: 'https://github.com/intel/ipex-llm', color: '#64c6ad' },
   { id: 'exl3xpu', name: 'EXL3 XPU', logoUrl: '', repoUrl: 'https://github.com/0xSero/exl3xpu', color: '#e8875a' },
   { id: 'strata', name: 'Strata', logoUrl: '', repoUrl: 'https://github.com/Niko1221/Strata', color: '#9ec773' },
+  { id: 'mlx', name: 'MLX', logoUrl: '', repoUrl: 'https://github.com/ml-explore/mlx-lm', color: '#e0e0e0' },
   { id: 'tensorfold', name: 'TensorFold', logoUrl: '', repoUrl: 'https://github.com/ashhart/TensorFold', color: '#7c9be8' },
 ]
 
@@ -199,7 +200,7 @@ export const MODELS: Model[] = [
   },
   {
     id: 'qwen3-8b', name: 'Qwen3-8B', family: 'Qwen3', brand: 'Qwen', params: '8B', architecture: 'dense',
-    sourceUrl: 'https://huggingface.co/Qwen/Qwen3-8B', logoUrl: '/logos/models/qwen.svg', brandColor: '#b699eb', quants: ['int4', 'q4_k_m', 'q8_0', 'fp16'],
+    sourceUrl: 'https://huggingface.co/Qwen/Qwen3-8B', logoUrl: '/logos/models/qwen.svg', brandColor: '#b699eb', quants: ['int4', 'q4_k_m', 'q8_0', 'fp16', 'mlx-4bit'],
   },
   {
     id: 'qwen3-coder-next', name: 'Qwen3-Coder-Next', family: 'Qwen3-Next', brand: 'Qwen', params: '80B', architecture: 'moe', activeParams: '3B',
@@ -303,6 +304,7 @@ export const HARDWARE: HardwareItem[] = [
   hw('amd-ryzen-9-9950x', 'cpu', 'AMD', 'Ryzen 9 9950X', { cores: 16, threads: 32, boostGhz: 5.7, tdpW: 170, platform: 'Zen 5' }, '2024-08-15', 'Ryzen 9000'),
   hw('amd-ryzen-7-9800x3d', 'cpu', 'AMD', 'Ryzen 7 9800X3D', { cores: 8, threads: 16, boostGhz: 5.2, tdpW: 120, platform: 'Zen 5' }, '2024-11-07', 'Ryzen 9000'),
   hw('amd-ryzen-7-5800xt', 'cpu', 'AMD', 'Ryzen 7 5800XT', { cores: 8, threads: 16, boostGhz: 4.8, tdpW: 105, platform: 'Zen 3' }, '2024-07-31', 'Ryzen 5000'),
+  hw('apple-m4', 'cpu', 'Apple', 'M4 (10-core)', { cores: 10, threads: 10, boostGhz: 4.4, platform: 'Apple silicon' }, '2024-05-07', 'M4', ['apple-m4-gpu-10c']),
   hw('apple-m4-max', 'cpu', 'Apple', 'M4 Max (16-core)', { cores: 16, threads: 16, boostGhz: 4.5, tdpW: 90, platform: 'Apple silicon' }, '2024-10-30', 'M4', ['apple-m4-max-gpu-40c']),
   // Intel discrete GPUs
   hw('intel-arc-pro-b70', 'gpu', 'Intel', 'Arc Pro B70', { vramGb: 32, memoryType: 'GDDR6', xeCores: 32, tdpW: 240 }, '2026-03-10', 'Arc Pro B'),
@@ -331,6 +333,7 @@ export const HARDWARE: HardwareItem[] = [
   hw('intel-arc-graphics-meteor-lake', 'igpu', 'Intel', 'Arc Graphics (Meteor Lake)', { xeCores: 8, platform: 'Meteor Lake', architecture: 'Xe-LPG' }, '2023-12-14', 'Arc'),
   hw('intel-arc-b390', 'igpu', 'Intel', 'Arc B390', { xeCores: 12, platform: 'Panther Lake', architecture: 'Xe3' }, '2026-01-05', 'Arc B'),
   hw('intel-uhd-770', 'igpu', 'Intel', 'UHD Graphics 770', { euCount: 32, platform: 'Alder / Raptor Lake', architecture: 'Xe-LP' }, '2021-11-04', 'UHD'),
+  hw('apple-m4-gpu-10c', 'igpu', 'Apple', 'M4 GPU (10-core)', { cores: 10, platform: 'Apple silicon' }, '2024-05-07', 'M4'),
   hw('apple-m4-max-gpu-40c', 'igpu', 'Apple', 'M4 Max GPU (40-core)', { cores: 40, platform: 'Apple silicon' }, '2024-10-30', 'M4'),
   // NPUs
   hw('intel-ai-boost-npu-3', 'npu', 'Intel', 'AI Boost NPU (Meteor Lake)', { tops: 11, platform: 'Meteor Lake' }, '2023-12-14', 'AI Boost'),
@@ -344,13 +347,16 @@ export const HARDWARE: HardwareItem[] = [
   hw('ddr5-4800-64gb-ecc', 'ram', 'Generic', 'DDR5-4800 64 GB ECC RDIMM', { type: 'DDR5', speedMts: 4800, capacityGb: 64, formFactor: 'RDIMM' }),
   hw('ddr5-5600-16gb-sodimm', 'ram', 'Generic', 'DDR5-5600 16 GB SO-DIMM', { type: 'DDR5', speedMts: 5600, capacityGb: 16, formFactor: 'SO-DIMM' }),
   hw('lpddr5x-8533-16gb', 'ram', 'Generic', 'LPDDR5X-8533 16 GB (on package)', { type: 'LPDDR5X', speedMts: 8533, capacityGb: 16, formFactor: 'On package' }),
+  hw('lpddr5x-7500-16gb-unified', 'ram', 'Apple', 'Unified memory 16 GB', { type: 'LPDDR5X', speedMts: 7500, capacityGb: 16, formFactor: 'On package' }),
+  hw('lpddr5x-7500-24gb-unified', 'ram', 'Apple', 'Unified memory 24 GB', { type: 'LPDDR5X', speedMts: 7500, capacityGb: 24, formFactor: 'On package' }),
+  hw('lpddr5x-7500-32gb-unified', 'ram', 'Apple', 'Unified memory 32 GB', { type: 'LPDDR5X', speedMts: 7500, capacityGb: 32, formFactor: 'On package' }),
   hw('lpddr5x-8533-128gb-unified', 'ram', 'Apple', 'Unified memory 128 GB', { type: 'LPDDR5X', speedMts: 8533, capacityGb: 128, formFactor: 'On package' }),
   hw('ddr4-3200-32gb', 'ram', 'Generic', 'DDR4-3200 32 GB', { type: 'DDR4', speedMts: 3200, capacityGb: 32, formFactor: 'UDIMM' }),
 ]
 
 export const HARDWARE_BY_ID: Record<string, HardwareItem> = Object.fromEntries(HARDWARE.map((h) => [h.id, h]))
 /** Hardware currently exposed in browsing and rig-building UIs. */
-export const VISIBLE_HARDWARE = HARDWARE.filter((h) => h.vendor === 'Intel' || h.vendor === 'AMD' || h.vendor === 'NVIDIA' || h.vendor === 'Generic')
+export const VISIBLE_HARDWARE = HARDWARE.filter((h) => h.vendor === 'Intel' || h.vendor === 'AMD' || h.vendor === 'NVIDIA' || h.vendor === 'Apple' || h.vendor === 'Generic')
 export const RUNTIME_BY_ID: Record<string, Runtime> = Object.fromEntries(RUNTIMES.map((r) => [r.id, r]))
 export const MODEL_BY_ID: Record<string, Model> = Object.fromEntries(MODELS.map((m) => [m.id, m]))
 export const QUANT_BY_ID: Record<string, Quant> = Object.fromEntries(QUANTS.map((q) => [q.id, q]))
