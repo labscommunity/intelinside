@@ -303,6 +303,10 @@ export const HARDWARE: HardwareItem[] = [
   hw('amd-ryzen-9-9950x', 'cpu', 'AMD', 'Ryzen 9 9950X', { cores: 16, threads: 32, boostGhz: 5.7, tdpW: 170, platform: 'Zen 5' }, '2024-08-15', 'Ryzen 9000'),
   hw('amd-ryzen-7-9800x3d', 'cpu', 'AMD', 'Ryzen 7 9800X3D', { cores: 8, threads: 16, boostGhz: 5.2, tdpW: 120, platform: 'Zen 5' }, '2024-11-07', 'Ryzen 9000'),
   hw('amd-ryzen-7-5800xt', 'cpu', 'AMD', 'Ryzen 7 5800XT', { cores: 8, threads: 16, boostGhz: 4.8, tdpW: 105, platform: 'Zen 3' }, '2024-07-31', 'Ryzen 5000'),
+  hw('amd-ryzen-7-5700x3d', 'cpu', 'AMD', 'Ryzen 7 5700X3D', { cores: 8, threads: 16, boostGhz: 4.1, tdpW: 105, platform: 'Zen 3' }, '2024-01-31', 'Ryzen 5000'),
+  hw('amd-ryzen-ai-max-plus-395', 'cpu', 'AMD', 'Ryzen AI Max+ 395', { cores: 16, threads: 32, boostGhz: 5.1, tdpW: 55, platform: 'Strix Halo' }, '2025-01-06', 'Ryzen AI Max 300', ['amd-radeon-8060s', 'amd-xdna-2-npu-strix-halo']),
+  hw('amd-ryzen-threadripper-pro-9995wx', 'cpu', 'AMD', 'Ryzen Threadripper PRO 9995WX', { cores: 96, threads: 192, boostGhz: 5.4, tdpW: 350, platform: 'Zen 5' }, '2025-07-23', 'Threadripper PRO 9000 WX'),
+  hw('amd-epyc-9655', 'cpu', 'AMD', 'EPYC 9655', { cores: 96, threads: 192, boostGhz: 4.5, tdpW: 400, platform: 'Zen 5' }, '2024-10-10', 'EPYC 9005'),
   hw('apple-m4-max', 'cpu', 'Apple', 'M4 Max (16-core)', { cores: 16, threads: 16, boostGhz: 4.5, tdpW: 90, platform: 'Apple silicon' }, '2024-10-30', 'M4', ['apple-m4-max-gpu-40c']),
   // Intel discrete GPUs
   hw('intel-arc-pro-b70', 'gpu', 'Intel', 'Arc Pro B70', { vramGb: 32, memoryType: 'GDDR6', xeCores: 32, tdpW: 240 }, '2026-03-10', 'Arc Pro B'),
@@ -324,6 +328,11 @@ export const HARDWARE: HardwareItem[] = [
   hw('nvidia-geforce-rtx-3060-12gb', 'gpu', 'NVIDIA', 'GeForce RTX 3060 12GB', { vramGb: 12, memoryType: 'GDDR6', tdpW: 170 }, '2021-02-25', 'GeForce 30'),
   hw('nvidia-rtx-pro-6000-blackwell', 'gpu', 'NVIDIA', 'RTX PRO 6000 Blackwell', { vramGb: 96, memoryType: 'GDDR7', tdpW: 600 }, '2025-03-18', 'RTX PRO'),
   hw('amd-radeon-rx-7900-xtx', 'gpu', 'AMD', 'Radeon RX 7900 XTX', { vramGb: 24, memoryType: 'GDDR6', tdpW: 355 }, '2022-12-13', 'Radeon 7000'),
+  hw('amd-radeon-rx-9070-xt', 'gpu', 'AMD', 'Radeon RX 9070 XT', { vramGb: 16, memoryType: 'GDDR6', tdpW: 304 }, '2025-03-06', 'Radeon 9000'),
+  hw('amd-radeon-rx-9070', 'gpu', 'AMD', 'Radeon RX 9070', { vramGb: 16, memoryType: 'GDDR6', tdpW: 220 }, '2025-03-06', 'Radeon 9000'),
+  hw('amd-radeon-ai-pro-r9700', 'gpu', 'AMD', 'Radeon AI PRO R9700', { vramGb: 32, memoryType: 'GDDR6', tdpW: 300 }, '2025-07-23', 'Radeon AI PRO R9000'),
+  hw('amd-instinct-mi300x', 'gpu', 'AMD', 'Instinct MI300X', { vramGb: 192, memoryType: 'HBM3', tdpW: 750 }, '2023-12-06', 'Instinct MI300'),
+  hw('amd-instinct-mi325x', 'gpu', 'AMD', 'Instinct MI325X', { vramGb: 256, memoryType: 'HBM3E', tdpW: 1000 }, '2024-10-10', 'Instinct MI300'),
   // Integrated GPUs
   hw('intel-graphics-arrow-lake-s', 'igpu', 'Intel', 'Intel Graphics (Arrow Lake-S)', { xeCores: 4, platform: 'Arrow Lake-S', architecture: 'Xe-LPG' }, '2024-10-24', 'Intel Graphics'),
   hw('intel-arc-140v', 'igpu', 'Intel', 'Arc 140V', { xeCores: 8, platform: 'Lunar Lake', architecture: 'Xe2' }, '2024-09-24', 'Arc'),
@@ -332,11 +341,13 @@ export const HARDWARE: HardwareItem[] = [
   hw('intel-arc-b390', 'igpu', 'Intel', 'Arc B390', { xeCores: 12, platform: 'Panther Lake', architecture: 'Xe3' }, '2026-01-05', 'Arc B'),
   hw('intel-uhd-770', 'igpu', 'Intel', 'UHD Graphics 770', { euCount: 32, platform: 'Alder / Raptor Lake', architecture: 'Xe-LP' }, '2021-11-04', 'UHD'),
   hw('apple-m4-max-gpu-40c', 'igpu', 'Apple', 'M4 Max GPU (40-core)', { cores: 40, platform: 'Apple silicon' }, '2024-10-30', 'M4'),
+  hw('amd-radeon-8060s', 'igpu', 'AMD', 'Radeon 8060S', { cores: 40, platform: 'Strix Halo', architecture: 'RDNA 3.5' }, '2025-01-06', 'Radeon'),
   // NPUs
   hw('intel-ai-boost-npu-3', 'npu', 'Intel', 'AI Boost NPU (Meteor Lake)', { tops: 11, platform: 'Meteor Lake' }, '2023-12-14', 'AI Boost'),
   hw('intel-ai-boost-npu-4', 'npu', 'Intel', 'AI Boost NPU 4 (Lunar Lake)', { tops: 48, platform: 'Lunar Lake' }, '2024-09-24', 'AI Boost'),
   hw('intel-ai-boost-npu-5', 'npu', 'Intel', 'AI Boost NPU 5 (Panther Lake)', { tops: 50, platform: 'Panther Lake' }, '2026-01-05', 'AI Boost'),
   hw('intel-ai-boost-arrow-lake', 'npu', 'Intel', 'AI Boost NPU (Arrow Lake)', { tops: 13, platform: 'Arrow Lake' }, '2024-10-24', 'AI Boost'),
+  hw('amd-xdna-2-npu-strix-halo', 'npu', 'AMD', 'XDNA 2 NPU (Strix Halo)', { tops: 50, platform: 'Strix Halo' }, '2025-01-06', 'XDNA 2'),
   // Memory (one item = one module; the rig quantity gives total capacity)
   hw('ddr5-5600-32gb', 'ram', 'Generic', 'DDR5-5600 32 GB', { type: 'DDR5', speedMts: 5600, capacityGb: 32, formFactor: 'UDIMM' }),
   hw('ddr5-6000-32gb', 'ram', 'Generic', 'DDR5-6000 32 GB', { type: 'DDR5', speedMts: 6000, capacityGb: 32, formFactor: 'UDIMM' }),
@@ -345,6 +356,7 @@ export const HARDWARE: HardwareItem[] = [
   hw('ddr5-5600-16gb-sodimm', 'ram', 'Generic', 'DDR5-5600 16 GB SO-DIMM', { type: 'DDR5', speedMts: 5600, capacityGb: 16, formFactor: 'SO-DIMM' }),
   hw('lpddr5x-8533-16gb', 'ram', 'Generic', 'LPDDR5X-8533 16 GB (on package)', { type: 'LPDDR5X', speedMts: 8533, capacityGb: 16, formFactor: 'On package' }),
   hw('lpddr5x-8533-128gb-unified', 'ram', 'Apple', 'Unified memory 128 GB', { type: 'LPDDR5X', speedMts: 8533, capacityGb: 128, formFactor: 'On package' }),
+  hw('lpddr5x-8000-128gb-unified', 'ram', 'Generic', 'LPDDR5X-8000 128 GB (unified)', { type: 'LPDDR5X', speedMts: 8000, capacityGb: 128, formFactor: 'On package' }),
   hw('ddr4-3200-32gb', 'ram', 'Generic', 'DDR4-3200 32 GB', { type: 'DDR4', speedMts: 3200, capacityGb: 32, formFactor: 'UDIMM' }),
 ]
 
