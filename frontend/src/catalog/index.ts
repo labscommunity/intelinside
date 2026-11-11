@@ -317,7 +317,7 @@ export const HARDWARE: HardwareItem[] = [
   hw('apple-m4-max', 'cpu', 'Apple', 'M4 Max (16-core)', { cores: 16, threads: 16, boostGhz: 4.5, tdpW: 90, platform: 'Apple silicon' }, '2024-10-30', 'M4', ['apple-m4-max-gpu-40c']),
   hw('nvidia-gb10', 'cpu', 'NVIDIA', 'GB10 (20-core Arm)', { cores: 20, threads: 20, boostGhz: 4.0, tdpW: 140, platform: 'GB10', architecture: '10× Cortex-X925 + 10× Cortex-A725' }, '2025-10-15', 'Grace Blackwell', ['nvidia-gb10-gpu']),
   // Intel discrete GPUs
-  hw('intel-arc-pro-b70', 'gpu', 'Intel', 'Arc Pro B70', { vramGb: 32, memoryType: 'GDDR6', xeCores: 32, tdpW: 240 }, '2026-03-10', 'Arc Pro B'),
+  hw('intel-arc-pro-b70', 'gpu', 'Intel', 'Arc Pro B70', { vramGb: 32, memoryType: 'GDDR6', xeCores: 32, tdpW: 230 }, '2026-03-25', 'Arc Pro B'),
   hw('intel-arc-pro-b60', 'gpu', 'Intel', 'Arc Pro B60', { vramGb: 24, memoryType: 'GDDR6', xeCores: 20, tdpW: 200 }, '2025-05-19', 'Arc Pro B'),
   hw('intel-arc-pro-b50', 'gpu', 'Intel', 'Arc Pro B50', { vramGb: 16, memoryType: 'GDDR6', xeCores: 16, tdpW: 70 }, '2025-05-19', 'Arc Pro B'),
   hw('intel-arc-b580', 'gpu', 'Intel', 'Arc B580', { vramGb: 12, memoryType: 'GDDR6', xeCores: 20, tdpW: 190 }, '2024-12-13', 'Arc B'),
