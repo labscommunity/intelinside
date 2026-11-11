@@ -15,6 +15,8 @@ export const RUNTIMES: Runtime[] = [
   { id: 'exl3xpu', name: 'EXL3 XPU', logoUrl: '', repoUrl: 'https://github.com/0xSero/exl3xpu', color: '#e8875a' },
   { id: 'strata', name: 'Strata', logoUrl: '', repoUrl: 'https://github.com/Niko1221/Strata', color: '#9ec773' },
   { id: 'tensorfold', name: 'TensorFold', logoUrl: '', repoUrl: 'https://github.com/ashhart/TensorFold', color: '#7c9be8' },
+  { id: 'tensorrt-llm', name: 'TensorRT-LLM', logoUrl: '', repoUrl: 'https://github.com/NVIDIA/TensorRT-LLM', color: '#8fc96b' },
+  { id: 'sglang', name: 'SGLang', logoUrl: '', repoUrl: 'https://github.com/sgl-project/sglang', color: '#c49ae8' },
 ]
 
 export const QUANTS: Quant[] = [
@@ -43,6 +45,7 @@ export const QUANTS: Quant[] = [
   { id: 'gptq-4bit', label: 'GPTQ 4-bit', bits: 4, format: 'GPTQ' },
   { id: 'nf4', label: 'NF4', bits: 4, format: 'bitsandbytes' },
   { id: 'mxfp4', label: 'MXFP4', bits: 4, format: 'Microscaling FP4' },
+  { id: 'nvfp4', label: 'NVFP4', bits: 4, format: 'NVIDIA FP4: E2M1 values, an FP8 E4M3 scale per 16-value block, and an FP32 scale per tensor' },
   { id: 'exl3-4bpw', label: 'EXL3 4bpw', bits: 4, format: 'EXL3 trellis quantization (ExLlamaV3), ~4 bits per weight' },
   { id: 'exl3-5bpw', label: 'EXL3 5bpw', bits: 5, format: 'EXL3 trellis quantization (ExLlamaV3), mixed-bit ~5 bits per weight' },
   { id: 'mlx-4bit', label: 'MLX 4-bit', bits: 4, format: 'MLX affine 4-bit, group size 64 (used by TensorFold)' },
@@ -304,6 +307,7 @@ export const HARDWARE: HardwareItem[] = [
   hw('amd-ryzen-7-9800x3d', 'cpu', 'AMD', 'Ryzen 7 9800X3D', { cores: 8, threads: 16, boostGhz: 5.2, tdpW: 120, platform: 'Zen 5' }, '2024-11-07', 'Ryzen 9000'),
   hw('amd-ryzen-7-5800xt', 'cpu', 'AMD', 'Ryzen 7 5800XT', { cores: 8, threads: 16, boostGhz: 4.8, tdpW: 105, platform: 'Zen 3' }, '2024-07-31', 'Ryzen 5000'),
   hw('apple-m4-max', 'cpu', 'Apple', 'M4 Max (16-core)', { cores: 16, threads: 16, boostGhz: 4.5, tdpW: 90, platform: 'Apple silicon' }, '2024-10-30', 'M4', ['apple-m4-max-gpu-40c']),
+  hw('nvidia-gb10', 'cpu', 'NVIDIA', 'GB10 (20-core Arm)', { cores: 20, threads: 20, boostGhz: 4.0, tdpW: 140, platform: 'GB10', architecture: '10× Cortex-X925 + 10× Cortex-A725' }, '2025-10-15', 'Grace Blackwell', ['nvidia-gb10-gpu']),
   // Intel discrete GPUs
   hw('intel-arc-pro-b70', 'gpu', 'Intel', 'Arc Pro B70', { vramGb: 32, memoryType: 'GDDR6', xeCores: 32, tdpW: 240 }, '2026-03-10', 'Arc Pro B'),
   hw('intel-arc-pro-b60', 'gpu', 'Intel', 'Arc Pro B60', { vramGb: 24, memoryType: 'GDDR6', xeCores: 20, tdpW: 200 }, '2025-05-19', 'Arc Pro B'),
@@ -317,12 +321,19 @@ export const HARDWARE: HardwareItem[] = [
   hw('nvidia-geforce-rtx-5090', 'gpu', 'NVIDIA', 'GeForce RTX 5090', { vramGb: 32, memoryType: 'GDDR7', tdpW: 575 }, '2025-01-30', 'GeForce 50'),
   hw('nvidia-geforce-rtx-5080', 'gpu', 'NVIDIA', 'GeForce RTX 5080', { vramGb: 16, memoryType: 'GDDR7', tdpW: 360 }, '2025-01-30', 'GeForce 50'),
   hw('nvidia-geforce-rtx-5070-ti', 'gpu', 'NVIDIA', 'GeForce RTX 5070 Ti', { vramGb: 16, memoryType: 'GDDR7', tdpW: 300 }, '2025-02-20', 'GeForce 50'),
+  hw('nvidia-geforce-rtx-5070', 'gpu', 'NVIDIA', 'GeForce RTX 5070', { vramGb: 12, memoryType: 'GDDR7', tdpW: 250 }, '2025-03-05', 'GeForce 50'),
   hw('nvidia-geforce-rtx-5060-ti-16gb', 'gpu', 'NVIDIA', 'GeForce RTX 5060 Ti 16GB', { vramGb: 16, memoryType: 'GDDR7', tdpW: 180 }, '2025-04-16', 'GeForce 50'),
   hw('nvidia-geforce-rtx-4090', 'gpu', 'NVIDIA', 'GeForce RTX 4090', { vramGb: 24, memoryType: 'GDDR6X', tdpW: 450 }, '2022-10-12', 'GeForce 40'),
+  hw('nvidia-geforce-rtx-4080', 'gpu', 'NVIDIA', 'GeForce RTX 4080', { vramGb: 16, memoryType: 'GDDR6X', tdpW: 320 }, '2022-11-16', 'GeForce 40'),
+  hw('nvidia-geforce-rtx-4070', 'gpu', 'NVIDIA', 'GeForce RTX 4070', { vramGb: 12, memoryType: 'GDDR6X', tdpW: 200 }, '2023-04-13', 'GeForce 40'),
   hw('nvidia-geforce-rtx-4060-ti-16gb', 'gpu', 'NVIDIA', 'GeForce RTX 4060 Ti 16GB', { vramGb: 16, memoryType: 'GDDR6', tdpW: 165 }, '2023-07-18', 'GeForce 40'),
   hw('nvidia-geforce-rtx-3090', 'gpu', 'NVIDIA', 'GeForce RTX 3090', { vramGb: 24, memoryType: 'GDDR6X', tdpW: 350 }, '2020-09-24', 'GeForce 30'),
   hw('nvidia-geforce-rtx-3060-12gb', 'gpu', 'NVIDIA', 'GeForce RTX 3060 12GB', { vramGb: 12, memoryType: 'GDDR6', tdpW: 170 }, '2021-02-25', 'GeForce 30'),
   hw('nvidia-rtx-pro-6000-blackwell', 'gpu', 'NVIDIA', 'RTX PRO 6000 Blackwell', { vramGb: 96, memoryType: 'GDDR7', tdpW: 600 }, '2025-03-18', 'RTX PRO'),
+  hw('nvidia-rtx-6000-ada', 'gpu', 'NVIDIA', 'RTX 6000 Ada Generation', { vramGb: 48, memoryType: 'GDDR6', tdpW: 300 }, '2022-09-20', 'RTX Ada'),
+  hw('nvidia-h100-sxm-80gb', 'gpu', 'NVIDIA', 'H100 SXM 80GB', { vramGb: 80, memoryType: 'HBM3', tdpW: 700 }, '2022-03-22', 'Hopper'),
+  hw('nvidia-h200-sxm-141gb', 'gpu', 'NVIDIA', 'H200 SXM 141GB', { vramGb: 141, memoryType: 'HBM3e', tdpW: 700 }, '2023-11-13', 'Hopper'),
+  hw('nvidia-b200-sxm-180gb', 'gpu', 'NVIDIA', 'B200 SXM 180GB', { vramGb: 180, memoryType: 'HBM3e', tdpW: 1000 }, '2024-03-18', 'Blackwell'),
   hw('amd-radeon-rx-7900-xtx', 'gpu', 'AMD', 'Radeon RX 7900 XTX', { vramGb: 24, memoryType: 'GDDR6', tdpW: 355 }, '2022-12-13', 'Radeon 7000'),
   // Integrated GPUs
   hw('intel-graphics-arrow-lake-s', 'igpu', 'Intel', 'Intel Graphics (Arrow Lake-S)', { xeCores: 4, platform: 'Arrow Lake-S', architecture: 'Xe-LPG' }, '2024-10-24', 'Intel Graphics'),
@@ -332,6 +343,7 @@ export const HARDWARE: HardwareItem[] = [
   hw('intel-arc-b390', 'igpu', 'Intel', 'Arc B390', { xeCores: 12, platform: 'Panther Lake', architecture: 'Xe3' }, '2026-01-05', 'Arc B'),
   hw('intel-uhd-770', 'igpu', 'Intel', 'UHD Graphics 770', { euCount: 32, platform: 'Alder / Raptor Lake', architecture: 'Xe-LP' }, '2021-11-04', 'UHD'),
   hw('apple-m4-max-gpu-40c', 'igpu', 'Apple', 'M4 Max GPU (40-core)', { cores: 40, platform: 'Apple silicon' }, '2024-10-30', 'M4'),
+  hw('nvidia-gb10-gpu', 'igpu', 'NVIDIA', 'GB10 GPU (Blackwell)', { cores: 6144, platform: 'GB10', architecture: 'Blackwell' }, '2025-10-15', 'Grace Blackwell'),
   // NPUs
   hw('intel-ai-boost-npu-3', 'npu', 'Intel', 'AI Boost NPU (Meteor Lake)', { tops: 11, platform: 'Meteor Lake' }, '2023-12-14', 'AI Boost'),
   hw('intel-ai-boost-npu-4', 'npu', 'Intel', 'AI Boost NPU 4 (Lunar Lake)', { tops: 48, platform: 'Lunar Lake' }, '2024-09-24', 'AI Boost'),
@@ -345,6 +357,7 @@ export const HARDWARE: HardwareItem[] = [
   hw('ddr5-5600-16gb-sodimm', 'ram', 'Generic', 'DDR5-5600 16 GB SO-DIMM', { type: 'DDR5', speedMts: 5600, capacityGb: 16, formFactor: 'SO-DIMM' }),
   hw('lpddr5x-8533-16gb', 'ram', 'Generic', 'LPDDR5X-8533 16 GB (on package)', { type: 'LPDDR5X', speedMts: 8533, capacityGb: 16, formFactor: 'On package' }),
   hw('lpddr5x-8533-128gb-unified', 'ram', 'Apple', 'Unified memory 128 GB', { type: 'LPDDR5X', speedMts: 8533, capacityGb: 128, formFactor: 'On package' }),
+  hw('nvidia-gb10-lpddr5x-128gb', 'ram', 'NVIDIA', 'GB10 unified memory 128 GB', { type: 'LPDDR5X', speedMts: 8533, capacityGb: 128, formFactor: 'On package' }),
   hw('ddr4-3200-32gb', 'ram', 'Generic', 'DDR4-3200 32 GB', { type: 'DDR4', speedMts: 3200, capacityGb: 32, formFactor: 'UDIMM' }),
 ]
 
