@@ -191,7 +191,7 @@ export const MODELS: Model[] = [
   },
   {
     id: 'qwen3-1-7b', name: 'Qwen3-1.7B', family: 'Qwen3', brand: 'Qwen', params: '1.7B', architecture: 'dense',
-    sourceUrl: 'https://huggingface.co/Qwen/Qwen3-1.7B', logoUrl: '/logos/models/qwen.svg', brandColor: '#b699eb', quants: ['int4'],
+    sourceUrl: 'https://huggingface.co/Qwen/Qwen3-1.7B', logoUrl: '/logos/models/qwen.svg', brandColor: '#b699eb', quants: ['int4', 'q4_k_m', 'q8_0'],
   },
   {
     id: 'qwen3-30b-a3b', name: 'Qwen3-30B-A3B', family: 'Qwen3', brand: 'Qwen', params: '30B', architecture: 'moe', activeParams: '3B',
