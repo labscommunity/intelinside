@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "Panther Lake 64 GB dev box",
+  "model": "qwen3-6-35b-a3b",
+  "quant": "int4",
+  "runtime": "cascadia",
+  "runtimeVersion": "0.2.7 (OpenVINO GenAI 2026.4.1)",
+  "runtimeFlags": "whole model on the Arc B390 iGPU (ov-genai engine, device GPU, greedy, batch 1); GPU shared-memory window 82%",
+  "revision": "v0.2.7",
+  "decodeTps": 47.5,
+  "ttftMs": 600,
+  "concurrency": 1,
+  "decodeMethod": "streamed",
+  "repeats": 3,
+  "promptCache": false,
+  "thinking": false,
+  "speculative": "none",
+  "inputTokens": 975,
+  "outputTokens": 256,
+  "runDate": "2026-11-11",
+  "evidenceUrl": "https://github.com/labscommunity/cascadia-ecg-bench/blob/97fadb0fd00f501c0ba3adcb799303c9de02add8/report/report.md",
+  "notes": "Intel Tiber dev-cloud Panther Lake box: Core Ultra X7 358H, Arc B390 iGPU, 64 GB (63.4 GB usable), Windows 11. OpenVINO INT4 export of Qwen3.6-35B-A3B (18 GB) whole on the iGPU. decodeTps is the medium prompt (975 tokens after the chat template, 256 generated, temperature 0, thinking off) averaged over 3 timed repeats after 1 warm-up: (completion tokens - 1) / (request wall time - time to first token), where TTFT is a separate max_tokens=1 request; ttftMs is the same medium prompt's median. Decode drew 34.2 W package power (1.23 tok/J), 79.5 GB/s DDR bandwidth. A signed-INT4 GPTQ export of the same model reached 53.4 tok/s on this box."
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "Panther Lake NUC trio 32 GB",
+  "model": "qwen3-6-35b-a3b",
+  "quant": "int4",
+  "runtime": "cascadia",
+  "runtimeVersion": "0.2.7 (OpenVINO GenAI 2026.4.1)",
+  "runtimeFlags": "3-stage layer pipeline (qwen35 staged engine), one stage per NUC on its Arc B390 iGPU, activations over 2.5 GbE, greedy, batch 1",
+  "revision": "v0.2.7",
+  "decodeTps": 17.8,
+  "ttftMs": 3480,
+  "concurrency": 1,
+  "decodeMethod": "streamed",
+  "repeats": 3,
+  "promptCache": false,
+  "thinking": false,
+  "speculative": "none",
+  "inputTokens": 975,
+  "outputTokens": 256,
+  "runDate": "2026-11-11",
+  "evidenceUrl": "https://github.com/labscommunity/cascadia-ecg-bench/blob/97fadb0fd00f501c0ba3adcb799303c9de02add8/report/report.md",
+  "notes": "Three ASUS NUCs (Core Ultra X7 358H, Arc B390 iGPU, 32 GB each, Windows 11) on one 2.5 GbE switch. The 40 layers of the INT4 export are split 14/13/13 across the three iGPUs; each token crosses the wire twice. decodeTps is the medium prompt (975 tokens after the chat template, 256 generated, temperature 0, thinking off) averaged over 3 timed repeats after 1 warm-up: (completion tokens - 1) / (request wall time - time to first token), where TTFT is a separate max_tokens=1 request; ttftMs is the same medium prompt's median. Whole chain drew 27.6 W during decode (0.65 tok/J); 6.1 GB GPU memory per node. GSM8K 40-question subset: 36/40. The same model whole on one of these NUCs decodes at 33 tok/s once the GPU window is raised, so the split is for memory headroom, not speed."
+}
