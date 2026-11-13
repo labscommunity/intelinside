@@ -3,6 +3,6 @@
   "runtime": "cascadia",
   "name": "Cascadia qwen35 GPU keep-alive",
   "repoUrl": "https://github.com/labscommunity/cascadia",
-  "summary": "Cascadia 0.2.7 plus the qwen35 staged-pipeline GPU keep-alive: while a pipeline rank waits for the next activation, a tiny GPU inference every 2 ms keeps the Intel iGPU from idling, which removes ~0.5 s stalls on 40-50% of decode steps on 20+ GB stages. Also carries the GPTQ-to-OpenVINO builder fix (signed INT4 experts) the Qwen3.5-122B IR needs to compile on the iGPU.",
-  "notes": "Branch feat/qwen35-keepalive-profiling (PR to labscommunity/cascadia); opt-in with --gpu-keepalive-ms 2 / CASCADIA_QWEN36_GPU_KEEPALIVE_MS=2. Outputs are unchanged (greedy decode, parity-checked against the stock build); only the per-token latency changes. Becomes a stock flag once the PR merges."
+  "summary": "Cascadia 0.2.7 plus a GPU keep-alive for qwen35 pipeline ranks: a tiny inference every 2 ms while a rank waits on the network keeps the Intel iGPU from idling and removes ~0.5 s stalls on large stages. Also carries the signed-INT4 GPTQ builder fix the 122B IR needs on the iGPU.",
+  "notes": "Branch feat/qwen35-keepalive-profiling (PR to labscommunity/cascadia); opt-in with --gpu-keepalive-ms 2 (env CASCADIA_QWEN36_GPU_KEEPALIVE_MS=2). Outputs are unchanged (greedy decode, parity-checked against the stock build); only per-token latency changes: the 122B 3-stage chain on three 32 GB Panther Lake NUCs goes from ~3 to ~10.6 tok/s. The GPTQ-to-OpenVINO builder's --expert-sym emits expert stacks as signed INT4 without a zero point, which the OpenVINO 2026.4.1 GPU MoE fusion requires. Becomes a stock flag once the PR merges."
 }
