@@ -44,6 +44,22 @@ test('parser rejects wrong folders, edits, invalid dates, quantities, and catalo
   assert.equal(prepareFile('results/alice/run.json', 'modified', { ...raw, result: 'https://example.test/results/1' }, 'alice', parseResultFile).file.result, 'https://example.test/results/1')
 })
 
+test('parser names unknown fields instead of dropping them, and suggests close matches', () => {
+  const { problems } = parseResultFile({ ...raw, outputToken: 256, Concurency: 4, gpuTemp: 61 })
+  assert.deepEqual(problems, [
+    'Unknown field: "outputToken". Did you mean "outputTokens"?',
+    'Unknown field: "Concurency". Did you mean "concurrency"?',
+    'Unknown field: "gpuTemp".',
+  ])
+  assert.throws(() => prepareFile('results/alice/run.json', 'added', { ...raw, outputToken: 256 }, 'alice', parseResultFile), /Unknown field: "outputToken"/)
+  assert.deepEqual(parseResultFile({ $schema: '../schema.json', ...raw }).problems, [], '$schema stays allowed')
+})
+
+test('the parser accepts exactly the keys results/schema.json declares', () => {
+  const schema = JSON.parse(readFileSync(new URL('../../../results/schema.json', import.meta.url), 'utf8'))
+  assert.deepEqual([...parseResultFile.RESULT_FILE_KEYS].sort(), Object.keys(schema.properties).sort())
+})
+
 test('PR evidence is optional, retains HTTPS links on any host, and rejects invalid links', () => {
   assert.equal(parseResultFile(raw).file.evidenceUrl, undefined)
   for (const evidenceUrl of ['https://gist.github.com/alice/123', 'https://example.com/logs/run.txt?raw=1#sample']) {

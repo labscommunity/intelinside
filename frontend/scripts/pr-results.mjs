@@ -18,7 +18,7 @@ export async function loadResultParser() {
     bundle: true, write: false, platform: 'node', format: 'esm', logLevel: 'silent',
   })
   const module = await import(`data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].contents).toString('base64')}`)
-  return Object.assign(module.parseResultFile, { parseCustomRuntimeFile: module.parseCustomRuntimeFile })
+  return Object.assign(module.parseResultFile, { parseCustomRuntimeFile: module.parseCustomRuntimeFile, RESULT_FILE_KEYS: module.RESULT_FILE_KEYS })
 }
 
 export function prepareFile(path, status, raw, author, parseResultFile) {
