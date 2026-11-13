@@ -63,7 +63,7 @@ By default, boards keep only the best submission per rig or component and quanti
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/api/results?rig=&hardware=&model=&quant=&runtime=&user=&limit=&cursor=` | `Result[]`, newest first |
-| GET | `/api/results/:resultId` | `Result` plus `rank: { kind, position, boardSize }` |
+| GET | `/api/results/:resultId` | `Result` plus `rank: { kind, setup, boardSize, position?, heldBy?: { id, position } }`: ranked within the result's own setup (`all` when it matches none). `position` when this result is its rig's or part's row on the board; otherwise `heldBy` names the result that is |
 | POST | `/api/results` | Body `ResultInput`. Signed in. Server validates that `componentId` belongs to `rigId` and that `quant` is a catalog quant (any catalog quant is valid for any model) |
 | PATCH | `/api/results/:resultId` | Owner only. Any change resets verification to `self_reported` and clears confirmations |
 | DELETE | `/api/results/:resultId` | Owner only |

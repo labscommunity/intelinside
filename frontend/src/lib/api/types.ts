@@ -264,7 +264,18 @@ export type ResultsParams = {
   limit?: number
   cursor?: string
 }
-export type ResultRank = { kind: BoardKind; position: number; boardSize: number }
+/**
+ * Where a result stands on its board, within its own setup ('all' when it matches none). The board keeps one row per
+ * rig or part, so exactly one of `position` (this result is the row) and `heldBy` (another result of the same rig or
+ * part is the row) is set.
+ */
+export type ResultRank = {
+  kind: BoardKind
+  setup: SetupId
+  boardSize: number
+  position?: number
+  heldBy?: { id: string; position: number }
+}
 export type ResultDetail = Result & { rank?: ResultRank }
 export type HomeResponse = {
   stats: { results: number; rigs: number; hardware: number; members: number }

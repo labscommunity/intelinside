@@ -121,3 +121,23 @@ test('setup tabs rank only results measured that way, and count every setup', as
   // Other filters still apply inside a setup, and the counts follow them.
   assert.deepEqual((await q8(undefined, { q: 'B60' })).setupCounts, { standard: 0, speculative: 0, long: 0, concurrent: 0, all: 2 })
 })
+
+test('a result page shows its own rank, or names the result that holds its part\'s row', async () => {
+  const rank = async (id) => (await supabaseApi.result(id)).rank
+  // Q4_K_M components board: 5 (2× B60), 3 (B70), 4 (B60). Results 1 and 2 are slower B70 runs.
+  assert.deepEqual(await rank('3'), { kind: 'components', setup: 'all', boardSize: 3, position: 2 })
+  assert.deepEqual(await rank('1'), { kind: 'components', setup: 'all', boardSize: 3, heldBy: { id: '3', position: 2 } }, 'a slower run does not borrow #2')
+  assert.deepEqual(await rank('2'), { kind: 'components', setup: 'all', boardSize: 3, heldBy: { id: '3', position: 2 } }, 'a tie goes to the earlier run')
+  assert.deepEqual(await rank('6'), { kind: 'rigs', setup: 'all', boardSize: 1, position: 1 })
+})
+
+test('a result page ranks within the result\'s own setup', async () => {
+  const rank = async (id) => (await supabaseApi.result(id)).rank
+  // On All results, result 13 (speculative, 90) holds the B70 row. Each setup is its own board.
+  assert.deepEqual(await rank('12'), { kind: 'components', setup: 'standard', boardSize: 1, position: 1 })
+  assert.deepEqual(await rank('13'), { kind: 'components', setup: 'speculative', boardSize: 1, position: 1 })
+  assert.deepEqual(await rank('16'), { kind: 'components', setup: 'concurrent', boardSize: 1, position: 1 })
+  // Conditions that match no setup (wall clock) or none recorded rank on All results.
+  assert.deepEqual(await rank('14'), { kind: 'components', setup: 'all', boardSize: 3, position: 3 })
+  assert.deepEqual(await rank('15'), { kind: 'components', setup: 'all', boardSize: 3, position: 1 })
+})

@@ -12,6 +12,7 @@ import { UnitLabel } from '@/components/UnitLabel'
 import { ConditionChips } from '@/components/ConditionChips'
 import type { Model, Quant, Result, ResultRank, Runtime } from '@/lib/api/types'
 import { fmtDate, fmtMs, fmtTps } from '@/lib/format'
+import { boardPhrase, rankBoardPath, unitPhrase } from '@/lib/rank'
 import { cn } from '@/lib/utils'
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
@@ -52,10 +53,15 @@ export function ResultCard({ result: r, models, quants, runtimes, rank, eyebrow 
           <div className={cn('mt-2 font-mono font-semibold tnum', compact ? 'text-5xl' : 'text-6xl md:text-7xl')}>
             {hasFigure ? fmtTps(r.decodeTps) : '—'} <span className={cn('font-normal text-muted-foreground', compact ? 'text-lg' : 'text-2xl')}>tok/s</span>
           </div>
-          {rank ? (
-            <Link to={`/models/${r.modelId}/${r.quant}?kind=${rank.kind}`} className="mt-3 inline-block text-sm text-muted-foreground hover:text-foreground">
-              #{rank.position} of {rank.boardSize} on the {model?.name} {quant} {rank.kind} board
+          {rank?.position ? (
+            <Link to={rankBoardPath(r, rank)} className="mt-3 inline-block text-sm text-muted-foreground hover:text-foreground">
+              #{rank.position} of {rank.boardSize} {boardPhrase(rank, model?.name ?? r.modelId, quant)}
             </Link>
+          ) : rank?.heldBy ? (
+            <p className="mt-3 max-w-prose text-sm text-muted-foreground">
+              Not ranked. {unitPhrase(r)} holds #{rank.heldBy.position} of {rank.boardSize} with{' '}
+              <Link to={`/results/${rank.heldBy.id}`} className="text-foreground underline-offset-4 hover:underline">a faster result</Link>; the board shows each {r.component ? 'part' : 'rig'} once.
+            </p>
           ) : null}
         </div>
         <div className="flex flex-col items-end justify-between gap-6 self-stretch">
