@@ -187,7 +187,7 @@ export const MODELS: Model[] = [
   },
   {
     id: 'ripple-65b-preview', name: 'Ripple-65B Preview', family: 'Ripple', brand: 'Ricursive', params: '65B', architecture: 'dense',
-    sourceUrl: 'https://huggingface.co/ricursiveAI/Ripple-65B-Preview', brandColor: '#5aa6c8', quants: ['iq4_xs', 'q4_k_m', 'q5_k_m', 'q6_k', 'q8_0'],
+    sourceUrl: 'https://huggingface.co/ricursiveAI/Ripple-65B-Preview', brandColor: '#5aa6c8', quants: ['gptq-4bit', 'iq4_xs', 'q4_k_m', 'q5_k_m', 'q6_k', 'q8_0'],
   },
   {
     id: 'qwen3-1-7b', name: 'Qwen3-1.7B', family: 'Qwen3', brand: 'Qwen', params: '1.7B', architecture: 'dense',
