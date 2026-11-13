@@ -9,8 +9,9 @@ import { VerificationBadge } from '@/components/VerificationBadge'
 import { UserLink } from '@/components/UserLink'
 import { HardwareLink } from '@/components/HardwareLink'
 import { UnitLabel } from '@/components/UnitLabel'
+import { ConditionChips } from '@/components/ConditionChips'
 import type { Model, Quant, Result, ResultRank, Runtime } from '@/lib/api/types'
-import { fmtDate, fmtInt, fmtMs, fmtTps } from '@/lib/format'
+import { fmtDate, fmtMs, fmtTps } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
@@ -108,13 +109,17 @@ export function ResultCard({ result: r, models, quants, runtimes, rank, eyebrow 
               {r.revision ? <div className="mt-0.5 font-mono text-xs text-muted-foreground">@ {r.revision}</div> : null}
             </>
           ) : (
-            <span className="text-muted-foreground">Stock</span>
+            <>
+              <span className="text-muted-foreground">Stock</span>
+              {r.revision ? <div className="mt-0.5 font-mono text-xs text-muted-foreground">@ {r.revision}</div> : null}
+            </>
           )}
         </Field>
         <Field label="Prompt tok/s"><span className="font-mono tnum">{fmtTps(r.promptTps)}</span></Field>
         <Field label="Time to first token"><span className="font-mono tnum">{fmtMs(r.ttftMs)}</span></Field>
-        <Field label="Context length"><span className="font-mono tnum">{r.contextLength ? fmtInt(r.contextLength) : '—'}</span></Field>
-        <Field label="Batch size"><span className="font-mono tnum">{r.batchSize ?? '—'}</span></Field>
+        {/* Two cells in place of context length and batch size, so the grid stays 12 cells. */}
+        <Field label="Workload"><ConditionChips result={r} part="workload" /></Field>
+        <Field label="Method"><ConditionChips result={r} part="method" /></Field>
         <Field label="Run date">{r.runDate ? fmtDate(r.runDate) : '—'}</Field>
         <Field label="Submitted by"><UserLink user={r.submitter} /></Field>
         <Field label="Evidence">

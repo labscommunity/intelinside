@@ -105,6 +105,13 @@ export const BUILD_SUMMARY_MAX = 280
  */
 export type ExecutionStack = 'stock' | 'modified'
 
+/** With concurrency above 1: whether decodeTps is each request's rate or the machine's total throughput. */
+export type DecodeScope = 'per_request' | 'total'
+/** How decode was timed. `wall` includes prefill, so it reads lower than the others. */
+export type DecodeMethod = 'streamed' | 'engine' | 'llama_bench' | 'wall'
+/** Speculative decoding. `lossless` keeps the output identical; `lossy` may change it. */
+export type Speculative = 'none' | 'lossless' | 'lossy'
+
 /**
  * A changed runtime someone owns: a fork, a patch, a custom kernel. The base runtime is catalog data; this is user
  * content, shaped like a rig. Unlike a rig, a result may reference a build its submitter does not own — a public fork
@@ -147,7 +154,7 @@ export type Result = {
   /** The build this run used. Absent means stock. */
   customRuntimeId?: string
   customRuntime?: CustomRuntime
-  /** Builds only: the exact revision that produced this number — a commit, a tag, or a build id. */
+  /** The exact revision that produced this number — a commit, a tag, or a build id. Stock or custom build. */
   revision?: string
   /** Derived from customRuntimeId; kept on the contract so boards and badges read one field. */
   execution: ExecutionStack
@@ -161,8 +168,20 @@ export type Result = {
   decodeTps: number
   promptTps?: number
   ttftMs?: number
+  /** Legacy: some submitters meant prompt tokens, others the context window. New results use `inputTokens`. */
   contextLength?: number
+  /** Legacy: some submitters meant concurrent requests, others engine batch size. New results use `concurrency`. */
   batchSize?: number
+  // Conditions (issue #130). All optional; see lib/conditions.ts for meanings and allowed values.
+  inputTokens?: number
+  outputTokens?: number
+  concurrency?: number
+  decodeScope?: DecodeScope
+  decodeMethod?: DecodeMethod
+  repeats?: number
+  promptCache?: boolean
+  thinking?: boolean
+  speculative?: Speculative
   notes?: string
   /** Optional HTTPS evidence link. The legacy name is retained for API compatibility. */
   repoUrl?: string

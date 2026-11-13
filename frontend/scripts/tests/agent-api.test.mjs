@@ -183,3 +183,21 @@ test('input errors, documentation, routing, and cache protection are explicit',a
  assert.equal((await call('/api/v1/handler?route=me')).status,200)
  assert.equal((await call('/api/keys?route=activity',{token:'alice-test-session'})).status,200)
 })
+
+test('results record optional conditions, and a stock run keeps its revision',async()=>{
+ // Earlier tests delete the shared rig, so this one brings its own rig and build.
+ rig=okay(await call('/api/v1/rigs',{method:'POST',body:rigInput}),201)
+ runtime=okay(await call('/api/v1/custom-runtimes',{method:'POST',body:{...buildInput,name:'Conditions build'}}),201)
+ const conditions={inputTokens:512,outputTokens:256,concurrency:4,decodeScope:'total',decodeMethod:'streamed',repeats:3,promptCache:false,thinking:false,speculative:'none'}
+ const created=okay(await call('/api/v1/results',{method:'POST',body:{...resultInput(),...conditions}}),201)
+ for(const [k,v] of Object.entries(conditions)) assert.equal(created[k],v,k)
+ // Clearing the custom build no longer clears the revision: stock runs may name their engine commit.
+ const stock=okay(await call(`/api/v1/results/${created.id}`,{method:'PATCH',body:{customRuntimeId:null},version:created.updatedAt}))
+ assert.equal(stock.customRuntimeId,null);assert.equal(stock.revision,'abc123')
+ const cleared=okay(await call(`/api/v1/results/${created.id}`,{method:'PATCH',body:{decodeScope:null,concurrency:1,speculative:null},version:stock.updatedAt}))
+ assert.equal(cleared.decodeScope,null);assert.equal(cleared.concurrency,1);assert.equal(cleared.speculative,null);assert.equal(cleared.inputTokens,512)
+ assert.equal((await call('/api/v1/results',{method:'POST',body:{...resultInput(),decodeMethod:'stopwatch'}})).status,400)
+ assert.equal((await call('/api/v1/results',{method:'POST',body:{...resultInput(),thinking:'on'}})).status,400)
+ assert.notEqual((await call('/api/v1/results',{method:'POST',body:{...resultInput(),decodeScope:'total',concurrency:1}})).status,201)
+ okay(await call(`/api/v1/results/${created.id}`,{method:'DELETE',version:cleared.updatedAt}))
+})

@@ -68,7 +68,7 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 80,
-      "description": "Custom runtimes only: the exact revision behind this number \u2014 a commit hash, a tag, or a build id. A fork moves week to week, so this is what makes the run reproducible."
+      "description": "The exact engine revision behind this number \u2014 a commit hash, a tag, or a build id. Recommended for stock and custom runs alike: engines change week to week."
     },
     "decodeTps": {
       "type": "number",
@@ -86,11 +86,69 @@
     },
     "contextLength": {
       "type": "integer",
-      "minimum": 1
+      "minimum": 1,
+      "description": "Legacy and ambiguous (prompt tokens or context window). Use inputTokens for the prompt length."
     },
     "batchSize": {
       "type": "integer",
-      "minimum": 1
+      "minimum": 1,
+      "description": "Legacy and ambiguous (concurrent requests or engine batch size). Use concurrency for simultaneous requests."
+    },
+    "inputTokens": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2147483647,
+      "description": "Prompt tokens actually sent, after the chat template."
+    },
+    "outputTokens": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2147483647,
+      "description": "Tokens actually generated."
+    },
+    "concurrency": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2147483647,
+      "description": "Simultaneous requests. 1 for a single stream."
+    },
+    "decodeScope": {
+      "enum": [
+        "per_request",
+        "total"
+      ],
+      "description": "Only with concurrency above 1: whether decodeTps is each request's rate or total throughput across requests."
+    },
+    "decodeMethod": {
+      "enum": [
+        "streamed",
+        "engine",
+        "llama_bench",
+        "wall"
+      ],
+      "description": "How decode was timed: streamed rate after the first token, the engine's own timing, llama-bench tg, or wall clock including prefill."
+    },
+    "repeats": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2147483647,
+      "description": "Measured runs behind the number, not counting warm-up."
+    },
+    "promptCache": {
+      "type": "boolean",
+      "description": "Whether a cached prompt was reused."
+    },
+    "thinking": {
+      "type": "boolean",
+      "description": "Whether reasoning (thinking) mode was on."
+    },
+    "speculative": {
+      "enum": [
+        "none",
+        "lossless",
+        "lossy"
+      ],
+      "description": "Speculative decoding: none, lossless (output unchanged, e.g. MTP or a draft model with exact verification), or lossy."
     },
     "runDate": {
       "type": "string",

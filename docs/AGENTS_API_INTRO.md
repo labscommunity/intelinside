@@ -120,9 +120,14 @@ rig, and its quantity cannot exceed the rig's quantity.
 
 POST that object to `/results`, or POST `{ "items": [ ... ] }` to `/results/batch`
 for up to 100 results in one transaction. If one entry fails, none are committed.
-Record workload, concurrency, speculation, and other comparability caveats in
-`runtimeFlags` and `notes`. Publishing measured aggregate throughput as a single
-stream measurement would misrepresent the run.
+Record how the number was measured in the optional condition fields:
+`inputTokens`, `outputTokens`, `concurrency`, `decodeScope` (`per_request` or
+`total`, only when `concurrency` is above 1), `decodeMethod` (`streamed`,
+`engine`, `llama_bench`, or `wall`), `repeats`, `promptCache`, `thinking`, and
+`speculative` (`none`, `lossless`, or `lossy`). Set `revision` to the engine
+commit for stock runs too. Leave a field out rather than guess. Put any other
+caveats in `runtimeFlags` and `notes`. Publishing measured aggregate throughput
+as a single stream measurement would misrepresent the run.
 
 ## Rig photos
 

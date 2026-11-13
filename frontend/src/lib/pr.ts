@@ -2,6 +2,7 @@ import { REVISION_MAX, RUNTIME_FLAGS_MAX, type Result, type ResultInput } from '
 import { REPO } from '@/lib/brand'
 import { HARDWARE_BY_ID, MODEL_BY_ID, QUANT_BY_ID, RUNTIME_BY_ID } from '@/catalog'
 import { isEvidenceUrl } from '@/lib/evidence'
+import { CONDITION_KEYS, conditionProblems, type Conditions } from '@/lib/conditions'
 
 // PR results are validated by trusted CI and inserted into Supabase on merge.
 // This parser also supports the legacy browser prefill and exporting existing results as archive files.
@@ -11,7 +12,7 @@ export const RESULTS_DIR = 'results'
 const API = 'https://api.github.com'
 
 /** A result as committed to the repo. Mirrors ResultInput with catalog ids, plus the rig by id or name. */
-export type ResultFile = {
+export type ResultFile = Conditions & {
   /** The number at the end of the rig's URL on the site, or the rig's exact name. */
   rig: string
   /** Hardware id of the one part the run used. Leave out for a whole-rig result. */
@@ -27,7 +28,7 @@ export type ResultFile = {
   customRuntime?: string
   /** Repository-relative registration path added in the same PR. Mutually exclusive with customRuntime. */
   customRuntimeFile?: string
-  /** Custom runtimes only: the exact revision behind the number — a commit, a tag, or a build id. */
+  /** The exact revision behind the number — a commit, a tag, or a build id. Stock or custom build. */
   revision?: string
   decodeTps: number
   promptTps?: number
@@ -115,13 +116,16 @@ export function parseResultFile(raw: unknown): { file: Partial<ResultFile>; prob
   if (data.customRuntimeFile !== undefined && data.customRuntime !== undefined) problems.push('Use customRuntime or customRuntimeFile, not both.')
   file.revision = str('revision')
   if (file.revision && file.revision.length > REVISION_MAX) problems.push(`"revision" must be ${REVISION_MAX} characters or fewer.`)
-  // It is resolved against the site when the form loads, so the file only has to be shaped right here.
-  if (file.revision && !file.customRuntime && !file.customRuntimeFile) problems.push('"revision" needs "customRuntime" or "customRuntimeFile"; a stock run has no revision.')
   file.decodeTps = num('decodeTps', true)
   file.promptTps = num('promptTps')
   file.ttftMs = num('ttftMs')
   file.contextLength = num('contextLength', false, true)
   file.batchSize = num('batchSize', false, true)
+  // Conditions: checked together so the file and the form report the same problems.
+  const conditions = Object.fromEntries(CONDITION_KEYS.filter((key) => data[key] != null).map((key) => [key, data[key]]))
+  const conditionIssues = conditionProblems(conditions)
+  problems.push(...conditionIssues)
+  if (!conditionIssues.length) Object.assign(file, conditions)
   file.runDate = str('runDate', true)
   if (file.runDate && !DATE.test(file.runDate)) {
     problems.push('"runDate" must be YYYY-MM-DD.')
@@ -196,6 +200,7 @@ export function resultFileFor(r: Result | ResultInput, resultUrl?: string): Resu
     ...(r.ttftMs != null ? { ttftMs: r.ttftMs } : {}),
     ...(r.contextLength != null ? { contextLength: r.contextLength } : {}),
     ...(r.batchSize != null ? { batchSize: r.batchSize } : {}),
+    ...Object.fromEntries(CONDITION_KEYS.filter((key) => r[key] != null).map((key) => [key, r[key]])),
     runDate: r.runDate.slice(0, 10),
     ...(r.notes ? { notes: r.notes } : {}),
     ...(r.repoUrl?.trim() ? { evidenceUrl: r.repoUrl.trim() } : {}),

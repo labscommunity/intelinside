@@ -31,6 +31,7 @@ import { ApiError, REVISION_MAX, RUNTIME_FLAGS_MAX, type CustomRuntime, type Res
 import { fmtTps, pluralize } from '@/lib/format'
 import { resultShareTarget } from '@/lib/share'
 import { cn } from '@/lib/utils'
+import { DECODE_METHODS, DECODE_SCOPES, SPECULATIVE, type Conditions } from '@/lib/conditions'
 import { HARDWARE_BY_ID, MODEL_BY_ID, QUANT_BY_ID, RUNTIME_BY_ID } from '@/catalog'
 
 type Target = 'rig' | 'component'
@@ -52,6 +53,16 @@ type Form = {
   ttftMs: string
   contextLength: string
   batchSize: string
+  // Conditions, as typed. Booleans are '', 'true' or 'false' so "not recorded" stays distinct from off.
+  inputTokens: string
+  outputTokens: string
+  concurrency: string
+  decodeScope: string
+  decodeMethod: string
+  repeats: string
+  promptCache: string
+  thinking: string
+  speculative: string
   repoUrl: string
   runDate: string
   notes: string
@@ -62,8 +73,38 @@ const EMPTY: Form = {
   rigId: '', target: 'rig', componentId: '', componentQuantity: '1', modelId: '', quant: '', runtimeId: '', runtimeVersion: '',
   runtimeFlags: '', customId: '', revision: '',
   decodeTps: '', promptTps: '', ttftMs: '', contextLength: '', batchSize: '', repoUrl: '', runDate: today(), notes: '',
+  ...emptyConditions(),
 }
 const num = (s: string) => (s.trim() === '' ? undefined : Number(s))
+const CONDITION_INTEGERS = ['inputTokens', 'outputTokens', 'concurrency', 'repeats'] as const
+
+function emptyConditions() {
+  return { inputTokens: '', outputTokens: '', concurrency: '', decodeScope: '', decodeMethod: '', repeats: '', promptCache: '', thinking: '', speculative: '' }
+}
+/** Form strings from stored conditions, for a file, an edit, or a carried-over setup. */
+function conditionFields(c: Partial<Conditions>): ReturnType<typeof emptyConditions> {
+  const text = (v: number | boolean | string | undefined) => (v == null ? '' : String(v))
+  return {
+    inputTokens: text(c.inputTokens), outputTokens: text(c.outputTokens), concurrency: text(c.concurrency),
+    decodeScope: text(c.decodeScope), decodeMethod: text(c.decodeMethod), repeats: text(c.repeats),
+    promptCache: text(c.promptCache), thinking: text(c.thinking), speculative: text(c.speculative),
+  }
+}
+/** Stored conditions from the form. Per request vs total only applies with several requests, so it is dropped otherwise. */
+function conditionsFrom(f: Form): Conditions {
+  const bool = (v: string) => (v === '' ? undefined : v === 'true')
+  const concurrency = num(f.concurrency)
+  return {
+    inputTokens: num(f.inputTokens), outputTokens: num(f.outputTokens), concurrency,
+    decodeScope: concurrency != null && concurrency > 1 && f.decodeScope ? (f.decodeScope as Conditions['decodeScope']) : undefined,
+    decodeMethod: (f.decodeMethod || undefined) as Conditions['decodeMethod'],
+    repeats: num(f.repeats),
+    promptCache: bool(f.promptCache), thinking: bool(f.thinking),
+    speculative: (f.speculative || undefined) as Conditions['speculative'],
+  }
+}
+/** "Submit another" keeps the setup, since a series of runs usually changes one thing at a time. */
+const conditionsCarried = (f: Form) => conditionFields(conditionsFrom(f))
 
 // The same model, quant, runtime, and card can differ twofold on kernel choices, so the placeholder names the ones
 // that matter for each runtime rather than leaving people to guess what belongs here.
@@ -98,6 +139,10 @@ function validate(f: Form): Record<string, string> {
     const v = num(f[k])
     if (v != null && (Number.isNaN(v) || v < 0)) e[k] = 'Must be zero or more.'
   }
+  for (const k of CONDITION_INTEGERS) {
+    const v = num(f[k])
+    if (v != null && !(Number.isInteger(v) && v >= 1)) e[k] = 'Enter a whole number of 1 or more.'
+  }
   if (f.repoUrl.trim() && !isEvidenceUrl(f.repoUrl.trim())) e.repoUrl = 'Enter a full URL, starting with https://.'
   if (!f.runDate) e.runDate = 'Enter the run date.'
   else if (f.runDate > today()) e.runDate = 'Run date cannot be in the future.'
@@ -113,7 +158,7 @@ function toInput(f: Form): ResultInput {
     runtimeVersion: f.runtimeVersion.trim(),
     runtimeFlags: f.runtimeFlags.trim() || undefined,
     customRuntimeId: f.customId || undefined,
-    revision: f.customId ? f.revision.trim() || undefined : undefined,
+    revision: f.revision.trim() || undefined,
     rigId: f.rigId,
     componentId: component ? f.componentId : undefined,
     componentQuantity: component ? Number(f.componentQuantity) || 1 : undefined,
@@ -122,6 +167,7 @@ function toInput(f: Form): ResultInput {
     ttftMs: num(f.ttftMs),
     contextLength: num(f.contextLength),
     batchSize: num(f.batchSize),
+    ...conditionsFrom(f),
     notes: f.notes.trim() || undefined,
     repoUrl: f.repoUrl.trim(),
     runDate: isoAtNoon(f.runDate),
@@ -156,6 +202,7 @@ function formFromFile(file: Partial<ResultFile>, rigs: RigSummary[], customRunti
       ttftMs: text(file.ttftMs),
       contextLength: text(file.contextLength),
       batchSize: text(file.batchSize),
+      ...conditionFields(file),
       repoUrl: file.evidenceUrl ?? '',
       runDate: file.runDate ?? prev.runDate,
       notes: file.notes ?? '',
@@ -243,6 +290,7 @@ export default function SubmitResult({ mode = 'create' }: { mode?: 'create' | 'e
       runtimeFlags: r.runtimeFlags ?? '', customId: r.customRuntimeId ?? '', revision: r.revision ?? '',
       decodeTps: String(r.decodeTps), promptTps: r.promptTps?.toString() ?? '', ttftMs: r.ttftMs?.toString() ?? '',
       contextLength: r.contextLength?.toString() ?? '', batchSize: r.batchSize?.toString() ?? '',
+      ...conditionFields(r),
       repoUrl: r.repoUrl ?? '', runDate: r.runDate.slice(0, 10), notes: r.notes ?? '',
     })
     setInitialized(true)
@@ -368,7 +416,7 @@ export default function SubmitResult({ mode = 'create' }: { mode?: 'create' | 'e
     runtimeFlags: form.runtimeFlags.trim() || undefined,
     customRuntimeId: form.customId || undefined,
     customRuntime: customRuntimes.find((b) => b.id === form.customId),
-    revision: form.customId ? form.revision.trim() || undefined : undefined,
+    revision: form.revision.trim() || undefined,
     execution: form.customId ? 'modified' : 'stock',
     rigId: form.rigId,
     rig: selectedRig,
@@ -381,6 +429,7 @@ export default function SubmitResult({ mode = 'create' }: { mode?: 'create' | 'e
     ttftMs: num(form.ttftMs),
     contextLength: num(form.contextLength),
     batchSize: num(form.batchSize),
+    ...conditionsFrom(form),
     notes: form.notes.trim() || undefined,
     repoUrl: form.repoUrl.trim() || undefined,
     sourcePrUrl: existing.data?.sourcePrUrl ?? pr?.pr.url,
@@ -475,7 +524,7 @@ export default function SubmitResult({ mode = 'create' }: { mode?: 'create' | 'e
                     setDone(null)
                     setAttempted(false)
                     setErrors({})
-                    setForm({ ...EMPTY, rigId: form.rigId, runtimeId: form.runtimeId, runtimeVersion: form.runtimeVersion, runtimeFlags: form.runtimeFlags, customId: form.customId, revision: form.revision })
+                    setForm({ ...EMPTY, rigId: form.rigId, runtimeId: form.runtimeId, runtimeVersion: form.runtimeVersion, runtimeFlags: form.runtimeFlags, customId: form.customId, revision: form.revision, ...conditionsCarried(form) })
                   }}
                 >
                   Submit another
@@ -750,7 +799,7 @@ export default function SubmitResult({ mode = 'create' }: { mode?: 'create' | 'e
                     value={form.customId}
                     disabled={!form.runtimeId}
                     aria-invalid={!!errors.customId}
-                    onChange={(e) => set({ customId: e.target.value, ...(e.target.value ? {} : { revision: '' }) })}
+                    onChange={(e) => set({ customId: e.target.value })}
                   >
                     <NativeSelectOption value="">Stock{runtimeName ? ` ${runtimeName}` : ''}</NativeSelectOption>
                     {/* Grouped only when there is something to contrast: with none of your own, a lone "yours vs
@@ -798,17 +847,17 @@ export default function SubmitResult({ mode = 'create' }: { mode?: 'create' | 'e
                   />
                 </div>
               ) : null}
-              {form.customId ? (
-                <Field
-                  id="revision"
-                  label="Revision"
-                  error={errors.revision}
-                  hint="The commit, tag, or build id behind this number. A fork moves week to week, so this is what makes the run reproducible."
-                  className="max-w-xs"
-                >
-                  <Input {...inputProps('revision')} placeholder="a8192fe" className="font-mono" />
-                </Field>
-              ) : null}
+              <Field
+                id="revision"
+                label="Revision"
+                error={errors.revision}
+                hint={form.customId
+                  ? 'The commit, tag, or build id behind this number. A fork moves week to week, so this is what makes the run reproducible.'
+                  : 'Optional. The exact commit or tag you ran. Engines change week to week, so this pins the number to a build.'}
+                className="max-w-xs"
+              >
+                <Input {...inputProps('revision')} placeholder={form.runtimeId === 'llamacpp' ? 'b6512' : 'a8192fe'} className="font-mono" />
+              </Field>
             </Step>
 
             <Step n={5} title="Numbers" hint="Decode speed ranks. Average a few runs of at least 256 tokens.">
@@ -822,16 +871,75 @@ export default function SubmitResult({ mode = 'create' }: { mode?: 'create' | 'e
                 <Field id="ttftMs" label="Time to first token (ms)" error={errors.ttftMs}>
                   <Input {...inputProps('ttftMs')} type="number" min={0} step="any" inputMode="decimal" placeholder="Optional" className="font-mono" />
                 </Field>
-                <Field id="contextLength" label="Context length" error={errors.contextLength}>
-                  <Input {...inputProps('contextLength')} type="number" min={0} step={1} inputMode="numeric" placeholder="4096" className="font-mono" />
+                {/* Legacy and ambiguous, so new results use the conditions below. Shown only while a value is there,
+                    so editing an older result never drops it silently. */}
+                {form.contextLength || errors.contextLength ? (
+                  <Field id="contextLength" label="Context length (legacy)" error={errors.contextLength}>
+                    <Input {...inputProps('contextLength')} type="number" min={0} step={1} inputMode="numeric" className="font-mono" />
+                  </Field>
+                ) : null}
+                {form.batchSize || errors.batchSize ? (
+                  <Field id="batchSize" label="Batch size (legacy)" error={errors.batchSize}>
+                    <Input {...inputProps('batchSize')} type="number" min={0} step={1} inputMode="numeric" className="font-mono" />
+                  </Field>
+                ) : null}
+              </div>
+            </Step>
+
+            <Step n={6} title="How it was measured" hint="Optional, but the same machine gives very different numbers at a 512 or a 4k prompt, or with speculation on. Record what you know.">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <Field id="inputTokens" label="Prompt tokens" error={errors.inputTokens}>
+                  <Input {...inputProps('inputTokens')} type="number" min={1} step={1} inputMode="numeric" placeholder="512" className="font-mono" />
                 </Field>
-                <Field id="batchSize" label="Batch size" error={errors.batchSize}>
-                  <Input {...inputProps('batchSize')} type="number" min={0} step={1} inputMode="numeric" placeholder="1" className="font-mono" />
+                <Field id="outputTokens" label="Output tokens" error={errors.outputTokens}>
+                  <Input {...inputProps('outputTokens')} type="number" min={1} step={1} inputMode="numeric" placeholder="256" className="font-mono" />
+                </Field>
+                <Field id="concurrency" label="Concurrent requests" error={errors.concurrency}>
+                  <Input {...inputProps('concurrency')} type="number" min={1} step={1} inputMode="numeric" placeholder="1" className="font-mono" />
+                </Field>
+                <Field id="repeats" label="Repeats" error={errors.repeats}>
+                  <Input {...inputProps('repeats')} type="number" min={1} step={1} inputMode="numeric" placeholder="3" className="font-mono" />
+                </Field>
+              </div>
+              {Number(form.concurrency) > 1 ? (
+                <Field id="decodeScope" label="Decode tok/s is" error={errors.decodeScope} hint="With several requests, each one's rate and the total throughput are different numbers." className="max-w-xs">
+                  <NativeSelect className="w-full" {...inputProps('decodeScope')}>
+                    <NativeSelectOption value="">Not recorded</NativeSelectOption>
+                    {Object.entries(DECODE_SCOPES).map(([value, label]) => <NativeSelectOption key={value} value={value}>{label}</NativeSelectOption>)}
+                  </NativeSelect>
+                </Field>
+              ) : null}
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <Field id="decodeMethod" label="Decode timing" error={errors.decodeMethod}>
+                  <NativeSelect className="w-full" {...inputProps('decodeMethod')}>
+                    <NativeSelectOption value="">Not recorded</NativeSelectOption>
+                    {Object.entries(DECODE_METHODS).map(([value, label]) => <NativeSelectOption key={value} value={value}>{label}</NativeSelectOption>)}
+                  </NativeSelect>
+                </Field>
+                <Field id="speculative" label="Speculative decoding" error={errors.speculative}>
+                  <NativeSelect className="w-full" {...inputProps('speculative')}>
+                    <NativeSelectOption value="">Not recorded</NativeSelectOption>
+                    {Object.entries(SPECULATIVE).map(([value, label]) => <NativeSelectOption key={value} value={value}>{label}</NativeSelectOption>)}
+                  </NativeSelect>
+                </Field>
+                <Field id="thinking" label="Thinking" error={errors.thinking}>
+                  <NativeSelect className="w-full" {...inputProps('thinking')}>
+                    <NativeSelectOption value="">Not recorded</NativeSelectOption>
+                    <NativeSelectOption value="false">Off</NativeSelectOption>
+                    <NativeSelectOption value="true">On</NativeSelectOption>
+                  </NativeSelect>
+                </Field>
+                <Field id="promptCache" label="Prompt cache" error={errors.promptCache}>
+                  <NativeSelect className="w-full" {...inputProps('promptCache')}>
+                    <NativeSelectOption value="">Not recorded</NativeSelectOption>
+                    <NativeSelectOption value="false">Off</NativeSelectOption>
+                    <NativeSelectOption value="true">On, reused</NativeSelectOption>
+                  </NativeSelect>
                 </Field>
               </div>
             </Step>
 
-            <Step n={6} title="Evidence" hint="An evidence link is optional. Logs, scripts, a gist, a report, or a repository can help others check your result.">
+            <Step n={7} title="Evidence" hint="An evidence link is optional. Logs, scripts, a gist, a report, or a repository can help others check your result.">
               <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_200px]">
                 <Field id="repoUrl" label="Evidence link (optional)" error={errors.repoUrl}>
                   <Input {...inputProps('repoUrl')} type="url" placeholder="https://example.com/benchmark-report" />

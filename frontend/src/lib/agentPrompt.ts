@@ -24,7 +24,9 @@ cannot be attributed to my account and the check will refuse it.
 The rig is already registered on the site, so name it as it is: "rig": "${rigId}" — my ${rigName}.
 Read ${RESULTS_DIR}/README.md in that repo for the field list, and frontend/src/catalog/ for the model, quant
 and runtime ids. Fill the file from my run: model, quant, runtime, runtimeVersion, decodeTps and runDate are
-required; promptTps, ttftMs, contextLength, batchSize and runtimeFlags if the log has them.
+required; promptTps, ttftMs, runtimeFlags and revision (the engine commit) if the log has them. Also record how
+it was measured, where the log or my setup says so: inputTokens, outputTokens, concurrency (and decodeScope when
+above 1), decodeMethod, repeats, promptCache, thinking and speculative. Leave out anything you would have to guess.
 If I have a published log, script, gist, report, or repository for the run, include its full HTTPS URL as
 evidenceUrl. This is optional; omit it if unavailable. The submission PR is linked automatically.
 
