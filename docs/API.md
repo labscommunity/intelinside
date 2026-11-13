@@ -156,7 +156,13 @@ export type Result = {
   modelId: string; quant: string; runtimeId: string; runtimeVersion: string;
   rigId: string; rig?: RigSummary; componentId?: string; componentQuantity?: number; component?: HardwareItem;
   componentHost?: HardwareItem; // when the part is an iGPU or NPU: the CPU in the rig whose package carries it
-  decodeTps: number; promptTps?: number; ttftMs?: number; contextLength?: number; batchSize?: number;
+  decodeTps: number; promptTps?: number; ttftMs?: number;
+  contextLength?: number; batchSize?: number; // legacy and ambiguous; use inputTokens and concurrency
+  // Conditions (all optional): what was run and how it was timed.
+  inputTokens?: number; outputTokens?: number; concurrency?: number;
+  decodeScope?: 'per_request' | 'total'; // only when concurrency > 1
+  decodeMethod?: 'streamed' | 'engine' | 'llama_bench' | 'wall';
+  repeats?: number; promptCache?: boolean; thinking?: boolean; speculative?: 'none' | 'lossless' | 'lossy';
   notes?: string; repoUrl?: string; sourcePrUrl?: string; runDate: string;
   verification: Verification; moderation: Moderation; createdAt: string; updatedAt: string;
 };

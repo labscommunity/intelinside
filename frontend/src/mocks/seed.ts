@@ -193,6 +193,7 @@ export function createSeed(): SeedDb {
         ttftMs: rand() < 0.7 ? Math.round((300 / promptTps) * 1000 + 40 + rand() * 120) : undefined,
         contextLength: rand() < 0.75 ? pick([2048, 4096, 4096, 8192]) : undefined,
         batchSize: rand() < 0.6 ? 1 : undefined,
+        ...seedConditions(id),
         notes: rand() < 0.25 ? pick(['Fresh driver, no thermal throttling.', 'Room was warm; expect a few percent more when cool.', 'Speculative decoding off.', 'KV cache 2 GB.', 'Averaged over 5 runs of 256 tokens.']) : undefined,
         repoUrl: rand() < 0.6 ? `https://github.com/${handle}/${rig.id.replace('rig-', '')}-bench` : runtime.repoUrl,
         runDate,
@@ -222,4 +223,25 @@ export function createSeed(): SeedDb {
   }
 
   return { users, rigs, customRuntimes, results, confirmations, flags }
+}
+
+/**
+ * Conditions for about 60% of seeded results, derived from the id rather than the shared random stream so the rest
+ * of the seed stays as it was. Mostly the standard setup, with some long prompts, multi-request and speculative runs.
+ */
+function seedConditions(id: string): Partial<Result> {
+  const k = [...id].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7)
+  if (k % 10 >= 6) return {}
+  const concurrency = k % 7 === 0 ? 4 : 1
+  return {
+    inputTokens: [512, 512, 512, 4096, 16384][k % 5],
+    outputTokens: 256,
+    concurrency,
+    decodeScope: concurrency > 1 ? 'per_request' : undefined,
+    decodeMethod: (['streamed', 'streamed', 'engine', 'llama_bench'] as const)[k % 4],
+    repeats: 3,
+    promptCache: false,
+    thinking: false,
+    speculative: k % 9 === 0 ? 'lossless' : 'none',
+  }
 }

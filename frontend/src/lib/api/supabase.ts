@@ -7,7 +7,7 @@ import type {
   Api, BestRank, BoardKind, BoardParams, BoardResponse, BoardRow, BoardUnit, ChartBar, FlagReason,
   HardwareDetail, HardwareItem, HomeResponse, ModelSummary, Moderation, Page, Result,
   ResultDetail, ResultInput, Rig, RigDetail, RigSummary, TopResultsResponse, User, UserStats,
-  CustomRuntime,
+  CustomRuntime, DecodeMethod, DecodeScope, Speculative,
 } from './types'
 import { ApiError, BUILD_SUMMARY_MAX, REVISION_MAX, RUNTIME_FLAGS_MAX } from './types'
 import { hardwareChart } from './hardware-chart'
@@ -49,6 +49,15 @@ type ResultRow = {
   ttft_ms: number | string | null
   context_length: number | null
   batch_size: number | null
+  input_tokens: number | null
+  output_tokens: number | null
+  concurrency: number | null
+  decode_scope: DecodeScope | null
+  decode_method: DecodeMethod | null
+  repeats: number | null
+  prompt_cache: boolean | null
+  thinking: boolean | null
+  speculative: Speculative | null
   notes: string | null
   repo_url: string | null
   source_pr_url: string | null
@@ -149,6 +158,9 @@ function resultPayload(input: Partial<ResultInput>, create = false): Record<stri
     ['rigId', 'rig_id'], ['componentId', 'component_id'], ['componentQuantity', 'component_quantity'],
     ['decodeTps', 'decode_tps'], ['promptTps', 'prompt_tps'], ['ttftMs', 'ttft_ms'], ['contextLength', 'context_length'],
     ['batchSize', 'batch_size'], ['notes', 'notes'], ['repoUrl', 'repo_url'], ['runDate', 'run_date'],
+    ['inputTokens', 'input_tokens'], ['outputTokens', 'output_tokens'], ['concurrency', 'concurrency'],
+    ['decodeScope', 'decode_scope'], ['decodeMethod', 'decode_method'], ['repeats', 'repeats'],
+    ['promptCache', 'prompt_cache'], ['thinking', 'thinking'], ['speculative', 'speculative'],
   ]
   const payload: Record<string, unknown> = {}
   for (const [source, target] of map) {
@@ -156,8 +168,6 @@ function resultPayload(input: Partial<ResultInput>, create = false): Record<stri
   }
   if ('repo_url' in payload) payload.repo_url = input.repoUrl?.trim() || null
   if (payload.component_id == null) payload.component_quantity = null
-  // A stock run carries no revision, whatever the form sent.
-  if (payload.custom_runtime_id == null && 'revision' in payload) payload.revision = null
   return payload
 }
 
@@ -300,6 +310,15 @@ function view(snapshot: Snapshot) {
       ttftMs: row.ttft_ms == null ? undefined : numberValue(row.ttft_ms),
       contextLength: optional(row.context_length),
       batchSize: optional(row.batch_size),
+      inputTokens: optional(row.input_tokens),
+      outputTokens: optional(row.output_tokens),
+      concurrency: optional(row.concurrency),
+      decodeScope: optional(row.decode_scope),
+      decodeMethod: optional(row.decode_method),
+      repeats: optional(row.repeats),
+      promptCache: optional(row.prompt_cache),
+      thinking: optional(row.thinking),
+      speculative: optional(row.speculative),
       notes: optional(row.notes),
       repoUrl: optional(row.repo_url),
       sourcePrUrl: optional(row.source_pr_url),

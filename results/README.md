@@ -21,8 +21,15 @@ Every result on the site can also live here as a file, and a file here can becom
      "decodeTps": 34.2,
      "promptTps": 410,
      "ttftMs": 120,
-     "contextLength": 4096,
-     "batchSize": 1,
+     "inputTokens": 512,
+     "outputTokens": 256,
+     "concurrency": 1,
+     "decodeMethod": "streamed",
+     "repeats": 3,
+     "promptCache": false,
+     "thinking": false,
+     "speculative": "none",
+     "revision": "b6512",
      "runDate": "2026-09-04",
      "notes": "Fresh driver, no thermal throttling."
    }
@@ -31,8 +38,34 @@ Every result on the site can also live here as a file, and a file here can becom
    `runtimeFlags` is optional free text: the settings and build options that would change the number if someone
    rebuilt it. Leave `component` out for a whole-rig result. Ids come from [the catalog](../frontend/src/catalog/); the site's hardware pages show each part's id in the URL. Missing a part? [Add it](../frontend/src/catalog/README.md) first and have a maintainer deploy the catalog to the site and database before submitting your result.
 
+   The conditions (`inputTokens` through `speculative`) are optional, but record what you know: see
+   [Conditions](#conditions) below.
+
 3. Open a pull request against `main`. The **Result ingestion** check validates the JSON, matches the PR author’s numeric GitHub ID to their GitHub OAuth identity, and checks rig ownership and database constraints. If no linked account exists, the check asks you to sign up with that GitHub account and rerun it.
 4. A maintainer merges the PR. The workflow reads the merged files and inserts all new results into Supabase in one transaction, attributed to your account with a link to the submission PR. No submit form is needed. The PR comment reports the result IDs or the error to fix.
+
+### Conditions
+
+The same model on the same hardware gives very different numbers depending on how it was measured. A 4k prompt
+decodes slower than a 512-token one, four concurrent requests give a different number per request than in total,
+and speculative decoding can double the rate. These optional fields record how the number was measured, so results
+measured the same way can be compared:
+
+| Field | Meaning |
+| --- | --- |
+| `inputTokens` | Prompt tokens actually sent, after the chat template. |
+| `outputTokens` | Tokens actually generated. |
+| `concurrency` | Simultaneous requests; `1` for a single stream. |
+| `decodeScope` | Only when `concurrency` is above 1: `per_request` (each request's rate) or `total` (all completion tokens over wall time). |
+| `decodeMethod` | How decode was timed: `streamed` (rate after the first token), `engine` (the engine's own timing), `llama_bench` (`llama-bench` tg), or `wall` (wall clock including prefill, which reads lower). |
+| `repeats` | Measured runs behind the number, not counting warm-up. |
+| `promptCache` | `true` if a cached prompt was reused. |
+| `thinking` | `true` if reasoning mode was on. |
+| `speculative` | `none`, `lossless` (output unchanged, such as MTP or a verified draft model), or `lossy`. |
+| `revision` | The exact engine commit or tag, for stock and custom runs alike. |
+
+`contextLength` and `batchSize` still work but are ambiguous: some people meant the prompt, others the context
+window; some meant concurrent requests, others the engine batch size. Use `inputTokens` and `concurrency` instead.
 
 ### Optional evidence link
 
@@ -50,7 +83,7 @@ The site keeps the submission PR link separately, whether or not you include `ev
 
 ### Stock or a custom runtime
 
-A run on the released runtime needs nothing extra. If you ran a changed runtime — a custom kernel or op, a patch,
+A run on the released runtime needs nothing extra beyond its `revision`, which is recommended. If you ran a changed runtime — a custom kernel or op, a patch,
 a fork — name the custom runtime it ran on and the revision behind it:
 
 ```json

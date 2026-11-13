@@ -27,6 +27,11 @@ export const resultSchema = object({
   componentId: nullable(slug), componentQuantity: nullable({ ...integer, maximum: 32767 }),
   decodeTps: positive, promptTps: nullable(positive), ttftMs: nullable(positive),
   contextLength: nullable(integer), batchSize: nullable(integer), notes: nullable(text(5000)),
+  inputTokens: nullable(integer), outputTokens: nullable(integer), concurrency: nullable(integer),
+  decodeScope: nullable({ type: 'string', enum: ['per_request', 'total'], description: 'Only with concurrency above 1: decodeTps is per request or total throughput.' }),
+  decodeMethod: nullable({ type: 'string', enum: ['streamed', 'engine', 'llama_bench', 'wall'], description: 'How decode was timed. wall includes prefill.' }),
+  repeats: nullable(integer), promptCache: nullable({ type: 'boolean' }), thinking: nullable({ type: 'boolean' }),
+  speculative: nullable({ type: 'string', enum: ['none', 'lossless', 'lossy'] }),
   repoUrl: nullable(https), runDate: { type: 'string', format: 'date' },
 }, ['rigId', 'modelId', 'quant', 'runtimeId', 'runtimeVersion', 'decodeTps', 'runDate'])
 const flagSchema = object({ reason: { type: 'string', enum: ['implausible', 'wrong_hardware', 'duplicate', 'spam', 'other'] }, note: nullable(text(5000)) }, ['reason'])
@@ -74,7 +79,7 @@ export function validate(schema: Schema, value: unknown, field = 'body'): void {
   const types = Array.isArray(schema.type) ? schema.type : [schema.type]
   const kind = value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value
   if (!types.includes(kind) && !(types.includes('integer') && typeof value === 'number' && Number.isInteger(value))) fail(`Expected ${types.join(' or ')}.`)
-  if (schema.enum && !schema.enum.includes(value)) fail(`Choose one of: ${schema.enum.join(', ')}.`)
+  if (schema.enum && value !== null && !schema.enum.includes(value)) fail(`Choose one of: ${schema.enum.join(', ')}.`)
   if (typeof value === 'string') {
     if (schema.minLength !== undefined && value.trim().length < schema.minLength) fail('Cannot be empty.')
     if (schema.maxLength !== undefined && value.length > schema.maxLength) fail(`Maximum length is ${schema.maxLength}.`)
