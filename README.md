@@ -39,7 +39,7 @@ the full picture, including how to run the app locally.
 ```
 frontend/          Vite + React 19 + Tailwind 4 single-page app
   src/catalog/     The hardware, model, quant, and runtime catalog — source of truth
-  src/lib/api/     Typed API contract, with supabase, mock, and live adapters
+  src/lib/api/     Typed API contract (types.ts), with supabase and mock adapters
   src/og/          Open Graph card rendering, shared by the app and the edge functions
   api/og/          Vercel edge functions that serve the share images
   scripts/         Catalog seeding, mark generation, OG previews, validators
@@ -84,7 +84,6 @@ Deployed on Vercel; the Open Graph cards are rendered by edge functions with Sat
 
 ## Docs
 
-- [docs/API.md](docs/API.md) — the typed API contract the front end is written against
 - [docs/SUPABASE.md](docs/SUPABASE.md) — environments, migrations, and OAuth setup
 
 ## License

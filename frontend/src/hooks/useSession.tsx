@@ -60,8 +60,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       void signInWithGitHub(returnTo ?? window.location.pathname).catch((error: unknown) => {
         toast.error(error instanceof Error ? error.message : 'Could not start GitHub sign-in.')
       })
-    } else if (api.mode === 'live') {
-      window.location.assign(api.signInUrl(returnTo ?? window.location.pathname))
     } else {
       setSignInOpen(true)
     }

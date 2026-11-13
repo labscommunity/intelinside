@@ -3,8 +3,8 @@
 The HTTP API uses the existing Vercel deployment and Supabase project. There is no
 new hosted service. Users create personal keys at `/settings/api-keys` and use
 `/docs/agents.md`; `/api/openapi.json` is generated at request time from the same
-route schemas used for validation. `docs/API.md` describes the older frontend
-adapter contract, not these versioned HTTP routes.
+route schemas used for validation. The front end's internal data contract is
+`frontend/src/lib/api/types.ts`, separate from these versioned HTTP routes.
 
 ## Deployment order
 

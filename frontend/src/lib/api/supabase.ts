@@ -452,7 +452,6 @@ export const supabaseApi: Api = {
     const user = publicUser(row)
     return { ...user, stats: userStats(snapshot, user) }
   },
-  signInUrl: () => '#sign-in',
   signOut: signOutSupabase,
 
   async models() {
