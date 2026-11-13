@@ -18,7 +18,6 @@ const one = async (sql, params) => (await db.query(sql, params)).rows[0]
 const count = async (table) => (await one(`select count(*)::integer as n from ${table}`)).n
 const newModel = (snapshot) => {
   snapshot.models.push({ ...snapshot.models[0], id: 'sync-test-7b', name: 'Sync Test 7B' })
-  snapshot.model_quants.push({ model_id: 'sync-test-7b', quant_id: 'int4' })
   return snapshot
 }
 
@@ -28,17 +27,22 @@ test('the current catalog syncs, and a second sync changes nothing', async () =>
   assert.equal(first.tables.models.inserted + first.tables.models.updated + first.tables.models.unchanged, catalog.models.length)
   const second = await sync(catalog)
   assert.equal(changes(second), 0)
-  assert.equal(second.tables.model_quants.unchanged, catalog.model_quants.length)
   assert.equal(second.tables.hardware.unchanged, catalog.hardware.length)
   assert.match(report(second), /\| hardware \| 0 \| 0 \| \d+ \|/)
 })
 
-test('a new model and its board are inserted without a migration, so results can reference them', async () => {
+test('a new model is inserted without a migration, so results can reference it with any catalog quant', async () => {
   const result = await sync(newModel(fresh()))
   assert.equal(result.tables.models.inserted, 1)
-  assert.equal(result.tables.model_quants.inserted, 1)
-  assert.equal(changes(result), 2)
-  assert.ok(await one(`select 1 from public.model_quants where model_id = 'sync-test-7b' and quant_id = 'int4'`))
+  assert.equal(changes(result), 1)
+  assert.ok(await one(`select 1 from public.models where id = 'sync-test-7b'`))
+  assert.equal('model_quants' in result.tables, false)
+})
+
+test('a snapshot from older code that still sends model_quants is accepted and the key ignored', async () => {
+  const legacy = { ...fresh(), model_quants: [{ model_id: 'qwen3-8b', quant_id: 'int4' }] }
+  assert.equal(changes(await sync(legacy)), 0)
+  assert.equal(await one(`select to_regclass('public.model_quants') as t`).then((r) => r.t), null)
 })
 
 test('metadata edits update only the changed row and every column type round-trips', async () => {
@@ -69,7 +73,6 @@ test('dry runs report the same changes and write nothing', async () => {
 test('rows missing from the catalog are reported and kept', async () => {
   const result = await sync(fresh())
   assert.deepEqual(result.tables.models.not_in_catalog, ['sync-test-7b'])
-  assert.deepEqual(result.tables.model_quants.not_in_catalog, ['sync-test-7b/int4'])
   assert.ok(await one(`select 1 from public.models where id = 'sync-test-7b'`))
   assert.match(report(result), /models: sync-test-7b/)
 })
@@ -77,7 +80,6 @@ test('rows missing from the catalog are reported and kept', async () => {
 test('a bad snapshot rolls back completely', async () => {
   const before = await count('public.models')
   const broken = [
-    [(s) => { newModel(s); s.model_quants.push({ model_id: 'sync-test-7b', quant_id: 'no-such-quant' }) }, /model_quants_quant_id_fkey|foreign key/],
     [(s) => { s.models.push({ ...s.models[0], id: 'rollback-me' }); s.models.push({ ...s.models[0], id: 'rollback-me' }) }, /repeats a models key/],
     [(s) => { s.models.push({ ...s.models[0], id: 'rollback-me', brand: 'Extra' }) }, /field this database does not sync/],
     [(s) => { s.models.push({ ...s.models[0], id: 'rollback-me' }); s.hardware.find((h) => h.integrated.length).integrated.push('no-such-part') }, /Integrated hardware does not exist/],
