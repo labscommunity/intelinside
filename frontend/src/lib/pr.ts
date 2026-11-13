@@ -65,6 +65,33 @@ export function parsePrRef(input: string): PrRef | null {
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/
 
+/** Every key a result file may carry. results/schema.json lists the same keys; a test keeps them in step. */
+export const RESULT_FILE_KEYS = [
+  '$schema', 'rig', 'component', 'componentQuantity', 'model', 'quant', 'runtime', 'runtimeVersion', 'runtimeFlags',
+  'customRuntime', 'customRuntimeFile', 'revision', 'decodeTps', 'promptTps', 'ttftMs', 'contextLength', 'batchSize',
+  ...CONDITION_KEYS, 'runDate', 'notes', 'evidenceUrl', 'result',
+] as const
+
+/** How many single-letter edits turn a into b. Small strings only. */
+function editDistance(a: string, b: string): number {
+  let row = Array.from({ length: b.length + 1 }, (_, i) => i)
+  for (let i = 1; i <= a.length; i++) {
+    const next = [i]
+    for (let j = 1; j <= b.length; j++) next[j] = Math.min(row[j] + 1, next[j - 1] + 1, row[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1))
+    row = next
+  }
+  return row[b.length]
+}
+
+/** A misspelled field is otherwise dropped without a word, so name it and suggest the closest known key. */
+function unknownFieldProblem(key: string): string {
+  const lower = key.toLowerCase()
+  const guess = RESULT_FILE_KEYS.map((known) => ({ known, distance: editDistance(lower, known.toLowerCase()) }))
+    .filter(({ distance }) => distance <= 2)
+    .sort((a, b) => a.distance - b.distance)[0]
+  return `Unknown field: "${key}".${guess ? ` Did you mean "${guess.known}"?` : ''}`
+}
+
 /**
  * Reads a result file leniently: every field that can be used is kept, every problem is named, so a file with one
  * bad id still prefills the rest of the form. The CI check treats any problem as a failure.
@@ -74,6 +101,9 @@ export function parseResultFile(raw: unknown): { file: Partial<ResultFile>; prob
   const file: Partial<ResultFile> = {}
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { file, problems: ['The file must be a JSON object.'] }
   const data = raw as Record<string, unknown>
+  for (const key of Object.keys(data)) {
+    if (!(RESULT_FILE_KEYS as readonly string[]).includes(key)) problems.push(unknownFieldProblem(key))
+  }
   const str = (key: keyof ResultFile, required = false) => {
     const value = data[key]
     if (typeof value === 'string' && value.trim()) return value.trim()
