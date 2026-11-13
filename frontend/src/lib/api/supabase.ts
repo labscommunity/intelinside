@@ -10,7 +10,8 @@ import type {
   CustomRuntime, DecodeMethod, DecodeScope, Speculative,
 } from './types'
 import { ApiError, BUILD_SUMMARY_MAX, REVISION_MAX, RUNTIME_FLAGS_MAX } from './types'
-import { SETUPS, SETUP_BY_ID } from '@/lib/setups'
+import { SETUPS, SETUP_BY_ID, type SetupId } from '@/lib/setups'
+import { resultRank } from '@/lib/rank'
 import { hardwareChart } from './hardware-chart'
 
 type ProfileRow = {
@@ -681,9 +682,9 @@ export const supabaseApi: Api = {
     if (!row) throw new ApiError('not_found', 'No such result.', 404)
     const result = data.result(row)
     const kind: BoardKind = result.componentId ? 'components' : 'rigs'
-    const ranked = boardItems(snapshot.results.map(data.result), result.modelId, result.quant, { kind, includeModified: result.execution === 'modified' })
-    const position = ranked.findIndex((candidate) => unitKey(candidate) === unitKey(result))
-    const detail: ResultDetail = { ...result, rank: position >= 0 ? { kind, position: position + 1, boardSize: ranked.length } : undefined }
+    const all = snapshot.results.map(data.result)
+    const rankedIn = (setup: SetupId) => boardItems(all, result.modelId, result.quant, { kind, setup, includeModified: result.execution === 'modified' })
+    const detail: ResultDetail = { ...result, rank: resultRank(result, kind, rankedIn, unitKey) }
     return detail
   },
   async createResult(input) {

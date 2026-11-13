@@ -11,7 +11,7 @@ The front end talks to the network only through `src/lib/api.ts`, whose function
 - List endpoints accept `limit` (default 25, max 100) and `cursor`, and return `{ items, nextCursor }`.
 - Errors return `{ error: { code, message, fields? } }` with 400, 401, 403, 404, or 409.
 - Hidden results are omitted everywhere except for their owner, who receives them with `moderation.hidden = true`.
-- Ranking (best per hardware unit, highest decode tok/s, earliest run date on ties) is computed server-side.
+- Ranking (best per hardware unit, highest decode tok/s, earliest run date on ties) is computed by whichever adapter serves the data. A backend implementing this contract computes it server-side; the Supabase adapter the site uses (`src/lib/api/supabase.ts`) computes it in the browser from the results it loads.
 
 ## Auth
 
@@ -63,7 +63,7 @@ By default, boards keep only the best submission per rig or component and quanti
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/api/results?rig=&hardware=&model=&quant=&runtime=&user=&limit=&cursor=` | `Result[]`, newest first |
-| GET | `/api/results/:resultId` | `Result` plus `rank: { kind, position, boardSize }` |
+| GET | `/api/results/:resultId` | `Result` plus `rank: { kind, setup, boardSize, position?, heldBy?: { id, position } }`: ranked within the result's own setup (`all` when it matches none). `position` when this result is its rig's or part's row on the board; otherwise `heldBy` names the result that is |
 | POST | `/api/results` | Body `ResultInput`. Signed in. Server validates that `componentId` belongs to `rigId` and that `quant` is a catalog quant (any catalog quant is valid for any model) |
 | PATCH | `/api/results/:resultId` | Owner only. Any change resets verification to `self_reported` and clears confirmations |
 | DELETE | `/api/results/:resultId` | Owner only |

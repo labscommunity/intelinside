@@ -54,7 +54,7 @@ export function resultShareTarget(
   const model = catalog.models.find((m) => m.id === result.modelId)?.name ?? result.modelId
   const quant = catalog.quants.find((q) => q.id === result.quant)?.label ?? result.quant
   const runtime = catalog.runtimes.find((r) => r.id === result.runtimeId)?.name ?? result.runtimeId
-  const rankLine = rank ? ` #${rank.position} on the ${BRAND_NAME} board.` : ''
+  const rankLine = rank?.position ? ` #${rank.position} on the ${BRAND_NAME} board.` : ''
   return {
     kind: 'result',
     id: result.id,

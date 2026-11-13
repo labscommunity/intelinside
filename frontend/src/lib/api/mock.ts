@@ -9,7 +9,8 @@ import { hardwareChart } from './hardware-chart'
 import { isEvidenceUrl } from '@/lib/evidence'
 import { hostIn } from '@/lib/hardware'
 import { conditionErrors } from '@/lib/conditions'
-import { SETUPS, SETUP_BY_ID } from '@/lib/setups'
+import { SETUPS, SETUP_BY_ID, type SetupId } from '@/lib/setups'
+import { resultRank } from '@/lib/rank'
 import { boardQuants, HARDWARE_BY_ID, MODELS, MODEL_BY_ID, QUANTS, QUANT_BY_ID, RUNTIMES, RUNTIME_BY_ID, VISIBLE_HARDWARE } from '@/catalog'
 import { createSeed, type SeedDb } from '@/mocks/seed'
 import { rigSummaryLine } from '@/lib/rig-summary'
@@ -505,9 +506,8 @@ export const mockApi: Api = {
     const r = db.results.find((x) => x.id === id)
     if (!r || !canSee(r)) return fail('not_found', 'No such result.', 404)
     const kind: BoardKind = r.componentId ? 'components' : 'rigs'
-    const rows = bestRows(r.modelId, r.quant, kind, { includeModified: r.execution === 'modified' })
-    const i = rows.findIndex((x) => unitKey(x) === unitKey(r))
-    const detail: ResultDetail = { ...hydrateResult(r), rank: i >= 0 ? { kind, position: i + 1, boardSize: rows.length } : undefined }
+    const rankedIn = (setup: SetupId) => bestRows(r.modelId, r.quant, kind, { setup, includeModified: r.execution === 'modified' })
+    const detail: ResultDetail = { ...hydrateResult(r), rank: resultRank(r, kind, rankedIn, unitKey) }
     return delay(detail)
   },
   async createResult(input) {

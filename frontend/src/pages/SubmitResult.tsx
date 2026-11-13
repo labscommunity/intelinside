@@ -32,6 +32,7 @@ import { fmtTps, pluralize } from '@/lib/format'
 import { resultShareTarget } from '@/lib/share'
 import { cn } from '@/lib/utils'
 import { DECODE_METHODS, DECODE_SCOPES, SPECULATIVE, type Conditions } from '@/lib/conditions'
+import { boardPhrase, rankBoardPath, unitPhrase } from '@/lib/rank'
 import { HARDWARE_BY_ID, MODEL_BY_ID, QUANT_BY_ID, RUNTIME_BY_ID } from '@/catalog'
 
 type Target = 'rig' | 'component'
@@ -483,10 +484,16 @@ export default function SubmitResult({ mode = 'create' }: { mode?: 'create' | 'e
           eyebrow="Submitted"
           title={
             <>
-              <span className="font-mono">{fmtTps(r.decodeTps)}</span> tok/s is on the board.
+              <span className="font-mono">{fmtTps(r.decodeTps)}</span> tok/s is {done.rank?.heldBy ? 'saved' : 'on the board'}.
             </>
           }
-          description={done.rank ? `#${done.rank.position} of ${done.rank.boardSize} on the ${m?.name ?? r.modelId} ${quantLabel(r.quant)} ${done.rank.kind} board. It starts as self-reported; the community can confirm it.` : undefined}
+          description={
+            done.rank?.position
+              ? `#${done.rank.position} of ${done.rank.boardSize} ${boardPhrase(done.rank, m?.name ?? r.modelId, quantLabel(r.quant))}. It starts as self-reported; the community can confirm it.`
+              : done.rank?.heldBy
+                ? `It is saved, but ${unitPhrase(r)} already ranks #${done.rank.heldBy.position} of ${done.rank.boardSize} with a faster result, and the board shows each ${r.componentId ? 'part' : 'rig'} once.`
+                : undefined
+          }
           actions={
             <>
               <Button variant="outline" onClick={() => setShareOpen(true)}>
@@ -515,7 +522,7 @@ export default function SubmitResult({ mode = 'create' }: { mode?: 'create' | 'e
             runtimes={runtimes}
             footer={
               <div className="flex flex-wrap items-center gap-2">
-                <Button variant="outline" render={<Link to={`/models/${r.modelId}/${r.quant}?kind=${done.rank?.kind ?? 'rigs'}`} />} nativeButton={false}>
+                <Button variant="outline" render={<Link to={done.rank ? rankBoardPath(r, done.rank) : `/models/${r.modelId}/${r.quant}?kind=${r.componentId ? 'components' : 'rigs'}`} />} nativeButton={false}>
                   Open the board
                 </Button>
                 <Button
