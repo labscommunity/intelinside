@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { AgentPromptDialog } from '@/components/AgentPromptDialog'
 import { CustomRuntimeForm } from '@/components/CustomRuntimeForm'
 import { Textarea } from '@/components/ui/textarea'
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from '@/components/ui/native-select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/PageHeader'
 import { ResultCard } from '@/components/ResultCard'
@@ -81,14 +81,13 @@ const runtimeFlagsPlaceholder = (runtimeId: string) =>
 const isoAtNoon = (day: string) => new Date(`${day}T12:00:00`).toISOString()
 
 /** Mirrors the server's rules so the form can flag problems before the request. */
-function validate(f: Form, quantsFor: string[]): Record<string, string> {
+function validate(f: Form): Record<string, string> {
   const e: Record<string, string> = {}
   if (!f.rigId) e.rigId = 'Pick a rig.'
   if (f.target === 'component' && !f.componentId) e.componentId = 'Pick the part it ran on.'
   if (f.target === 'component' && !(Number(f.componentQuantity) >= 1)) e.componentQuantity = 'How many of that part were used?'
   if (!f.modelId) e.modelId = 'Pick a model.'
   if (!f.quant) e.quant = 'Pick a quantization.'
-  else if (quantsFor.length && !quantsFor.includes(f.quant)) e.quant = 'That quant has no board for this model.'
   if (!f.runtimeId) e.runtimeId = 'Pick a runtime.'
   if (!f.runtimeVersion.trim()) e.runtimeVersion = 'Enter the runtime version.'
   if (f.runtimeFlags.trim().length > RUNTIME_FLAGS_MAX) e.runtimeFlags = `Use ${RUNTIME_FLAGS_MAX} characters or fewer.`
@@ -303,18 +302,13 @@ export default function SubmitResult({ mode = 'create' }: { mode?: 'create' | 'e
 
   const rigDetail = useAsync(() => (form.rigId ? api.rig(form.rigId) : Promise.resolve(null)), [form.rigId])
   const model = cat.data?.models.find((m) => m.id === form.modelId)
+  // Any catalog quant works for any model. The model's own list leads; the rest follow as "Other quants".
   const quantsFor = model?.quants ?? []
-  const quantKey = quantsFor.join(',')
-
-  // Drop a quant that the chosen model has no board for.
-  useEffect(() => {
-    setForm((f) => (f.quant && quantsFor.length && !quantsFor.includes(f.quant) ? { ...f, quant: '' } : f))
-  }, [quantKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Live validation once the first attempt has been made.
   useEffect(() => {
-    if (attempted) setErrors(validate(form, quantsFor))
-  }, [form, attempted, quantKey]) // eslint-disable-line react-hooks/exhaustive-deps
+    if (attempted) setErrors(validate(form))
+  }, [form, attempted])
 
   if (loading || cat.loading || (mode === 'edit' && existing.loading))
     return (
@@ -404,7 +398,7 @@ export default function SubmitResult({ mode = 'create' }: { mode?: 'create' | 'e
       return
     }
     setAttempted(true)
-    const e = validate(form, quantsFor)
+    const e = validate(form)
     setErrors(e)
     if (Object.keys(e).length) {
       toast.error('Fix the highlighted fields.')
@@ -668,7 +662,7 @@ export default function SubmitResult({ mode = 'create' }: { mode?: 'create' | 'e
               ) : null}
             </Step>
 
-            <Step n={3} title="Model" hint="Each model and quantization is its own board.">
+            <Step n={3} title="Model" hint="Each model and quantization is its own board. Any quantization in the catalog works for any model.">
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field id="modelId" label="Model" error={errors.modelId}>
                   <NativeSelect className="w-full" id="modelId" value={form.modelId} aria-invalid={!!errors.modelId} onChange={(e) => set({ modelId: e.target.value })}>
@@ -683,11 +677,20 @@ export default function SubmitResult({ mode = 'create' }: { mode?: 'create' | 'e
                 <Field id="quant" label="Quantization" error={errors.quant}>
                   <NativeSelect className="w-full" id="quant" value={form.quant} disabled={!form.modelId} aria-invalid={!!errors.quant} onChange={(e) => set({ quant: e.target.value })}>
                     <NativeSelectOption value="">{form.modelId ? 'Pick a quant' : 'Pick a model first'}</NativeSelectOption>
-                    {quantsFor.map((q) => (
-                      <NativeSelectOption key={q} value={q}>
-                        {quantLabel(q)}
-                      </NativeSelectOption>
-                    ))}
+                    <NativeSelectOptGroup label="Suggested for this model">
+                      {quantsFor.map((q) => (
+                        <NativeSelectOption key={q} value={q}>
+                          {quantLabel(q)}
+                        </NativeSelectOption>
+                      ))}
+                    </NativeSelectOptGroup>
+                    <NativeSelectOptGroup label="Other quants">
+                      {quants.filter((q) => !quantsFor.includes(q.id)).map((q) => (
+                        <NativeSelectOption key={q.id} value={q.id}>
+                          {q.label}
+                        </NativeSelectOption>
+                      ))}
+                    </NativeSelectOptGroup>
                   </NativeSelect>
                 </Field>
               </div>

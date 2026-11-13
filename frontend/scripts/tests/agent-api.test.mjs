@@ -109,7 +109,11 @@ test('catalog relationships, result edits, pagination, and hidden rows keep webs
  assert.equal((await call('/api/v1/results',{method:'POST',body:{...resultInput(),runtimeId:'vllm'}})).status,400)
  const unknownModel=await call('/api/v1/results',{method:'POST',body:{...resultInput(),modelId:'not-a-model'}})
  assert.equal(unknownModel.status,400);assert.match(unknownModel.body.error.message,/Unknown model: not-a-model/)
- assert.match((await call('/api/v1/results',{method:'POST',body:{...resultInput(),quant:'ptq1_0'}})).body.error.message,/does not support quant ptq1_0/)
+ // Any catalog quant is valid for any model (#130); an unknown quant is still rejected.
+ const offList=okay(await call('/api/v1/results',{method:'POST',body:{...resultInput(),quant:'ptq1_0'}}),201)
+ assert.equal(offList.quant,'ptq1_0')
+ okay(await call(`/api/v1/results/${offList.id}`,{method:'DELETE',version:offList.updatedAt}))
+ assert.match((await call('/api/v1/results',{method:'POST',body:{...resultInput(),quant:'not-a-quant'}})).body.error.message,/Unknown quant: not-a-quant/)
  assert.equal((await call('/api/v1/results/batch',{method:'POST',body:{items:[resultInput(),{...resultInput(),runtimeId:'not-a-runtime'}]}})).status,400)
  assert.equal((await call(`/api/v1/custom-runtimes/${runtime.id}`,{method:'PATCH',body:{runtimeId:'vllm'},version:runtime.updatedAt})).status,409)
  const first=okay(await call('/api/v1/results?owner=me&limit=1'))

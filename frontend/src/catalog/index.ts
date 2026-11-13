@@ -390,4 +390,14 @@ export const VISIBLE_HARDWARE = HARDWARE.filter((h) => h.vendor === 'Intel' || h
 export const RUNTIME_BY_ID: Record<string, Runtime> = Object.fromEntries(RUNTIMES.map((r) => [r.id, r]))
 export const MODEL_BY_ID: Record<string, Model> = Object.fromEntries(MODELS.map((m) => [m.id, m]))
 export const QUANT_BY_ID: Record<string, Quant> = Object.fromEntries(QUANTS.map((q) => [q.id, q]))
+
+/**
+ * The quant boards a model shows. Any catalog quant is valid for any model; `model.quants` is only the suggested
+ * list the submit form leads with. Boards are the suggested quants, then any other quant that has results, in
+ * catalog order.
+ */
+export function boardQuants(model: Pick<Model, 'quants'>, usedQuants: Iterable<string>): string[] {
+  const used = new Set(usedQuants)
+  return [...model.quants, ...QUANTS.map((q) => q.id).filter((id) => used.has(id) && !model.quants.includes(id))]
+}
 export const VENDORS = Array.from(new Set(VISIBLE_HARDWARE.map((h) => h.vendor))).filter((v) => v !== 'Generic')

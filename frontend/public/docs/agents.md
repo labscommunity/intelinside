@@ -171,7 +171,7 @@ All paths below are relative to `/api/v1`. Every route except `/catalog` require
 
 | Method | Path | Permission | Behavior |
 | --- | --- | --- | --- |
-| GET | `/catalog` | public | Hardware, models with supported quant IDs, quantizations, and base runtimes. Public; no key required. |
+| GET | `/catalog` | public | Hardware, models with suggested quant IDs, quantizations, and base runtimes. Any catalog quant is valid for any model. Public; no key required. |
 | GET | `/me` | read | Your profile, key ID, and granted permissions. |
 | GET | `/users/{handle}` | read | Read a public profile. |
 | GET | `/rigs` | read | List rigs. Filter by owner=me, q, or resource-specific IDs. |

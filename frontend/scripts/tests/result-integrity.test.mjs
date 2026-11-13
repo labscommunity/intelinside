@@ -57,3 +57,16 @@ test('a build in use cannot move to another base runtime', async () => {
     values ($1,'llamacpp','Unused','https://github.com/example/unused','Not referenced') returning id`, [owner])
   await as(owner, () => db.query(`update public.custom_runtimes set runtime_id = 'vllm' where id = $1`, [rows[0].id]))
 })
+
+test('any catalog quant is valid for any catalog model; unknown ids are not', async () => {
+  // ptq1_0 is suggested only for Ternary Bonsai, not for Qwen3-8B.
+  const ok = await as(owner, () => db.query(`insert into public.results
+    (submitter_id,rig_id,model_id,quant_id,runtime_id,runtime_version,decode_tps,run_date)
+    values ($1,1,'qwen3-8b','ptq1_0','llamacpp','any-quant',34.2,'2026-09-04') returning id`, [owner]))
+  assert.equal(ok.rows.length, 1)
+  for (const [model, quant, key] of [['qwen3-8b', 'not-a-quant', 'results_quant_id_fkey'], ['not-a-model', 'q4_k_m', 'results_model_id_fkey']]) {
+    await assert.rejects(as(owner, () => db.query(`insert into public.results
+      (submitter_id,rig_id,model_id,quant_id,runtime_id,runtime_version,decode_tps,run_date)
+      values ($1,1,$2,$3,'llamacpp','any-quant',34.2,'2026-09-04')`, [owner, model, quant])), new RegExp(key))
+  }
+})

@@ -44,8 +44,10 @@ changes.
 
 ## Add a model
 
-Append to `MODELS`. Every model needs `sourceUrl` (the model card) and a `quants` list; each quant in that list
-becomes its own leaderboard, so list only the ones people actually run.
+Append to `MODELS`. Every model needs `sourceUrl` (the model card) and a `quants` list. The list is a suggestion:
+the submit form leads with it and the model page always shows those boards. Any quant in `QUANTS` is valid for
+any model, and a quant outside the list gets its own board once someone posts a result with it. So list the
+ones people usually run, and add a new quant to `QUANTS` once rather than to every model.
 
 ```ts
 {

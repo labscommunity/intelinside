@@ -21,6 +21,9 @@ const results = [
   run(7, 'intel-arc-pro-b70', 1, 90, { hidden: true }),
   run(8, 'intel-arc-pro-b70', 1, 100, { custom_runtime_id: 1 }),
   run(9, 'intel-arc-pro-b70', 1, 110, { quant_id: 'int4' }),
+  // Quants outside the model's suggested list: one visible, one hidden.
+  run(10, 'intel-arc-pro-b70', 1, 30, { quant_id: 'iq2_xxs' }),
+  run(11, 'intel-arc-pro-b70', 1, 30, { quant_id: 'q2_0', hidden: true }),
 ]
 
 before(async () => {
@@ -86,4 +89,14 @@ test('all-submissions pagination counts all matches and retains repeated configu
     cursor = page.nextCursor
   } while (cursor)
   assert.deepEqual(pages, ['5', '3', '2', '1', '4'])
+})
+
+test('a quant outside the suggested list gets its own board once it has visible results', async () => {
+  const model = (await supabaseApi.models()).find((m) => m.id === 'qwen3-8-27b')
+  assert.deepEqual(model.quants, ['int4', 'int8', 'fp8', 'q4_k_m', 'q4_k_l', 'q8_0', 'exl3-4bpw', 'exl3-5bpw', 'mlx-4bit', 'iq2_xxs'])
+  assert.equal(model.resultCounts.iq2_xxs, 1)
+  assert.deepEqual(ids(await supabaseApi.board('qwen3-8-27b', 'iq2_xxs', { kind: 'components' })), ['10'])
+  // Any catalog quant has a board, even an empty one; only unknown quants are missing.
+  assert.equal((await supabaseApi.board('qwen3-8-27b', 'q2_0', { kind: 'components' })).board.total, 0)
+  await assert.rejects(supabaseApi.board('qwen3-8-27b', 'not-a-quant', { kind: 'components' }), /No such board/)
 })

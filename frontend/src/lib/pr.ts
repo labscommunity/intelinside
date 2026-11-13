@@ -103,7 +103,6 @@ export function parseResultFile(raw: unknown): { file: Partial<ResultFile>; prob
   if (file.model && !model) problems.push(`"model" ${file.model} is not a model id in the catalog.`)
   file.quant = str('quant', true)
   if (file.quant && !QUANT_BY_ID[file.quant]) problems.push(`"quant" ${file.quant} is not a quant id in the catalog.`)
-  else if (file.quant && model && !model.quants.includes(file.quant)) problems.push(`${model.name} has no ${QUANT_BY_ID[file.quant].label} board.`)
   file.runtime = str('runtime', true)
   if (file.runtime && !RUNTIME_BY_ID[file.runtime]) problems.push(`"runtime" ${file.runtime} is not a runtime id in the catalog.`)
   file.runtimeVersion = str('runtimeVersion', true)

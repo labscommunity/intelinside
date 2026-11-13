@@ -64,7 +64,7 @@ By default, boards keep only the best submission per rig or component and quanti
 |---|---|---|
 | GET | `/api/results?rig=&hardware=&model=&quant=&runtime=&user=&limit=&cursor=` | `Result[]`, newest first |
 | GET | `/api/results/:resultId` | `Result` plus `rank: { kind, position, boardSize }` |
-| POST | `/api/results` | Body `ResultInput`. Signed in. Server validates that `componentId` belongs to `rigId` and that `quant` is in the model's quant list |
+| POST | `/api/results` | Body `ResultInput`. Signed in. Server validates that `componentId` belongs to `rigId` and that `quant` is a catalog quant (any catalog quant is valid for any model) |
 | PATCH | `/api/results/:resultId` | Owner only. Any change resets verification to `self_reported` and clears confirmations |
 | DELETE | `/api/results/:resultId` | Owner only |
 | POST | `/api/results/:resultId/confirm` | Toggle. Signed in, not the owner. Returns updated `verification` |

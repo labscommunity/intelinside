@@ -8,7 +8,7 @@ import { ApiError, BUILD_SUMMARY_MAX } from './types'
 import { hardwareChart } from './hardware-chart'
 import { isEvidenceUrl } from '@/lib/evidence'
 import { hostIn } from '@/lib/hardware'
-import { HARDWARE_BY_ID, MODELS, MODEL_BY_ID, QUANTS, QUANT_BY_ID, RUNTIMES, RUNTIME_BY_ID, VISIBLE_HARDWARE } from '@/catalog'
+import { boardQuants, HARDWARE_BY_ID, MODELS, MODEL_BY_ID, QUANTS, QUANT_BY_ID, RUNTIMES, RUNTIME_BY_ID, VISIBLE_HARDWARE } from '@/catalog'
 import { createSeed, type SeedDb } from '@/mocks/seed'
 import { rigSummaryLine } from '@/lib/rig-summary'
 
@@ -218,11 +218,16 @@ function bestPerModelQuant(items: Result[], withPart = false): ChartBar[] {
   }))
 }
 
+/** Suggested quants plus any other quant with visible results for this model. */
+function quantsFor(m: Model): string[] {
+  return boardQuants(m, visibleResults().filter((r) => r.modelId === m.id).map((r) => r.quant))
+}
+
 function userStats(u: User): UserStats {
   const mine = visibleResults().filter((r) => r.submitterId === u.id)
   let bestRank: BestRank | undefined
   for (const m of MODELS)
-    for (const q of m.quants)
+    for (const q of quantsFor(m))
       for (const kind of ['rigs', 'components'] as BoardKind[]) {
         const rows = bestRows(m.id, q, kind)
         const i = rows.findIndex((r) => r.submitterId === u.id)
@@ -274,7 +279,7 @@ function validateResult(input: Partial<ResultInput>, forCreate: boolean): Record
   need('rigId', 'Pick a rig.')
   need('runDate', 'Enter the run date.')
   if (input.modelId && !MODEL_BY_ID[input.modelId]) errors.modelId = 'Unknown model.'
-  if (input.modelId && input.quant && MODEL_BY_ID[input.modelId] && !MODEL_BY_ID[input.modelId].quants.includes(input.quant)) errors.quant = 'That quant has no board for this model.'
+  if (input.quant && !QUANT_BY_ID[input.quant]) errors.quant = 'Unknown quant.'
   if (input.decodeTps != null && !(input.decodeTps > 0)) errors.decodeTps = 'Decode tok/s must be above zero.'
   if (forCreate && input.decodeTps == null) errors.decodeTps = 'Enter decode tok/s.'
   if (input.repoUrl?.trim() && !isEvidenceUrl(input.repoUrl.trim())) errors.repoUrl = 'Enter a full HTTPS URL.'
@@ -313,10 +318,10 @@ export const mockApi: Api = {
 
   async models() {
     return delay(
-      MODELS.map((m) => ({
-        ...m,
-        resultCounts: Object.fromEntries(m.quants.map((q) => [q, visibleResults().filter((r) => r.modelId === m.id && r.quant === q).length])),
-      })),
+      MODELS.map((m) => {
+        const quants = quantsFor(m)
+        return { ...m, quants, resultCounts: Object.fromEntries(quants.map((q) => [q, visibleResults().filter((r) => r.modelId === m.id && r.quant === q).length])) }
+      }),
     )
   },
   async model(id) {
@@ -352,7 +357,7 @@ export const mockApi: Api = {
 
   async board(modelId, quant, params) {
     if (!MODEL_BY_ID[modelId]) return fail('not_found', 'No such model.', 404)
-    if (!MODEL_BY_ID[modelId].quants.includes(quant)) return fail('not_found', 'No board for that quant.', 404)
+    if (!QUANT_BY_ID[quant]) return fail('not_found', 'No board for that quant.', 404)
     const rows = boardRows(modelId, quant, params)
     const page = paginate(rows, params.limit ?? 25, params.cursor)
     const res: BoardResponse = {

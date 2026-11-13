@@ -106,9 +106,6 @@ function checkCatalog(body: Record<string, unknown>) {
   if (typeof body.quant === 'string' && !QUANT_BY_ID[body.quant]) unknown('quant', body.quant)
   if (typeof body.runtimeId === 'string' && !RUNTIME_BY_ID[body.runtimeId]) unknown('runtime', body.runtimeId)
   if (typeof body.componentId === 'string' && !HARDWARE_BY_ID[body.componentId]) unknown('hardware', body.componentId)
-  if (typeof body.modelId === 'string' && typeof body.quant === 'string' && !MODEL_BY_ID[body.modelId].quants.includes(body.quant)) {
-    fail('validation', `${body.modelId} does not support quant ${body.quant}. Supported: ${MODEL_BY_ID[body.modelId].quants.join(', ')}.`, 400)
-  }
 }
 
 export function createHandler(getBackend: () => Backend | null = configuredBackend) {
