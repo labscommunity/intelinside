@@ -1,3 +1,4 @@
+import type { SetupId } from '@/lib/setups'
 // Mirrors docs/API.md. Keep the two in sync; this file is the front end's contract.
 
 export type Quant = { id: string; label: string; bits: number; format: string }
@@ -241,11 +242,14 @@ export type BoardParams = {
   verification?: VerificationStatus
   /** Boards rank stock runs alone unless this is set. */
   includeModified?: boolean
+  /** A named setup (lib/setups.ts) to rank within. Absent or 'all' keeps every result. */
+  setup?: SetupId
   q?: string
   limit?: number
   cursor?: string
 }
-export type BoardResponse = { board: BoardMeta; items: BoardRow[]; nextCursor?: string; chart: ChartBar[] }
+/** `setupCounts` counts the board under every setup, with all other filters applied, for the setup tabs. */
+export type BoardResponse = { board: BoardMeta; items: BoardRow[]; nextCursor?: string; chart: ChartBar[]; setupCounts: Record<SetupId, number> }
 export type HardwareParams = { type?: HardwareType; vendor?: string; q?: string; limit?: number; cursor?: string }
 export type HardwareDetail = HardwareItem & { chart: ChartBar[]; rigs: RigSummary[]; results: Result[] }
 export type RigsParams = { owner?: string; hardware?: string; sort?: 'newest' | 'results' | 'tps'; limit?: number; cursor?: string }

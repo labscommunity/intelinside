@@ -8,13 +8,19 @@ import { UserLink } from '@/components/UserLink'
 import { HardwareLink } from '@/components/HardwareLink'
 import { UnitLabel } from '@/components/UnitLabel'
 import { td, th } from '@/components/table-styles'
+import { ConditionsCell } from '@/components/ConditionChips'
+import { cn } from '@/lib/utils'
 import type { BoardRow, Model, Quant, Runtime } from '@/lib/api/types'
 import { fmtDate, fmtMs, fmtTps } from '@/lib/format'
 
-type Props = { rows: BoardRow[]; runtimes: Runtime[]; models?: Model[]; quants?: Quant[] }
+type Props = {
+  rows: BoardRow[]; runtimes: Runtime[]; models?: Model[]; quants?: Quant[]
+  /** Add a Conditions column; with `showSetup`, also tag each row with the named setup it ranks in. */
+  conditions?: boolean; showSetup?: boolean
+}
 
 /** Ranked rows. Pass `models` and `quants` to add a Model column for cross-board lists. */
-export function LeaderboardTable({ rows, runtimes, models, quants }: Props) {
+export function LeaderboardTable({ rows, runtimes, models, quants, conditions, showSetup }: Props) {
   const navigate = useNavigate()
   const byId = Object.fromEntries(runtimes.map((r) => [r.id, r]))
   const showModel = !!models
@@ -22,7 +28,7 @@ export function LeaderboardTable({ rows, runtimes, models, quants }: Props) {
   const qt = Object.fromEntries((quants ?? []).map((q) => [q.id, q]))
   return (
     <div className="overflow-x-auto">
-      <Table className="min-w-[820px]">
+      <Table className={cn(conditions ? 'min-w-[1040px]' : 'min-w-[820px]')}>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
             <TableHead className={`${th} w-16 text-right`}>#</TableHead>
@@ -30,6 +36,7 @@ export function LeaderboardTable({ rows, runtimes, models, quants }: Props) {
             {showModel ? <TableHead className={th}>Model</TableHead> : null}
             <TableHead className={th}>Runtime</TableHead>
             <TableHead className={`${th} text-right`}>Decode tok/s</TableHead>
+            {conditions ? <TableHead className={th}>Conditions</TableHead> : null}
             <TableHead className={`${th} hidden text-right md:table-cell`}>Prompt tok/s</TableHead>
             <TableHead className={`${th} hidden text-right lg:table-cell`}>TTFT</TableHead>
             <TableHead className={th}>By</TableHead>
@@ -78,6 +85,7 @@ export function LeaderboardTable({ rows, runtimes, models, quants }: Props) {
                   {fmtTps(result.decodeTps)}
                 </Link>
               </TableCell>
+              {conditions ? <TableCell className={`${td} text-xs`}><ConditionsCell result={result} showSetup={showSetup} /></TableCell> : null}
               <TableCell className={`${td} hidden text-right font-mono text-muted-foreground tnum md:table-cell`}>{fmtTps(result.promptTps)}</TableCell>
               <TableCell className={`${td} hidden text-right font-mono text-muted-foreground tnum lg:table-cell`}>{fmtMs(result.ttftMs)}</TableCell>
               <TableCell className={td}>

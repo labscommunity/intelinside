@@ -11,6 +11,7 @@ const run = (id, component, quantity, tps, extra = {}) => ({
   verification_status: 'self_reported', confirmations_count: 0, flags_count: 0, hidden: false,
   ...extra,
 })
+const standard = { input_tokens: 512, output_tokens: 256, concurrency: 1, speculative: 'none', decode_method: 'streamed' }
 const results = [
   run(1, 'intel-arc-pro-b70', 1, 50),
   run(2, 'intel-arc-pro-b70', 1, 60),
@@ -24,6 +25,12 @@ const results = [
   // Quants outside the model's suggested list: one visible, one hidden.
   run(10, 'intel-arc-pro-b70', 1, 30, { quant_id: 'iq2_xxs' }),
   run(11, 'intel-arc-pro-b70', 1, 30, { quant_id: 'q2_0', hidden: true }),
+  // Q8_0 board: results with and without recorded conditions, for the setup tabs.
+  run(12, 'intel-arc-pro-b70', 1, 40, { quant_id: 'q8_0', ...standard }),
+  run(13, 'intel-arc-pro-b70', 1, 90, { quant_id: 'q8_0', ...standard, speculative: 'lossless' }),
+  run(14, 'intel-arc-pro-b60', 1, 50, { quant_id: 'q8_0', ...standard, decode_method: 'wall' }),
+  run(15, 'intel-arc-pro-b60', 2, 100, { quant_id: 'q8_0' }),
+  run(16, 'intel-arc-pro-b70', 1, 20, { quant_id: 'q8_0', ...standard, concurrency: 4, decode_scope: 'per_request' }),
 ]
 
 before(async () => {
@@ -99,4 +106,18 @@ test('a quant outside the suggested list gets its own board once it has visible 
   // Any catalog quant has a board, even an empty one; only unknown quants are missing.
   assert.equal((await supabaseApi.board('qwen3-8-27b', 'q2_0', { kind: 'components' })).board.total, 0)
   await assert.rejects(supabaseApi.board('qwen3-8-27b', 'not-a-quant', { kind: 'components' }), /No such board/)
+})
+
+test('setup tabs rank only results measured that way, and count every setup', async () => {
+  const q8 = (setup, extra = {}) => supabaseApi.board('qwen3-8-27b', 'q8_0', { kind: 'components', setup, ...extra })
+  const all = await q8(undefined)
+  assert.deepEqual(ids(all), ['15', '13', '14'], 'All results keeps everything, best per part')
+  assert.deepEqual(all.setupCounts, { standard: 1, speculative: 1, long: 0, concurrent: 1, all: 3 })
+  assert.deepEqual(ids(await q8('standard')), ['12'], 'speculation, wall clock and 4 requests stay out of Standard')
+  assert.deepEqual(ids(await q8('speculative')), ['13'])
+  assert.deepEqual(ids(await q8('concurrent')), ['16'])
+  assert.equal((await q8('long')).board.total, 0)
+  assert.deepEqual(ids(await q8('all')), ids(all))
+  // Other filters still apply inside a setup, and the counts follow them.
+  assert.deepEqual((await q8(undefined, { q: 'B60' })).setupCounts, { standard: 0, speculative: 0, long: 0, concurrent: 0, all: 2 })
 })

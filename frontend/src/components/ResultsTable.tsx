@@ -8,6 +8,8 @@ import { UserLink } from '@/components/UserLink'
 import { HardwareLink } from '@/components/HardwareLink'
 import { UnitLabel } from '@/components/UnitLabel'
 import { td, th } from '@/components/table-styles'
+import { ConditionsCell } from '@/components/ConditionChips'
+import { cn } from '@/lib/utils'
 import type { Model, Quant, Result, Runtime } from '@/lib/api/types'
 import { fmtDate, fmtMs, fmtTps } from '@/lib/format'
 
@@ -18,23 +20,27 @@ type Props = {
   quants: Quant[]
   showHardware?: boolean
   showSubmitter?: boolean
+  /** Add a Conditions column; with `showSetup`, also tag each row with the named setup it ranks in. */
+  conditions?: boolean
+  showSetup?: boolean
 }
 
 /** Plain results list used on hardware, rig, and profile pages. Not ranked. */
-export function ResultsTable({ results, runtimes, models, quants, showHardware = true, showSubmitter = true }: Props) {
+export function ResultsTable({ results, runtimes, models, quants, showHardware = true, showSubmitter = true, conditions, showSetup }: Props) {
   const navigate = useNavigate()
   const rt = Object.fromEntries(runtimes.map((r) => [r.id, r]))
   const md = Object.fromEntries(models.map((m) => [m.id, m]))
   const qt = Object.fromEntries(quants.map((q) => [q.id, q]))
   return (
     <div className="overflow-x-auto">
-      <Table className="min-w-[780px]">
+      <Table className={cn(conditions ? 'min-w-[1000px]' : 'min-w-[780px]')}>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
             <TableHead className={th}>Model</TableHead>
             {showHardware ? <TableHead className={th}>Ran on</TableHead> : null}
             <TableHead className={th}>Runtime</TableHead>
             <TableHead className={`${th} text-right`}>Decode tok/s</TableHead>
+            {conditions ? <TableHead className={th}>Conditions</TableHead> : null}
             <TableHead className={`${th} hidden text-right md:table-cell`}>Prompt tok/s</TableHead>
             <TableHead className={`${th} hidden text-right lg:table-cell`}>TTFT</TableHead>
             {showSubmitter ? <TableHead className={th}>By</TableHead> : null}
@@ -78,6 +84,7 @@ export function ResultsTable({ results, runtimes, models, quants, showHardware =
                   {fmtTps(r.decodeTps)}
                 </Link>
               </TableCell>
+              {conditions ? <TableCell className={`${td} text-xs`}><ConditionsCell result={r} showSetup={showSetup} /></TableCell> : null}
               <TableCell className={`${td} hidden text-right font-mono text-muted-foreground tnum md:table-cell`}>{fmtTps(r.promptTps)}</TableCell>
               <TableCell className={`${td} hidden text-right font-mono text-muted-foreground tnum lg:table-cell`}>{fmtMs(r.ttftMs)}</TableCell>
               {showSubmitter ? (
