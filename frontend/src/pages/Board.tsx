@@ -150,7 +150,7 @@ export default function Board() {
             <PillTabs
               className="-ml-3"
               value={quant}
-              items={model.quants.map((qid) => ({
+              items={(model.quants.includes(quant) ? model.quants : [...model.quants, quant]).map((qid) => ({
                 value: qid,
                 label: <span className="font-mono">{QUANT_BY_ID[qid]?.label ?? qid}</span>,
                 count: model.resultCounts?.[qid] ?? 0,

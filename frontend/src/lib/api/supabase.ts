@@ -2,7 +2,7 @@ import { supabase, signOutSupabase } from '@/lib/auth'
 import { moderateText } from './moderation'
 import { hostIn } from '@/lib/hardware'
 import { rigSummaryLine } from '@/lib/rig-summary'
-import { HARDWARE_BY_ID, MODELS, MODEL_BY_ID, QUANTS, QUANT_BY_ID, RUNTIMES, RUNTIME_BY_ID, VISIBLE_HARDWARE } from '@/catalog'
+import { boardQuants, HARDWARE_BY_ID, MODELS, MODEL_BY_ID, QUANTS, QUANT_BY_ID, RUNTIMES, RUNTIME_BY_ID, VISIBLE_HARDWARE } from '@/catalog'
 import type {
   Api, BestRank, BoardKind, BoardParams, BoardResponse, BoardRow, BoardUnit, ChartBar, FlagReason,
   HardwareDetail, HardwareItem, HomeResponse, ModelSummary, Moderation, Page, Result,
@@ -395,7 +395,7 @@ function userStats(snapshot: Snapshot, user: User): UserStats {
   const hydrated = snapshot.results.filter((row) => !row.hidden).map(view(snapshot).result)
   let bestRank: BestRank | undefined
   for (const model of MODELS) {
-    for (const quant of model.quants) {
+    for (const quant of boardQuants(model, hydrated.filter((result) => result.modelId === model.id).map((result) => result.quant))) {
       for (const kind of ['rigs', 'components'] as BoardKind[]) {
         const items = boardItems(hydrated, model.id, quant, { kind })
         const index = items.findIndex((result) => result.submitterId === user.id)
@@ -435,10 +435,12 @@ export const supabaseApi: Api = {
 
   async models() {
     const snapshot = await loadSnapshot()
-    return MODELS.map((model) => ({
-      ...model,
-      resultCounts: Object.fromEntries(model.quants.map((quant) => [quant, snapshot.results.filter((row) => !row.hidden && row.model_id === model.id && row.quant_id === quant).length])),
-    }))
+    const visible = snapshot.results.filter((row) => !row.hidden)
+    return MODELS.map((model) => {
+      const mine = visible.filter((row) => row.model_id === model.id)
+      const quants = boardQuants(model, mine.map((row) => row.quant_id))
+      return { ...model, quants, resultCounts: Object.fromEntries(quants.map((quant) => [quant, mine.filter((row) => row.quant_id === quant).length])) }
+    })
   },
   async model(id) {
     if (!MODEL_BY_ID[id]) throw new ApiError('not_found', 'No such model.', 404)
@@ -496,7 +498,7 @@ export const supabaseApi: Api = {
   },
 
   async board(modelId, quant, params) {
-    if (!MODEL_BY_ID[modelId] || !MODEL_BY_ID[modelId].quants.includes(quant)) throw new ApiError('not_found', 'No such board.', 404)
+    if (!MODEL_BY_ID[modelId] || !QUANT_BY_ID[quant]) throw new ApiError('not_found', 'No such board.', 404)
     const snapshot = await loadSnapshot()
     const hydrated = snapshot.results.map(view(snapshot).result)
     const all = boardRows(hydrated, modelId, quant, params)

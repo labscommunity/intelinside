@@ -43,7 +43,7 @@ const resource = (path: string, action: string, schema: Schema): Route[] => [
   { method: 'DELETE', path: `${path}/{id}`, action: `${action}.delete`, description: 'Delete your record. Requires X-Expected-Version. Rig deletion with results also requires cascade=true.', scope: 'write', version: true },
 ]
 export const routes: Route[] = [
-  { method: 'GET', path: '/catalog', action: 'catalog', description: 'Hardware, models with supported quant IDs, quantizations, and base runtimes. Public; no key required.', scope: 'public' },
+  { method: 'GET', path: '/catalog', action: 'catalog', description: 'Hardware, models with suggested quant IDs, quantizations, and base runtimes. Any catalog quant is valid for any model. Public; no key required.', scope: 'public' },
   { method: 'GET', path: '/me', action: 'me', description: 'Your profile, key ID, and granted permissions.', scope: 'read' },
   { method: 'GET', path: '/users/{handle}', action: 'users.get', description: 'Read a public profile.', scope: 'read' },
   ...resource('/rigs', 'rigs', rigSchema),

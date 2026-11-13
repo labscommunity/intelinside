@@ -38,6 +38,9 @@ test('parser rejects wrong folders, edits, invalid dates, quantities, and catalo
   assert.throws(() => prepareFile('results/alice/run.json', 'added', { ...raw, decodeTps: -1 }, 'alice', parseResultFile), /above zero/)
   assert.throws(() => prepareFile('results/alice/run.json', 'added', { ...raw, model: 'missing' }, 'alice', parseResultFile), /catalog/)
   assert.equal(prepareFile('results/ALICE/run.json', 'added', raw, 'alice', parseResultFile).file.decodeTps, 34.2)
+  // Any catalog quant is valid for any model (#130): ptq1_0 is not in Qwen3-8B's suggested list.
+  assert.equal(prepareFile('results/alice/run.json', 'added', { ...raw, quant: 'ptq1_0' }, 'alice', parseResultFile).file.quant, 'ptq1_0')
+  assert.throws(() => prepareFile('results/alice/run.json', 'added', { ...raw, quant: 'missing' }, 'alice', parseResultFile), /quant id/)
   assert.equal(prepareFile('results/alice/run.json', 'modified', { ...raw, result: 'https://example.test/results/1' }, 'alice', parseResultFile).file.result, 'https://example.test/results/1')
 })
 
@@ -65,6 +68,7 @@ test('database validates quantity, membership, model/quant, build/runtime, and a
   await assert.rejects(rpc([entry('quantity', { component: 'intel-arc-b580', componentQuantity: 2 })]), /quantity exceeds/)
   await assert.rejects(rpc([entry('member', { component: 'missing', componentQuantity: 1 })]), /quantity exceeds/)
   await assert.rejects(rpc([entry('quant', { quant: 'missing' })]), /foreign key/)
+  assert.equal((await rpc([entry('off-list-quant', { quant: 'ptq1_0' })], { dry: true }))[0].status, 'validated')
   await assert.rejects(rpc([entry('build', { customRuntime: '1', runtime: 'vllm' })]), /customRuntime/)
   await db.query(`insert into public.rigs(owner_id,name) values ($1,'Alice rig')`, [owner])
   await assert.rejects(rpc([entry('name', { rig: 'Alice rig' })]), /exactly one/)

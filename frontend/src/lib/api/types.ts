@@ -16,6 +16,7 @@ export type Model = {
   /** Catalog asset. When missing, the UI shows a monogram tile in brandColor. */
   logoUrl?: string
   brandColor?: string
+  /** Suggested quants in the catalog. From the API, also any other quant that has results: each one is a board. */
   quants: string[]
   resultCounts?: Record<string, number>
 }
