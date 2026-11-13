@@ -30,7 +30,7 @@ function seed(): SeedDb {
   return s
 }
 
-let db: SeedDb = seed()
+const db: SeedDb = seed()
 let sessionUserId: string | null = readSession()
 let idCounter = 1000
 
@@ -629,9 +629,4 @@ export const mockApi: Api = {
   async upload(file) {
     return delay({ url: URL.createObjectURL(file) })
   },
-}
-
-/** Reset the in-memory database to the seed. Handy from the console during review. */
-export function resetMockDb() {
-  db = seed()
 }

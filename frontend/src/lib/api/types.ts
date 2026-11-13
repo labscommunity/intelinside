@@ -1,5 +1,5 @@
 import type { SetupId } from '@/lib/setups'
-// Mirrors docs/API.md. Keep the two in sync; this file is the front end's contract.
+// The front end's data contract. Both adapters (supabase.ts, mock.ts) implement `Api`.
 
 export type Quant = { id: string; label: string; bits: number; format: string }
 
@@ -210,25 +210,6 @@ export type BoardUnit =
 export type BoardRow = { rank: number; result: Result; unit: BoardUnit }
 export type ChartBar = { label: string; tps: number; runtimeId: string; href: string }
 
-export type Collection = {
-  id: string
-  slug: string
-  ownerId: string
-  owner?: User
-  title: string
-  description?: string
-  coverImageUrl?: string
-  items: { hardwareId: string; note?: string; hardware?: HardwareItem }[]
-  createdAt: string
-  updatedAt: string
-}
-export type CollectionSummary = Pick<Collection, 'id' | 'slug' | 'title' | 'coverImageUrl' | 'owner'> & {
-  itemCount: number
-}
-export type CollectionInput = Pick<Collection, 'title' | 'description' | 'coverImageUrl'> & {
-  slug?: string
-  items: { hardwareId: string; note?: string }[]
-}
 
 // Response shapes
 export type Page<T> = { items: T[]; nextCursor?: string }

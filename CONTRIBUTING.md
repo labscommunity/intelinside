@@ -118,7 +118,7 @@ The code has a voice; match the file you are editing rather than a general stand
 - **Copy is part of the change.** UI text is plain and specific — "The board is sealed", not "Content
   unavailable". If your change alters what the user sees, write the sentence too.
 - **Types over guards.** The API contract in [`frontend/src/lib/api/types.ts`](frontend/src/lib/api/types.ts)
-  mirrors [`docs/API.md`](docs/API.md); when one moves, move the other.
+  is what both adapters implement; change the type first and let the compiler find the rest.
 - Tailwind utilities inline, `cn()` to merge; shared patterns live in the `components/` file that owns them.
 
 ### Database changes

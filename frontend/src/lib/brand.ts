@@ -2,7 +2,6 @@
 export const BRAND_NAME = 'Intelinside'
 /** The site's domain, shown in the card wordmark. A placeholder until one is registered (Sep 4, 2026). */
 export const SITE_DOMAIN = 'intelinside.ai'
-export const BRAND_TAGLINE = 'Intel hardware. Real tok/s.'
 /** The site's own repo, public from launch. Results and the catalog both grow by pull request against it. */
 export const REPO = 'labscommunity/intelinside'
 export const REPO_URL = `https://github.com/${REPO}`
