@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 import { catalogSnapshot, loadCatalog } from './catalog-snapshot.mjs'
 
-export const TABLES = ['quants', 'models', 'model_quants', 'runtimes', 'hardware']
+export const TABLES = ['quants', 'models', 'runtimes', 'hardware']
 
 export function report({ source_sha: sha, dry_run: dryRun, tables }) {
   const lines = [

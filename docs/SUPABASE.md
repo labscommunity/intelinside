@@ -66,7 +66,9 @@ updates. There is no production reset script. Never treat this project as dispos
 ## Catalog sync
 
 `frontend/src/catalog/index.ts` is the source of truth for `quants`, `models`,
-`model_quants`, `runtimes`, and `hardware`. Catalog changes need no data migration:
+`runtimes`, and `hardware`. Each model's `quants` list is a suggestion the site reads
+from the bundled catalog; it is not stored in the database, and any catalog quant is
+valid for any model. Catalog changes need no data migration:
 on every push to `main` that touches the catalog, `.github/workflows/sync-catalog.yml`
 sends the merged catalog to `public.sync_catalog`, which applies it in one
 transaction. Schema changes still need migrations.

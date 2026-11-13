@@ -21,7 +21,6 @@ export function catalogSnapshot({ QUANTS, MODELS, RUNTIMES, HARDWARE }) {
       id: m.id, name: m.name, family: m.family, params: m.params, architecture: m.architecture,
       active_params: m.activeParams ?? null, source_url: m.sourceUrl, logo_url: m.logoUrl ?? null, brand_color: m.brandColor ?? null,
     })),
-    model_quants: MODELS.flatMap((m) => m.quants.map((quant) => ({ model_id: m.id, quant_id: quant }))),
     runtimes: RUNTIMES.map((r) => ({ id: r.id, name: r.name, logo_url: r.logoUrl, repo_url: r.repoUrl, color: r.color })),
     // Every part, including vendors the browse pages hide: results can reference them.
     hardware: HARDWARE.map((h) => ({

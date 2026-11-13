@@ -26,7 +26,6 @@ const statements = only === 'hardware' ? [...hardware, ''] : [
   'begin;', '',
   ...upsert('quants', snapshot.quants, ['id']), '',
   ...upsert('models', snapshot.models, ['id']), '',
-  ...upsert('model_quants', snapshot.model_quants, ['model_id', 'quant_id']), '',
   ...upsert('runtimes', snapshot.runtimes, ['id']), '',
   ...hardware, '',
   'commit;', '',
