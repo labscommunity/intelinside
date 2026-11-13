@@ -26,6 +26,8 @@ import { api } from '@/lib/api'
 import type { BoardKind, HardwareType, VerificationStatus } from '@/lib/api/types'
 import { HARDWARE_TYPE_LABEL, HARDWARE_TYPES, QUANT_BY_ID, VENDORS, quantHint } from '@/catalog'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
+import { DEFAULT_SETUP, SETUPS, SETUP_BY_ID, isSetupId, type SetupId } from '@/lib/setups'
 
 const ALL = 'all'
 const vendorItems = [{ value: ALL, label: 'All vendors' }, ...VENDORS.map((v) => ({ value: v, label: v }))]
@@ -51,6 +53,9 @@ export default function Board() {
   const verification = sp.get('verification') ?? ''
   // Off by default: the board is a hardware comparison, so a changed runtime is opt-in rather than mixed in.
   const includeModified = sp.get('modified') === '1'
+  // A named setup ranks only results measured the same way; "All results" is the default until setups fill up.
+  const setupParam = sp.get('setup')
+  const setup: SetupId = isSetupId(setupParam) ? setupParam : DEFAULT_SETUP
   const q = sp.get('q') ?? ''
   const update = (patch: Record<string, string | undefined>) => {
     const next = new URLSearchParams(sp)
@@ -68,6 +73,7 @@ export default function Board() {
     type: (type || undefined) as HardwareType | undefined,
     verification: (verification || undefined) as VerificationStatus | undefined,
     includeModified,
+    setup: setup === 'all' ? undefined : setup,
     q: q || undefined,
   }
 
@@ -77,11 +83,11 @@ export default function Board() {
   // Keep both boards ready so changing tabs does not refetch or clear their counts.
   const rigsBoard = useAsync(
     () => (quant ? api.board(modelId, quant, { ...params, kind: 'rigs', type: undefined }) : Promise.reject(new Error('no quant'))),
-    [modelId, quant, allSubmissions, runtime.join(','), vendor, verification, includeModified, q],
+    [modelId, quant, allSubmissions, runtime.join(','), vendor, verification, includeModified, setup, q],
   )
   const componentsBoard = useAsync(
     () => (quant ? api.board(modelId, quant, { ...params, kind: 'components' }) : Promise.reject(new Error('no quant'))),
-    [modelId, quant, allSubmissions, runtime.join(','), vendor, type, verification, includeModified, q],
+    [modelId, quant, allSubmissions, runtime.join(','), vendor, type, verification, includeModified, setup, q],
   )
   const board = kind === 'rigs' ? rigsBoard : componentsBoard
   const otherKind: BoardKind = kind === 'rigs' ? 'components' : 'rigs'
@@ -168,6 +174,29 @@ export default function Board() {
       </PageHeader>
 
       <Section>
+        <Toolbar>
+          <PillTabs<SetupId>
+            className="-ml-3"
+            value={setup}
+            onChange={(v) => update({ setup: v === DEFAULT_SETUP ? undefined : v })}
+            items={SETUPS.map((s) => ({
+              value: s.id,
+              label: s.name,
+              count: board.data?.setupCounts[s.id],
+              hint: s.rules.length ? `Ranks only: ${s.rules.join(', ')}` : 'Every result, whatever it was measured with',
+            }))}
+          />
+        </Toolbar>
+        <div className={cn('flex flex-wrap items-center gap-1.5 border-b py-2.5 text-xs text-muted-foreground', inset)}>
+          {SETUP_BY_ID[setup].rules.length ? (
+            <>
+              <span className="mr-0.5">Ranks only results measured at</span>
+              {SETUP_BY_ID[setup].rules.map((rule) => <Badge key={rule} variant="outline" className="font-mono font-normal">{rule}</Badge>)}
+            </>
+          ) : (
+            <span>Every result, whatever it was measured with. A tag shows when a result also ranks in a named setup.</span>
+          )}
+        </div>
         <Toolbar>
           <PillTabs
             className="-ml-3"
@@ -257,8 +286,8 @@ export default function Board() {
                   : `${board.data.board.total} ${kind} ranked · best entry per ${kind === 'rigs' ? 'rig' : 'part and quantity'} · earliest run wins ties`}
               </div>
               {allSubmissions ? (
-                <ResultsTable results={rows.map((row) => row.result)} runtimes={runtimes} models={cat.data?.models ?? []} quants={cat.data?.quants ?? []} />
-              ) : <LeaderboardTable rows={rows} runtimes={runtimes} />}
+                <ResultsTable results={rows.map((row) => row.result)} runtimes={runtimes} models={cat.data?.models ?? []} quants={cat.data?.quants ?? []} conditions showSetup={setup === 'all'} />
+              ) : <LeaderboardTable rows={rows} runtimes={runtimes} conditions showSetup={setup === 'all'} />}
               {cursor ? (
                 <Block className="py-4">
                   <LoadMore
@@ -285,6 +314,12 @@ export default function Board() {
                     View {otherKind}
                   </Button>
                 }
+              />
+            ) : setup !== 'all' ? (
+              <EmptyState
+                title={`No ${kind === 'rigs' ? 'rig' : 'component'} results at the ${SETUP_BY_ID[setup].name} setup yet`}
+                description={`This tab ranks only results that record ${SETUP_BY_ID[setup].rules.join(', ')}. Submit a run with those conditions recorded and it ranks here.`}
+                action={submit}
               />
             ) : filtered ? (
               <EmptyState

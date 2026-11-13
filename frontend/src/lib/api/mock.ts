@@ -9,6 +9,7 @@ import { hardwareChart } from './hardware-chart'
 import { isEvidenceUrl } from '@/lib/evidence'
 import { hostIn } from '@/lib/hardware'
 import { conditionErrors } from '@/lib/conditions'
+import { SETUPS, SETUP_BY_ID } from '@/lib/setups'
 import { boardQuants, HARDWARE_BY_ID, MODELS, MODEL_BY_ID, QUANTS, QUANT_BY_ID, RUNTIMES, RUNTIME_BY_ID, VISIBLE_HARDWARE } from '@/catalog'
 import { createSeed, type SeedDb } from '@/mocks/seed'
 import { rigSummaryLine } from '@/lib/rig-summary'
@@ -178,6 +179,7 @@ function matchesFilter(r: Result, p: Partial<BoardParams>): boolean {
   if (p.runtime?.length && !p.runtime.includes(r.runtimeId)) return false
   if (p.verification && r.verification.status !== p.verification) return false
   if (!p.includeModified && r.execution === 'modified') return false
+  if (p.setup && !SETUP_BY_ID[p.setup].match(r)) return false
   const rig = rigOf(r)
   if (p.vendor) {
     if (r.componentId) {
@@ -365,6 +367,7 @@ export const mockApi: Api = {
     const res: BoardResponse = {
       board: { modelId, quant, kind: params.kind, total: rows.length },
       items: page.items, nextCursor: page.nextCursor, chart: chartFromRows(rows),
+      setupCounts: Object.fromEntries(SETUPS.map((s) => [s.id, bestRows(modelId, quant, params.kind, { ...params, setup: s.id }).length])) as BoardResponse['setupCounts'],
     }
     return delay(res)
   },

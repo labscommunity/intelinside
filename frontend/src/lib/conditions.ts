@@ -73,3 +73,14 @@ export function methodChips(r: Partial<Conditions>): string[] {
 }
 
 export const conditionChips = (r: Partial<Conditions>) => [...workloadChips(r), ...methodChips(r)]
+
+/**
+ * The few conditions that move the number most, for one line in a board row: prompt, output, requests, plus
+ * speculation when on and wall-clock timing (which reads lower). The result page shows the rest.
+ */
+export function compactChips(r: Partial<Conditions>): string[] {
+  const chips = workloadChips(r)
+  if (r.speculative === 'lossless' || r.speculative === 'lossy') chips.push(`speculation: ${r.speculative}`)
+  if (r.decodeMethod === 'wall') chips.push('wall clock')
+  return chips
+}

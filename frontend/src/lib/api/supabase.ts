@@ -10,6 +10,7 @@ import type {
   CustomRuntime, DecodeMethod, DecodeScope, Speculative,
 } from './types'
 import { ApiError, BUILD_SUMMARY_MAX, REVISION_MAX, RUNTIME_FLAGS_MAX } from './types'
+import { SETUPS, SETUP_BY_ID } from '@/lib/setups'
 import { hardwareChart } from './hardware-chart'
 
 type ProfileRow = {
@@ -376,6 +377,7 @@ function boardItems(results: Result[], modelId: string, quant: string, params: P
     if (params.runtime?.length && !params.runtime.includes(result.runtimeId)) return false
     if (params.verification && result.verification.status !== params.verification) return false
     if (!params.includeModified && result.execution === 'modified') return false
+    if (params.setup && !SETUP_BY_ID[params.setup].match(result)) return false
     if (params.vendor) {
       if (result.component?.vendor !== params.vendor && !result.rig?.summary.toLowerCase().includes(params.vendor.toLowerCase())) return false
     }
@@ -527,6 +529,7 @@ export const supabaseApi: Api = {
       items: page.items,
       nextCursor: page.nextCursor,
       chart: chartFromRows(all),
+      setupCounts: Object.fromEntries(SETUPS.map((s) => [s.id, boardItems(hydrated, modelId, quant, { ...params, setup: s.id }).length])) as BoardResponse['setupCounts'],
     }
     return response
   },
