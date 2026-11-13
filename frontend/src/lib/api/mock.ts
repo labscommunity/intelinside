@@ -306,7 +306,6 @@ export const mockApi: Api = {
     const u = currentUser()
     return delay(u ? { ...publicUser(u), stats: userStats(u) } : null)
   },
-  signInUrl: () => '#sign-in',
   async mockSignIn(handle) {
     const u = db.users.find((x) => x.handle === handle)
     if (!u) return fail('not_found', 'No such user.', 404)

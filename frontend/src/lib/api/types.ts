@@ -284,11 +284,10 @@ export class ApiError extends Error {
 }
 
 export interface Api {
-  readonly mode: 'mock' | 'live' | 'supabase'
+  readonly mode: 'mock' | 'supabase'
   // auth
   me(): Promise<User | null>
-  signInUrl(returnTo: string): string
-  /** Mock only: pick a seeded user. Live mode redirects to GitHub instead. */
+  /** Mock only: pick a seeded user. With Supabase, sign-in redirects to GitHub instead. */
   mockSignIn?(handle: string): Promise<User>
   /** Mock only: the seeded users offered by the sign-in dialog. */
   mockUsers?(): Promise<User[]>
