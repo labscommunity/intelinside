@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
-  "rig": "Panther Lake NUC 32 GB",
+  "rig": "20",
   "model": "qwen3-6-35b-a3b",
   "quant": "int4",
   "runtime": "cascadia",
