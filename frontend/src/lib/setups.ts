@@ -3,10 +3,10 @@ import type { Conditions } from '@/lib/conditions'
 /**
  * Named setups (issue #130, step 3, "option 2"). Each one is a fixed way of measuring, so results inside it can be
  * ranked against each other. A result only joins a setup when the conditions the setup checks are recorded and
- * match; anything not recorded never matches. "All results" keeps everything and stays the default until the
- * setups have filled up.
+ * match; anything not recorded never matches. "All results" keeps every per-request number and stays the default
+ * until the setups have filled up; totals across concurrent requests live only in Throughput.
  */
-export type SetupId = 'standard' | 'speculative' | 'long' | 'concurrent' | 'all'
+export type SetupId = 'standard' | 'speculative' | 'long' | 'concurrent' | 'throughput' | 'all'
 
 export type Setup = {
   id: SetupId
@@ -20,6 +20,13 @@ export type Setup = {
 const timedAfterFirstToken = (r: Partial<Conditions>) => r.decodeMethod === 'streamed' || r.decodeMethod === 'engine' || r.decodeMethod === 'llama_bench'
 const shortPrompt = (r: Partial<Conditions>) => r.inputTokens != null && r.inputTokens <= 1024
 const enoughOutput = (r: Partial<Conditions>) => r.outputTokens != null && r.outputTokens >= 128
+
+/**
+ * Several requests at once and `decodeTps` is the machine's total across them. That is a different quantity from
+ * what one request sees, so it only ever ranks against other totals (the Throughput setup), never on a per-request
+ * board, and never counts as a rig's or part's best decode speed.
+ */
+export const isTotalThroughput = (r: Partial<Conditions>) => r.concurrency != null && r.concurrency > 1 && r.decodeScope === 'total'
 
 export const SETUPS: Setup[] = [
   {
@@ -41,6 +48,11 @@ export const SETUPS: Setup[] = [
     id: 'concurrent', name: '4 requests',
     rules: ['prompt ≤ 1k tokens', '4 requests', 'per-request decode', 'timed after first token'],
     match: (r) => shortPrompt(r) && r.concurrency === 4 && r.decodeScope === 'per_request' && timedAfterFirstToken(r),
+  },
+  {
+    id: 'throughput', name: 'Throughput',
+    rules: ['≥ 2 requests', 'total across requests'],
+    match: isTotalThroughput,
   },
   { id: 'all', name: 'All results', rules: [], match: () => true },
 ]

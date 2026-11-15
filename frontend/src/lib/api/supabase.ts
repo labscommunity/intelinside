@@ -10,7 +10,7 @@ import type {
   CustomRuntime, DecodeMethod, DecodeScope, Speculative,
 } from './types'
 import { ApiError, BUILD_SUMMARY_MAX, REVISION_MAX, RUNTIME_FLAGS_MAX } from './types'
-import { SETUPS, SETUP_BY_ID, type SetupId } from '@/lib/setups'
+import { SETUPS, SETUP_BY_ID, isTotalThroughput, type SetupId } from '@/lib/setups'
 import { resultRank } from '@/lib/rank'
 import { hardwareChart } from './hardware-chart'
 
@@ -237,7 +237,7 @@ function view(snapshot: Snapshot) {
       updatedAt: row.updated_at,
       resultsCount: mine.length,
       rigsCount: new Set(mine.map((result) => stringId(result.rig_id))).size,
-      bestTps: mine.length ? Math.max(...mine.map((result) => numberValue(result.decode_tps))) : undefined,
+      bestTps: bestDecode(mine),
     }
   }
   const customRuntimeById = new Map(snapshot.customRuntimes.map((row) => [stringId(row.id), customRuntime(row)]))
@@ -254,7 +254,7 @@ function view(snapshot: Snapshot) {
       owner: owner ? publicUser(owner) : undefined,
       components: (componentsByRig.get(id) ?? []).map((component) => ({ hardwareId: component.hardware_id, quantity: component.quantity })),
       resultsCount: matching.length,
-      bestTps: matching.length ? Math.max(...matching.map((result) => numberValue(result.decode_tps))) : undefined,
+      bestTps: bestDecode(matching),
     }
   }
 
@@ -352,6 +352,15 @@ function paginate<T>(items: T[], limit = 25, cursor?: string): Page<T> {
 
 const unitKey = (result: Result) => result.componentId ? `${result.componentId}x${result.componentQuantity ?? 1}` : `rig:${result.rigId}`
 
+/** A row whose `decode_tps` is a total across concurrent requests; see `isTotalThroughput`. */
+const totalRow = (row: ResultRow) => row.concurrency != null && row.concurrency > 1 && row.decode_scope === 'total'
+
+/** The best per-request decode rate among rows, for summaries. Totals across requests do not count. */
+function bestDecode(items: ResultRow[]): number | undefined {
+  const perRequest = items.filter((row) => !totalRow(row))
+  return perRequest.length ? Math.max(...perRequest.map((row) => numberValue(row.decode_tps))) : undefined
+}
+
 function bestPerKey(items: Result[], key: (result: Result) => string): Result[] {
   const best = new Map<string, Result>()
   for (const result of items) {
@@ -378,7 +387,10 @@ function boardItems(results: Result[], modelId: string, quant: string, params: P
     if (params.runtime?.length && !params.runtime.includes(result.runtimeId)) return false
     if (params.verification && result.verification.status !== params.verification) return false
     if (!params.includeModified && result.execution === 'modified') return false
-    if (params.setup && !SETUP_BY_ID[params.setup].match(result)) return false
+    // A named setup ranks only what matches it. Without one, totals across concurrent requests stay out: they are
+    // not the same quantity as a per-request rate and have their own setup.
+    const setup = params.setup && params.setup !== 'all' ? params.setup : undefined
+    if (setup ? !SETUP_BY_ID[setup].match(result) : isTotalThroughput(result)) return false
     if (params.vendor) {
       if (result.component?.vendor !== params.vendor && !result.rig?.summary.toLowerCase().includes(params.vendor.toLowerCase())) return false
     }
@@ -404,7 +416,7 @@ const chartFromRows = (items: BoardRow[]): ChartBar[] => items.slice(0, 10).map(
 }))
 
 function bestChart(items: Result[], includePart = false): ChartBar[] {
-  const best = bestPerKey(items, (result) => `${result.modelId}/${result.quant}${includePart ? `/${unitKey(result)}` : ''}`)
+  const best = bestPerKey(items.filter((result) => !isTotalThroughput(result)), (result) => `${result.modelId}/${result.quant}${includePart ? `/${unitKey(result)}` : ''}`)
   return best.slice(0, 10).map((result) => ({
     label: `${MODEL_BY_ID[result.modelId]?.name ?? result.modelId} ${QUANT_BY_ID[result.quant]?.label ?? result.quant}${includePart ? ` · ${unitLabel(unitFor(result))}` : ''}`,
     tps: result.decodeTps,
@@ -607,7 +619,7 @@ export const supabaseApi: Api = {
         ...runtime,
         resultsCount: mine.length,
         buildsCount: snapshot.customRuntimes.filter((row) => row.runtime_id === runtime.id).length,
-        bestTps: mine.length ? Math.max(...mine.map((row) => numberValue(row.decode_tps))) : undefined,
+        bestTps: bestDecode(mine),
       }
     })
   },
@@ -753,7 +765,7 @@ export const supabaseApi: Api = {
   async topResults(params = {}) {
     const snapshot = await loadSnapshot()
     const data = view(snapshot)
-    let results = snapshot.results.map(data.result).filter((result) => !result.moderation.hidden && result.execution !== 'modified')
+    let results = snapshot.results.map(data.result).filter((result) => !result.moderation.hidden && result.execution !== 'modified' && !isTotalThroughput(result))
     if (params.model) results = results.filter((result) => result.modelId === params.model)
     if (params.quant) results = results.filter((result) => result.quant === params.quant)
     const best = bestPerKey(results, (result) => `${unitKey(result)}|${result.modelId}|${result.quant}`)

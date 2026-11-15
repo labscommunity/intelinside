@@ -64,6 +64,11 @@ measured the same way can be compared:
 | `speculative` | `none`, `lossless` (output unchanged, such as MTP or a verified draft model), or `lossy`. |
 | `revision` | The exact engine commit or tag, for stock and custom runs alike. |
 
+Boards rank per-request numbers. A result with `concurrency` above 1 and `decodeScope` `total` is the machine's
+throughput, a different quantity from what one request sees, so it ranks only on the **Throughput** tab and never
+counts as a rig's best decode speed. Measure the same model, quant and runtime at several request counts, record
+`concurrency` and `decodeScope` on each, and the rig page draws decode tok/s against concurrent requests from them.
+
 `contextLength` and `batchSize` still work but are ambiguous: some people meant the prompt, others the context
 window; some meant concurrent requests, others the engine batch size. Use `inputTokens` and `concurrency` instead.
 

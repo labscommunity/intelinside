@@ -183,7 +183,7 @@ export default function Board() {
               value: s.id,
               label: s.name,
               count: board.data?.setupCounts[s.id],
-              hint: s.rules.length ? `Ranks only: ${s.rules.join(', ')}` : 'Every result, whatever it was measured with',
+              hint: s.rules.length ? `Ranks only: ${s.rules.join(', ')}` : 'Every per-request number, whatever it was measured with',
             }))}
           />
         </Toolbar>
@@ -194,7 +194,7 @@ export default function Board() {
               {SETUP_BY_ID[setup].rules.map((rule) => <Badge key={rule} variant="outline" className="font-mono font-normal">{rule}</Badge>)}
             </>
           ) : (
-            <span>Every result, whatever it was measured with. A tag shows when a result also ranks in a named setup.</span>
+            <span>Every per-request number, whatever it was measured with. A tag shows when a result also ranks in a named setup; totals across concurrent requests rank under Throughput.</span>
           )}
         </div>
         <Toolbar>

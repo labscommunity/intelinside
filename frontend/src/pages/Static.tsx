@@ -19,7 +19,7 @@ export function Guidelines() {
           <h2>How to measure decode tok/s</h2>
           <ul>
             <li>Generate at least 256 tokens from a short prompt and average over a few runs.</li>
-            <li>Measure one request at a time. A throughput configuration — OpenVINO's <code>PERFORMANCE_HINT=THROUGHPUT</code>, vLLM serving many sequences at once, llama.cpp with parallel slots — reports the total across concurrent requests, which is a larger and different number from what one person sees waiting for one answer. If that is what you measured, say so in the flags and set the batch size.</li>
+            <li>Measure one request at a time. A throughput configuration — OpenVINO's <code>PERFORMANCE_HINT=THROUGHPUT</code>, vLLM serving many sequences at once, llama.cpp with parallel slots — reports the total across concurrent requests, which is a larger and different number from what one person sees waiting for one answer. If that is what you measured, record it as <code>concurrency</code> with <code>decodeScope</code> set to <code>total</code>: it ranks on the Throughput board instead of against single requests, and several request counts of the same setup draw a scaling curve on the rig page.</li>
             <li>Report the runtime version you used. An evidence link is optional: logs, scripts, a gist, a report, or a repository can help others check your result. Any full HTTPS URL works.</li>
             <li>Note the flags and settings that moved the number: the backend you compiled in, flash attention, KV cache precision. The same card on the same runtime can differ twofold on these.</li>
             <li>If you ran on one card out of several, submit it as a component result and set the quantity you used.</li>
