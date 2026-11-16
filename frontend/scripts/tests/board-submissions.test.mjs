@@ -31,6 +31,8 @@ const results = [
   run(14, 'intel-arc-pro-b60', 1, 50, { quant_id: 'q8_0', ...standard, decode_method: 'wall' }),
   run(15, 'intel-arc-pro-b60', 2, 100, { quant_id: 'q8_0' }),
   run(16, 'intel-arc-pro-b70', 1, 20, { quant_id: 'q8_0', ...standard, concurrency: 4, decode_scope: 'per_request' }),
+  // A machine total across 8 requests: a different quantity, so it ranks only under Throughput.
+  run(17, 'intel-arc-pro-b70', 1, 500, { quant_id: 'q8_0', ...standard, concurrency: 8, decode_scope: 'total', decode_method: 'wall' }),
 ]
 
 before(async () => {
@@ -111,15 +113,16 @@ test('a quant outside the suggested list gets its own board once it has visible 
 test('setup tabs rank only results measured that way, and count every setup', async () => {
   const q8 = (setup, extra = {}) => supabaseApi.board('qwen3-8-27b', 'q8_0', { kind: 'components', setup, ...extra })
   const all = await q8(undefined)
-  assert.deepEqual(ids(all), ['15', '13', '14'], 'All results keeps everything, best per part')
-  assert.deepEqual(all.setupCounts, { standard: 1, speculative: 1, long: 0, concurrent: 1, all: 3 })
+  assert.deepEqual(ids(all), ['15', '13', '14'], 'All results keeps every per-request number, best per part; the 8-request total stays out')
+  assert.deepEqual(all.setupCounts, { standard: 1, speculative: 1, long: 0, concurrent: 1, throughput: 1, all: 3 })
+  assert.deepEqual(ids(await q8('throughput')), ['17'])
   assert.deepEqual(ids(await q8('standard')), ['12'], 'speculation, wall clock and 4 requests stay out of Standard')
   assert.deepEqual(ids(await q8('speculative')), ['13'])
   assert.deepEqual(ids(await q8('concurrent')), ['16'])
   assert.equal((await q8('long')).board.total, 0)
   assert.deepEqual(ids(await q8('all')), ids(all))
   // Other filters still apply inside a setup, and the counts follow them.
-  assert.deepEqual((await q8(undefined, { q: 'B60' })).setupCounts, { standard: 0, speculative: 0, long: 0, concurrent: 0, all: 2 })
+  assert.deepEqual((await q8(undefined, { q: 'B60' })).setupCounts, { standard: 0, speculative: 0, long: 0, concurrent: 0, throughput: 0, all: 2 })
 })
 
 test('a result page shows its own rank, or names the result that holds its part\'s row', async () => {
@@ -140,4 +143,13 @@ test('a result page ranks within the result\'s own setup', async () => {
   // Conditions that match no setup (wall clock) or none recorded rank on All results.
   assert.deepEqual(await rank('14'), { kind: 'components', setup: 'all', boardSize: 3, position: 3 })
   assert.deepEqual(await rank('15'), { kind: 'components', setup: 'all', boardSize: 3, position: 1 })
+  assert.deepEqual(await rank('17'), { kind: 'components', setup: 'throughput', boardSize: 1, position: 1 })
+})
+
+test('a total across requests never counts as a best decode speed', async () => {
+  const rig = await supabaseApi.rig('1')
+  assert.ok(rig.results.some((result) => result.id === '17'), 'the total is still a result of the rig')
+  assert.ok(rig.chart.every((bar) => bar.tps < 500), 'the rig chart shows per-request rates only')
+  const top = await supabaseApi.topResults({ model: 'qwen3-8-27b', quant: 'q8_0' })
+  assert.ok(top.items.every((row) => row.result.id !== '17'))
 })

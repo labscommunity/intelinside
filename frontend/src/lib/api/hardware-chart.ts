@@ -1,10 +1,12 @@
 import { MODEL_BY_ID, QUANT_BY_ID, RUNTIME_BY_ID } from '@/catalog'
 import type { ChartBar, Result } from './types'
+import { isTotalThroughput } from '@/lib/setups'
 
-/** Keep each runtime's best run visible, even when another runtime is faster. */
+/** Keep each runtime's best run visible, even when another runtime is faster. Totals across concurrent requests do not count. */
 export function hardwareChart(results: Result[]): ChartBar[] {
   const best = new Map<string, Result>()
   for (const result of results) {
+    if (isTotalThroughput(result)) continue
     const key = `${result.modelId}/${result.quant}/${result.runtimeId}`
     const current = best.get(key)
     if (!current || result.decodeTps > current.decodeTps || (result.decodeTps === current.decodeTps && result.runDate < current.runDate)) {

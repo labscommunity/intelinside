@@ -13,6 +13,7 @@ import { RigPhoto } from '@/components/RigPhoto'
 import { UserLink } from '@/components/UserLink'
 import { HardwareLink } from '@/components/HardwareLink'
 import { TpsBarChart } from '@/components/TpsBarChart'
+import { StreamsChart } from '@/components/StreamsChart'
 import { ResultsTable } from '@/components/ResultsTable'
 import { keySpec } from '@/components/cards'
 import { EmptyBoard } from '@/components/empty'
@@ -27,6 +28,8 @@ import { ApiError } from '@/lib/api/types'
 import { fmtDate, pluralize } from '@/lib/format'
 import { rigShareTarget } from '@/lib/share'
 import { UNIT_LABEL, nestParts } from '@/lib/hardware'
+import { streamSeries } from '@/lib/streams'
+import { isTotalThroughput } from '@/lib/setups'
 import { HARDWARE_TYPE_LABEL } from '@/catalog'
 import { cn } from '@/lib/utils'
 
@@ -54,8 +57,10 @@ export default function RigDetail() {
   const r = rig.data
   const isOwner = user?.id === r.ownerId
   const visibleResults = r.results.filter((x) => !x.moderation.hidden)
+  const series = streamSeries(r.results)
   const visible = visibleResults.length
-  const bestResult = visibleResults.reduce<(typeof visibleResults)[number] | undefined>((best, x) => (!best || x.decodeTps > best.decodeTps ? x : best), undefined)
+  // Totals across concurrent requests are not a rig's best decode speed.
+  const bestResult = visibleResults.filter((x) => !isTotalThroughput(x)).reduce<(typeof visibleResults)[number] | undefined>((best, x) => (!best || x.decodeTps > best.decodeTps ? x : best), undefined)
   const shareTarget = rigShareTarget(
     r,
     bestResult
@@ -163,6 +168,18 @@ export default function RigDetail() {
         <Section label="Best decode tok/s per model, quant, and part">
           <Framed>
             <TpsBarChart bars={r.chart} runtimes={cat.data.runtimes} />
+          </Framed>
+        </Section>
+      ) : null}
+
+      {series.length ? (
+        <Section label="Decode tok/s by concurrent requests">
+          <Framed>
+            <StreamsChart series={series} runtimes={cat.data.runtimes} />
+            <p className="pt-2 text-xs text-muted-foreground">
+              Each line is one model, quant and runtime on this rig measured at several request counts. Submit the same setup at another count, with
+              <code> concurrency</code> and <code>decodeScope</code> recorded, and it joins the line.
+            </p>
           </Framed>
         </Section>
       ) : null}

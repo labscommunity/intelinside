@@ -36,8 +36,7 @@ without a linked personal account. Account signup and rig registration remain on
 - Measure one request at a time. A throughput configuration — OpenVINO's
   `PERFORMANCE_HINT=THROUGHPUT`, vLLM serving many sequences at once, llama.cpp with parallel slots —
   reports the total across concurrent requests, which is a larger and different number from what one
-  person sees waiting for one answer. If that is what you measured, say so in the flags and set the
-  batch size.
+  person sees waiting for one answer. If that is what you measured, record it as `concurrency` with `decodeScope` set to `total`: it ranks on the Throughput board instead of against single requests, and several request counts of the same setup draw a scaling curve on the rig page.
 - Report the runtime version. An evidence link is optional: benchmark logs, scripts, a gist, a report,
   or a repository can help others check your result. Any full HTTPS URL works; no separate repository
   is required. In PR JSON, use `evidenceUrl`. The submission PR is recorded separately.
