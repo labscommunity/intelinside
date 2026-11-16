@@ -372,6 +372,7 @@ export const HARDWARE: HardwareItem[] = [
   hw('ddr5-6400-64gb', 'ram', 'Generic', 'DDR5-6400 64 GB', { type: 'DDR5', speedMts: 6400, capacityGb: 64, formFactor: 'UDIMM' }),
   hw('ddr5-4800-64gb-ecc', 'ram', 'Generic', 'DDR5-4800 64 GB ECC RDIMM', { type: 'DDR5', speedMts: 4800, capacityGb: 64, formFactor: 'RDIMM' }),
   hw('ddr5-6400-32gb-ecc', 'ram', 'Generic', 'DDR5-6400 32 GB ECC RDIMM', { type: 'DDR5', speedMts: 6400, capacityGb: 32, formFactor: 'RDIMM' }),
+  hw('ddr5-4800-16gb-sodimm', 'ram', 'Generic', 'DDR5-4800 16 GB SO-DIMM', { type: 'DDR5', speedMts: 4800, capacityGb: 16, formFactor: 'SO-DIMM' }),
   hw('ddr5-5600-16gb-sodimm', 'ram', 'Generic', 'DDR5-5600 16 GB SO-DIMM', { type: 'DDR5', speedMts: 5600, capacityGb: 16, formFactor: 'SO-DIMM' }),
   hw('lpddr5x-8533-16gb', 'ram', 'Generic', 'LPDDR5X-8533 16 GB (on package)', { type: 'LPDDR5X', speedMts: 8533, capacityGb: 16, formFactor: 'On package' }),
   hw('lpddr5x-8533-64gb', 'ram', 'Generic', 'LPDDR5X-8533 64 GB (soldered)', { type: 'LPDDR5X', speedMts: 8533, capacityGb: 64, formFactor: 'Soldered' }),
