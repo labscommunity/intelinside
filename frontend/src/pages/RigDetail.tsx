@@ -29,6 +29,7 @@ import { fmtDate, pluralize } from '@/lib/format'
 import { rigShareTarget } from '@/lib/share'
 import { UNIT_LABEL, nestParts } from '@/lib/hardware'
 import { streamSeries } from '@/lib/streams'
+import { isTotalThroughput } from '@/lib/setups'
 import { HARDWARE_TYPE_LABEL } from '@/catalog'
 import { cn } from '@/lib/utils'
 
@@ -58,7 +59,8 @@ export default function RigDetail() {
   const visibleResults = r.results.filter((x) => !x.moderation.hidden)
   const series = streamSeries(r.results)
   const visible = visibleResults.length
-  const bestResult = visibleResults.reduce<(typeof visibleResults)[number] | undefined>((best, x) => (!best || x.decodeTps > best.decodeTps ? x : best), undefined)
+  // Totals across concurrent requests are not a rig's best decode speed.
+  const bestResult = visibleResults.filter((x) => !isTotalThroughput(x)).reduce<(typeof visibleResults)[number] | undefined>((best, x) => (!best || x.decodeTps > best.decodeTps ? x : best), undefined)
   const shareTarget = rigShareTarget(
     r,
     bestResult
