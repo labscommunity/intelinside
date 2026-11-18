@@ -28,7 +28,7 @@ import { ApiError } from '@/lib/api/types'
 import { fmtDate, pluralize } from '@/lib/format'
 import { rigShareTarget } from '@/lib/share'
 import { UNIT_LABEL, nestParts } from '@/lib/hardware'
-import { streamSeries } from '@/lib/streams'
+import { contextSeries, streamSeries } from '@/lib/streams'
 import { isTotalThroughput } from '@/lib/setups'
 import { HARDWARE_TYPE_LABEL } from '@/catalog'
 import { cn } from '@/lib/utils'
@@ -58,6 +58,7 @@ export default function RigDetail() {
   const isOwner = user?.id === r.ownerId
   const visibleResults = r.results.filter((x) => !x.moderation.hidden)
   const series = streamSeries(r.results)
+  const contextCurves = contextSeries(r.results)
   const visible = visibleResults.length
   // Totals across concurrent requests are not a rig's best decode speed.
   const bestResult = visibleResults.filter((x) => !isTotalThroughput(x)).reduce<(typeof visibleResults)[number] | undefined>((best, x) => (!best || x.decodeTps > best.decodeTps ? x : best), undefined)
@@ -179,6 +180,19 @@ export default function RigDetail() {
             <p className="pt-2 text-xs text-muted-foreground">
               Each line is one model, quant and runtime on this rig measured at several request counts. Submit the same setup at another count, with
               <code> concurrency</code> and <code>decodeScope</code> recorded, and it joins the line.
+            </p>
+          </Framed>
+        </Section>
+      ) : null}
+
+      {contextCurves.length ? (
+        <Section label="Decode tok/s by prompt length">
+          <Framed>
+            <StreamsChart series={contextCurves} runtimes={cat.data.runtimes} />
+            <p className="pt-2 text-xs text-muted-foreground">
+              Each line is one model, quant and runtime on this rig, one request at a time, after prompts of several lengths. Decode slows as the
+              context fills. Submit the same setup at another prompt length, with <code>inputTokens</code> and <code>concurrency: 1</code> recorded,
+              and it joins the line.
             </p>
           </Framed>
         </Section>

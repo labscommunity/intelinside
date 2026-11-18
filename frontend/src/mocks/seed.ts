@@ -222,6 +222,22 @@ export function createSeed(): SeedDb {
     r.moderation = { flags: f.size, hidden: true, reasons: ['implausible'] }
   }
 
+  // One run at four prompt lengths (issue #130 step 4): the points share a run id, and the rig page draws the curve.
+  const base = results.find((r) => !r.componentId && !r.customRuntimeId && !r.moderation.hidden)
+  if (base) {
+    const runId = 'run-mock-sweep'
+    ;[[512, 20.66], [4096, 18.51], [16384, 15.2], [32768, 12.4]].forEach(([inputTokens, decodeTps], i) => {
+      const id = `res-sweep-${i}`
+      results.push({
+        ...base, id, runId, decodeTps, decodeTpsMin: +(decodeTps * 0.99).toFixed(2), decodeTpsMax: +(decodeTps * 1.01).toFixed(2),
+        inputTokens, outputTokens: 256, concurrency: 1, decodeScope: undefined, decodeMethod: 'streamed', repeats: 3,
+        promptCache: false, thinking: false, speculative: 'none', modelFile: `${base.modelId}-${base.quant}.bin`,
+        verification: { status: 'self_reported', confirmations: 0 }, moderation: { flags: 0, hidden: false },
+      })
+      confirmations.set(id, new Set())
+    })
+  }
+
   return { users, rigs, customRuntimes, results, confirmations, flags }
 }
 
