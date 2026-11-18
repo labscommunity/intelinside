@@ -72,6 +72,58 @@ counts as a rig's best decode speed. Measure the same model, quant and runtime a
 `contextLength` and `batchSize` still work but are ambiguous: some people meant the prompt, others the context
 window; some meant concurrent requests, others the engine batch size. Use `inputTokens` and `concurrency` instead.
 
+### Standard protocol
+
+Measure this way and your results land in the named setups, comparable with everyone else's by default. Each point
+is its own result file.
+
+**The minimum: one result.** 512 input tokens, 256 output tokens, 1 request. This is the comparison point and
+ranks on the **Standard** board.
+
+**The full grid, if you have time.** Input lengths 512, 4096, 16384 and 32768 tokens (as many as fit in the
+context window), each at 1 and at 4 concurrent requests. 16k and 32k at 1 request rank on **Long prompt**; 512 at 4
+requests ranks on **4 requests** and **Throughput**; every point counts toward the rig page's curves.
+
+For every point:
+
+1. **Settings.** 256 output tokens, temperature 0, thinking off, no speculative decoding, prompt cache off.
+2. **Repeats.** One warm-up run, discarded, then 3 measured runs. Report the mean; put the min and max in `notes`.
+3. **Decode.** The streamed rate after the first token: `(outputTokens − 1) / (time of last token − time of first token)`.
+   Report TTFT separately as `ttftMs`. At 4 requests, submit two files from the same runs: the mean per-request
+   decode (`decodeScope: "per_request"`) and the total completion tokens over wall time (`decodeScope: "total"`).
+4. **Record.** The engine commit as `revision`, the engine flags as `runtimeFlags`, and the model file (repository,
+   file name, SHA-256) in `notes`.
+
+```json
+{
+  "inputTokens": 512,
+  "outputTokens": 256,
+  "concurrency": 1,
+  "decodeMethod": "streamed",
+  "repeats": 3,
+  "promptCache": false,
+  "thinking": false,
+  "speculative": "none",
+  "revision": "b6512",
+  "notes": "min/max 33.9/34.6. Model: Qwen/Qwen3-8B-GGUF Qwen3-8B-Q4_K_M.gguf sha256 1a2b…"
+}
+```
+
+Three details decide whether two runs of the same setup agree:
+
+- **Count tokens with the engine, not stream chunks.** A chunk can carry several tokens. Use the server's
+  `usage.completion_tokens` (with `stream_options: {"include_usage": true}` on OpenAI-compatible servers) or the
+  engine's own count, and record that as `outputTokens`.
+- **Force the full length.** A model that stops early measures a shorter run. Turn on `ignore_eos` (llama.cpp,
+  vLLM, SGLang) or set `min_new_tokens` (OpenVINO GenAI, Transformers) to 256. If a run still stops short, discard it
+  and run again.
+- **Keep repeats from reusing the cache.** Set `cache_prompt: false` on llama-server, or start each repeat's prompt
+  with a different line (a run number is enough) so no prefix matches. Then record `promptCache: false`.
+
+`llama-bench` with `-p 512 -n 256 -r 3` follows the same settings; record `decodeMethod: "llama_bench"`. It times
+generation from an empty context rather than after the prompt, so its number reads a few percent higher than a
+streamed run.
+
 ### Optional evidence link
 
 You can submit without an evidence link. If you have published benchmark logs, scripts, a gist, a report,
