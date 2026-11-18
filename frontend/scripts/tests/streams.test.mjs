@@ -5,17 +5,17 @@ import { build } from 'esbuild'
 
 // Decode rate against concurrent requests (issue #130): totals and per-request rates are separate curves, a single
 // request seeds both, and nothing is drawn from a setup measured at only one request count.
-let streamSeries, isTotalThroughput, SETUP_BY_ID, setupOf
+let streamSeries, contextSeries, isTotalThroughput, SETUP_BY_ID, setupOf
 before(async () => {
   const bundle = await build({
     stdin: {
-      contents: `export { streamSeries } from './lib/streams'; export { isTotalThroughput, SETUP_BY_ID, setupOf } from './lib/setups';`,
+      contents: `export { streamSeries, contextSeries } from './lib/streams'; export { isTotalThroughput, SETUP_BY_ID, setupOf } from './lib/setups';`,
       resolveDir: fileURLToPath(new URL('../../src', import.meta.url)),
     },
     alias: { '@': fileURLToPath(new URL('../../src', import.meta.url)) },
     bundle: true, write: false, platform: 'browser', format: 'esm', logLevel: 'silent',
   })
-  ;({ streamSeries, isTotalThroughput, SETUP_BY_ID, setupOf } = await import(`data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].contents).toString('base64')}`))
+  ;({ streamSeries, contextSeries, isTotalThroughput, SETUP_BY_ID, setupOf } = await import(`data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].contents).toString('base64')}`))
 })
 
 const result = (id, concurrency, decodeTps, extra = {}) => ({
@@ -32,7 +32,7 @@ test('a single request seeds both curves and totals and per-request rates stay a
     result(4, 8, 17, { decodeScope: 'per_request' }),
     result(5, 4, 12, { decodeScope: 'per_request' }),
   ])
-  assert.deepEqual(series.map((s) => [s.scope, s.points.map((p) => [p.concurrency, p.decodeTps])]), [
+  assert.deepEqual(series.map((s) => [s.scope, s.points.map((p) => [p.x, p.decodeTps])]), [
     ['per_request', [[1, 18.5], [4, 12], [8, 17]]],
     ['total', [[1, 18.5], [8, 136], [48, 227.5]]],
   ])
@@ -41,7 +41,7 @@ test('a single request seeds both curves and totals and per-request rates stay a
 
 test('one request count is not a curve; repeats at a count keep the best; legacy batch size and hidden results are ignored', () => {
   assert.deepEqual(streamSeries([result(1, 1, 18.5), result(2, 1, 19.0)]), [])
-  assert.deepEqual(streamSeries([result(1, 1, 18.5), result(2, 8, 100, { decodeScope: 'total' }), result(3, 8, 130, { decodeScope: 'total' })]).map((s) => s.points.map((p) => [p.concurrency, p.decodeTps, p.resultId])), [[[1, 18.5, '1'], [8, 130, '3']]])
+  assert.deepEqual(streamSeries([result(1, 1, 18.5), result(2, 8, 100, { decodeScope: 'total' }), result(3, 8, 130, { decodeScope: 'total' })]).map((s) => s.points.map((p) => [p.x, p.decodeTps, p.resultId])), [[[1, 18.5, '1'], [8, 130, '3']]])
   assert.deepEqual(streamSeries([result(1, 1, 18.5), result(2, undefined, 100, { batchSize: 8 })]), [])
   assert.deepEqual(streamSeries([result(1, 1, 18.5), result(2, 8, 100, { decodeScope: 'total', moderation: { hidden: true } })]), [])
   // A total at several requests with no decodeScope recorded is ambiguous and stays out.
@@ -70,4 +70,21 @@ test('the Throughput setup takes totals across requests and nothing else', () =>
   assert.equal(setupOf({ concurrency: 144, decodeScope: 'total', decodeMethod: 'wall' })?.id, 'throughput')
   assert.equal(SETUP_BY_ID.throughput.match({ concurrency: 4, decodeScope: 'per_request', inputTokens: 512, decodeMethod: 'streamed' }), false)
   assert.equal(setupOf({ concurrency: 4, decodeScope: 'per_request', inputTokens: 512, decodeMethod: 'streamed' })?.id, 'concurrent')
+})
+
+test('prompt-length curves take single requests with inputTokens, best per length, and skip speculation', () => {
+  const series = contextSeries([
+    result(1, 1, 20.66, { inputTokens: 512 }),
+    result(2, 1, 18.51, { inputTokens: 4096 }),
+    result(3, 1, 19.9, { inputTokens: 4096 }),
+    result(4, 4, 15.05, { inputTokens: 16384, decodeScope: 'per_request' }),
+    result(5, 1, 40, { inputTokens: 16384, speculative: 'lossless' }),
+    result(6, undefined, 30, { inputTokens: 32768 }),
+    result(7, 1, 30, { contextLength: 32768 }),
+    result(8, 1, 12, { inputTokens: 32768, moderation: { hidden: true } }),
+  ])
+  assert.deepEqual(series.map((s) => [s.axis, s.scope, s.points.map((p) => [p.x, p.decodeTps, p.resultId])]),
+    [['input', 'per_request', [[512, 20.66, '1'], [4096, 19.9, '3']]]])
+  assert.deepEqual(contextSeries([result(1, 1, 20, { inputTokens: 512 })]), [], 'one length draws no line')
+  assert.deepEqual(contextSeries([result(1, 1, 20, { inputTokens: 512 }), result(2, 1, 18, { inputTokens: 4096, quant: 'q8_0' })]), [], 'another quant is another line')
 })
