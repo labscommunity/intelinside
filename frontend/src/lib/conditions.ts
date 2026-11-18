@@ -84,3 +84,42 @@ export function compactChips(r: Partial<Conditions>): string[] {
   if (r.decodeMethod === 'wall') chips.push('wall clock')
   return chips
 }
+
+/**
+ * The model file that ran and how far the repeats spread (issue #130, step 4). Optional like the conditions, but no
+ * setup checks them: they let a reader tell two files of the same quant apart, and a steady number from a noisy one.
+ */
+export type RunDetails = Pick<Result, 'modelRepo' | 'modelFile' | 'modelSha256' | 'decodeTpsMin' | 'decodeTpsMax'>
+export const DETAIL_KEYS = ['modelRepo', 'modelFile', 'modelSha256', 'decodeTpsMin', 'decodeTpsMax'] as const
+export const MODEL_REPO_MAX = 200
+export const MODEL_FILE_MAX = 255
+const SHA256 = /^[0-9a-f]{64}$/
+
+/** Lowercases the hash, the one detail with two spellings. Everything else passes through. */
+export const normalizeSha256 = (value: unknown) => (typeof value === 'string' ? value.trim().toLowerCase() : value)
+
+/** Checks one result's details against its decode rate, keyed by field like `conditionErrors`. */
+export function detailErrors(d: Partial<Record<keyof RunDetails, unknown>>, decodeTps?: unknown): Partial<Record<keyof RunDetails, string>> {
+  const errors: Partial<Record<keyof RunDetails, string>> = {}
+  for (const [key, max] of [['modelRepo', MODEL_REPO_MAX], ['modelFile', MODEL_FILE_MAX]] as const) {
+    const v = d[key]
+    if (v != null && !(typeof v === 'string' && v.trim() && v === v.trim() && v.length <= max)) errors[key] = `"${key}" must be text of ${max} characters or fewer.`
+  }
+  if (d.modelSha256 != null && !(typeof d.modelSha256 === 'string' && SHA256.test(d.modelSha256))) errors.modelSha256 = '"modelSha256" must be 64 lowercase hex characters.'
+  const rate = typeof decodeTps === 'number' && decodeTps > 0 ? decodeTps : undefined
+  for (const key of ['decodeTpsMin', 'decodeTpsMax'] as const) {
+    const v = d[key]
+    if (v == null) continue
+    if (!(typeof v === 'number' && Number.isFinite(v) && v > 0)) errors[key] = `"${key}" must be a number above zero.`
+    else if (rate != null && (key === 'decodeTpsMin' ? v > rate : v < rate)) errors[key] = `"${key}" must be ${key === 'decodeTpsMin' ? 'at most' : 'at least'} "decodeTps".`
+  }
+  return errors
+}
+export const detailProblems = (d: Partial<Record<keyof RunDetails, unknown>>, decodeTps?: unknown) => Object.values(detailErrors(d, decodeTps)) as string[]
+
+/** The details worth a line on the result page: spread, then the file. */
+export function spreadLabel(r: Partial<RunDetails>): string | undefined {
+  if (r.decodeTpsMin == null && r.decodeTpsMax == null) return undefined
+  const fmt = (n?: number) => (n == null ? '?' : n.toFixed(n >= 100 ? 0 : 1))
+  return `${fmt(r.decodeTpsMin)}–${fmt(r.decodeTpsMax)}`
+}

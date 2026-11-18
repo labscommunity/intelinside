@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
   "title": "Intelinside result",
-  "description": "One benchmark result, committed as results/<your-github-handle>/<name>.json. Ids come from the hardware, model, quant, and runtime catalog in frontend/src/catalog/. The pull request check validates the ids; this schema covers the shape.",
+  "description": "One benchmark result, committed as results/<your-github-handle>/<name>.json. Ids come from the hardware, model, quant, and runtime catalog in frontend/src/catalog/. The pull request check validates the ids; this schema covers the shape. A file with \"points\" is one run measured at several input lengths or request counts: each point becomes its own result, sharing every other field in the file.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -11,7 +11,6 @@
     "quant",
     "runtime",
     "runtimeVersion",
-    "decodeTps",
     "runDate"
   ],
   "properties": {
@@ -150,6 +149,33 @@
       ],
       "description": "Speculative decoding: none, lossless (output unchanged, e.g. MTP or a draft model with exact verification), or lossy."
     },
+    "modelRepo": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "description": "Where the weights came from, for example Qwen/Qwen3-8B-GGUF."
+    },
+    "modelFile": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "description": "The model file within it, for example Qwen3-8B-Q4_K_M.gguf. Two files of the same quant from different quantizers can differ in speed."
+    },
+    "modelSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{64}$",
+      "description": "SHA-256 of the model file."
+    },
+    "decodeTpsMin": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Slowest measured repeat, in decode tokens per second. At most decodeTps."
+    },
+    "decodeTpsMax": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Fastest measured repeat, in decode tokens per second. At least decodeTps."
+    },
     "runDate": {
       "type": "string",
       "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
@@ -174,6 +200,48 @@
       "type": "string",
       "pattern": "^custom-runtimes/[a-zA-Z0-9-]+/[a-zA-Z0-9][a-zA-Z0-9._-]*\\.json$",
       "description": "Registration file added in this PR. Mutually exclusive with customRuntime."
+    },
+    "points": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "description": "One run at several input lengths or request counts. Each point becomes a result with the file's other fields; a point holds only the fields that change between points. With points, leave decodeTps, decodeTpsMin, decodeTpsMax, promptTps and ttftMs out of the top level.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "decodeTps"
+        ],
+        "properties": {
+          "decodeTps": {
+            "$ref": "#/properties/decodeTps"
+          },
+          "decodeTpsMin": {
+            "$ref": "#/properties/decodeTpsMin"
+          },
+          "decodeTpsMax": {
+            "$ref": "#/properties/decodeTpsMax"
+          },
+          "promptTps": {
+            "$ref": "#/properties/promptTps"
+          },
+          "ttftMs": {
+            "$ref": "#/properties/ttftMs"
+          },
+          "inputTokens": {
+            "$ref": "#/properties/inputTokens"
+          },
+          "outputTokens": {
+            "$ref": "#/properties/outputTokens"
+          },
+          "concurrency": {
+            "$ref": "#/properties/concurrency"
+          },
+          "decodeScope": {
+            "$ref": "#/properties/decodeScope"
+          }
+        }
+      }
     }
   },
   "not": {
@@ -181,5 +249,27 @@
       "customRuntime",
       "customRuntimeFile"
     ]
-  }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "decodeTps"
+      ],
+      "not": {
+        "required": [
+          "points"
+        ]
+      }
+    },
+    {
+      "required": [
+        "points"
+      ],
+      "not": {
+        "required": [
+          "decodeTps"
+        ]
+      }
+    }
+  ]
 }

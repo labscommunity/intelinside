@@ -10,6 +10,7 @@ import { UserLink } from '@/components/UserLink'
 import { HardwareLink } from '@/components/HardwareLink'
 import { UnitLabel } from '@/components/UnitLabel'
 import { ConditionChips } from '@/components/ConditionChips'
+import { spreadLabel } from '@/lib/conditions'
 import type { Model, Quant, Result, ResultRank, Runtime } from '@/lib/api/types'
 import { fmtDate, fmtMs, fmtTps } from '@/lib/format'
 import { boardPhrase, rankBoardPath, unitPhrase } from '@/lib/rank'
@@ -53,6 +54,11 @@ export function ResultCard({ result: r, models, quants, runtimes, rank, eyebrow 
           <div className={cn('mt-2 font-mono font-semibold tnum', compact ? 'text-5xl' : 'text-6xl md:text-7xl')}>
             {hasFigure ? fmtTps(r.decodeTps) : '—'} <span className={cn('font-normal text-muted-foreground', compact ? 'text-lg' : 'text-2xl')}>tok/s</span>
           </div>
+          {spreadLabel(r) ? (
+            <div className="mt-1 font-mono text-sm text-muted-foreground tnum">
+              range {spreadLabel(r)}{r.repeats ? ` over ${r.repeats} runs` : ''}
+            </div>
+          ) : null}
           {rank?.position ? (
             <Link to={rankBoardPath(r, rank)} className="mt-3 inline-block text-sm text-muted-foreground hover:text-foreground">
               #{rank.position} of {rank.boardSize} {boardPhrase(rank, model?.name ?? r.modelId, quant)}
@@ -79,6 +85,12 @@ export function ResultCard({ result: r, models, quants, runtimes, rank, eyebrow 
           ) : (
             <span className="text-muted-foreground">—</span>
           )}
+          {r.modelRepo || r.modelFile ? (
+            <div className="mt-0.5 break-all font-mono text-xs text-muted-foreground">{[r.modelRepo, r.modelFile].filter(Boolean).join(' / ')}</div>
+          ) : null}
+          {r.modelSha256 ? (
+            <div className="mt-0.5 font-mono text-xs text-muted-foreground" title={r.modelSha256}>sha256 {r.modelSha256.slice(0, 12)}…</div>
+          ) : null}
         </Field>
         <Field label={r.component ? 'Part' : 'Rig'}>
           {r.component ? (

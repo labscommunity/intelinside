@@ -32,6 +32,11 @@ export const resultSchema = object({
   decodeMethod: nullable({ type: 'string', enum: ['streamed', 'engine', 'llama_bench', 'wall'], description: 'How decode was timed. wall includes prefill.' }),
   repeats: nullable(integer), promptCache: nullable({ type: 'boolean' }), thinking: nullable({ type: 'boolean' }),
   speculative: nullable({ type: 'string', enum: ['none', 'lossless', 'lossy'] }),
+  modelRepo: nullable({ ...text(200, 1), description: 'Where the weights came from, such as Qwen/Qwen3-8B-GGUF.' }),
+  modelFile: nullable({ ...text(255, 1), description: 'The model file, such as Qwen3-8B-Q4_K_M.gguf.' }),
+  modelSha256: nullable({ type: 'string', pattern: '^[0-9a-f]{64}$', description: 'SHA-256 of the model file, lowercase hex.' }),
+  decodeTpsMin: nullable({ ...positive, description: 'Slowest measured repeat; at most decodeTps.' }),
+  decodeTpsMax: nullable({ ...positive, description: 'Fastest measured repeat; at least decodeTps.' }),
   repoUrl: nullable(https), runDate: { type: 'string', format: 'date' },
 }, ['rigId', 'modelId', 'quant', 'runtimeId', 'runtimeVersion', 'decodeTps', 'runDate'])
 const flagSchema = object({ reason: { type: 'string', enum: ['implausible', 'wrong_hardware', 'duplicate', 'spam', 'other'] }, note: nullable(text(5000)) }, ['reason'])
@@ -54,7 +59,7 @@ export const routes: Route[] = [
   ...resource('/rigs', 'rigs', rigSchema),
   ...resource('/custom-runtimes', 'custom_runtimes', runtimeSchema),
   // Put the static batch route before /results/{id}.
-  { method: 'POST', path: '/results/batch', action: 'results.batch', description: 'Create up to 100 results atomically. A failure rolls back the entire batch.', scope: 'write', schema: object({ items: { type: 'array', minItems: 1, maxItems: 100, items: resultSchema } }, ['items']) },
+  { method: 'POST', path: '/results/batch', action: 'results.batch', description: 'Create up to 100 results atomically. A failure rolls back the entire batch. Set sameRun when the items are one run (one setup at several input lengths or request counts): they get a shared runId and the rig page draws them as one curve.', scope: 'write', schema: object({ items: { type: 'array', minItems: 1, maxItems: 100, items: resultSchema }, sameRun: { type: 'boolean' } }, ['items']) },
   ...resource('/results', 'results', resultSchema),
   { method: 'PUT', path: '/results/{id}/confirmation', action: 'confirmations.set', description: 'Confirm another user’s result. Repeating this never removes a confirmation.', scope: 'community' },
   { method: 'DELETE', path: '/results/{id}/confirmation', action: 'confirmations.delete', description: 'Remove your confirmation.', scope: 'community' },
@@ -103,7 +108,7 @@ export function validate(schema: Schema, value: unknown, field = 'body'): void {
 }
 
 export function moderateBody(body: Record<string, unknown>) {
-  const fields = ['name', 'os', 'summary', 'notes', 'note', 'runtimeVersion', 'runtimeFlags', 'revision']
+  const fields = ['name', 'os', 'summary', 'notes', 'note', 'runtimeVersion', 'runtimeFlags', 'revision', 'modelRepo', 'modelFile']
   moderateText(fields.filter((key) => typeof body[key] === 'string').map((key) => [key, body[key] as string, 5000]))
   if (Array.isArray(body.items)) body.items.forEach((item) => moderateBody(item as Record<string, unknown>))
 }

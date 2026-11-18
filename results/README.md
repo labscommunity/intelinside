@@ -63,11 +63,51 @@ measured the same way can be compared:
 | `thinking` | `true` if reasoning mode was on. |
 | `speculative` | `none`, `lossless` (output unchanged, such as MTP or a verified draft model), or `lossy`. |
 | `revision` | The exact engine commit or tag, for stock and custom runs alike. |
+| `modelRepo`, `modelFile` | Where the weights came from and which file: `Qwen/Qwen3-8B-GGUF`, `Qwen3-8B-Q4_K_M.gguf`. Two files of the same quant from different quantizers can differ in speed. |
+| `modelSha256` | The model file's SHA-256 (`sha256sum`, or the hash on its download page). |
+| `decodeTpsMin`, `decodeTpsMax` | The slowest and fastest measured repeat behind `decodeTps`. |
 
 Boards rank per-request numbers. A result with `concurrency` above 1 and `decodeScope` `total` is the machine's
 throughput, a different quantity from what one request sees, so it ranks only on the **Throughput** tab and never
 counts as a rig's best decode speed. Measure the same model, quant and runtime at several request counts, record
 `concurrency` and `decodeScope` on each, and the rig page draws decode tok/s against concurrent requests from them.
+
+### One run, several points
+
+Measuring the same setup at several prompt lengths or request counts is one run. Write it as one file with a
+`points` list instead of one file per point. Each point holds only what changes between points (`decodeTps`,
+`decodeTpsMin`, `decodeTpsMax`, `promptTps`, `ttftMs`, `inputTokens`, `outputTokens`, `concurrency`,
+`decodeScope`); everything else is written once at the top and applies to every point:
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "16",
+  "model": "qwen3-8b",
+  "quant": "q4_k_m",
+  "runtime": "llamacpp",
+  "runtimeVersion": "b6512",
+  "revision": "b6512",
+  "outputTokens": 256,
+  "decodeMethod": "streamed",
+  "repeats": 3,
+  "promptCache": false,
+  "thinking": false,
+  "speculative": "none",
+  "modelRepo": "Qwen/Qwen3-8B-GGUF",
+  "modelFile": "Qwen3-8B-Q4_K_M.gguf",
+  "runDate": "2026-11-18",
+  "points": [
+    { "inputTokens": 512, "concurrency": 1, "decodeTps": 20.66, "decodeTpsMin": 20.51, "decodeTpsMax": 20.79 },
+    { "inputTokens": 4096, "concurrency": 1, "decodeTps": 18.51 },
+    { "inputTokens": 512, "concurrency": 4, "decodeScope": "per_request", "decodeTps": 15.05 },
+    { "inputTokens": 512, "concurrency": 4, "decodeScope": "total", "decodeTps": 28.8 }
+  ]
+}
+```
+
+Each point becomes its own result, so each ranks on the board of its setup, and the results share a run id. At most
+64 points per file; no two points may have the same prompt, output, request count and scope.
 
 `contextLength` and `batchSize` still work but are ambiguous: some people meant the prompt, others the context
 window; some meant concurrent requests, others the engine batch size. Use `inputTokens` and `concurrency` instead.
@@ -87,12 +127,15 @@ requests ranks on **4 requests** and **Throughput**; every point counts toward t
 For every point:
 
 1. **Settings.** 256 output tokens, temperature 0, thinking off, no speculative decoding, prompt cache off.
-2. **Repeats.** One warm-up run, discarded, then 3 measured runs. Report the mean; put the min and max in `notes`.
+2. **Repeats.** One warm-up run, discarded, then 3 measured runs. Report the mean as `decodeTps` and the slowest and
+   fastest as `decodeTpsMin` and `decodeTpsMax`.
 3. **Decode.** The streamed rate after the first token: `(outputTokens − 1) / (time of last token − time of first token)`.
    Report TTFT separately as `ttftMs`. At 4 requests, submit two files from the same runs: the mean per-request
    decode (`decodeScope: "per_request"`) and the total completion tokens over wall time (`decodeScope: "total"`).
-4. **Record.** The engine commit as `revision`, the engine flags as `runtimeFlags`, and the model file (repository,
-   file name, SHA-256) in `notes`.
+4. **Record.** The engine commit as `revision`, the engine flags as `runtimeFlags`, and the model file as
+   `modelRepo`, `modelFile` and `modelSha256`.
+
+The whole grid fits in one file: see [One run, several points](#one-run-several-points).
 
 ```json
 {
@@ -105,7 +148,12 @@ For every point:
   "thinking": false,
   "speculative": "none",
   "revision": "b6512",
-  "notes": "min/max 33.9/34.6. Model: Qwen/Qwen3-8B-GGUF Qwen3-8B-Q4_K_M.gguf sha256 1a2b…"
+  "decodeTps": 34.2,
+  "decodeTpsMin": 33.9,
+  "decodeTpsMax": 34.6,
+  "modelRepo": "Qwen/Qwen3-8B-GGUF",
+  "modelFile": "Qwen3-8B-Q4_K_M.gguf",
+  "modelSha256": "<64 hex characters>"
 }
 ```
 

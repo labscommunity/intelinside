@@ -8,7 +8,7 @@ import { ApiError, BUILD_SUMMARY_MAX } from './types'
 import { hardwareChart } from './hardware-chart'
 import { isEvidenceUrl } from '@/lib/evidence'
 import { hostIn } from '@/lib/hardware'
-import { conditionErrors } from '@/lib/conditions'
+import { conditionErrors, detailErrors } from '@/lib/conditions'
 import { SETUPS, SETUP_BY_ID, type SetupId } from '@/lib/setups'
 import { resultRank } from '@/lib/rank'
 import { boardQuants, HARDWARE_BY_ID, MODELS, MODEL_BY_ID, QUANTS, QUANT_BY_ID, RUNTIMES, RUNTIME_BY_ID, VISIBLE_HARDWARE } from '@/catalog'
@@ -289,6 +289,7 @@ function validateResult(input: Partial<ResultInput>, forCreate: boolean): Record
   if (input.repoUrl?.trim() && !isEvidenceUrl(input.repoUrl.trim())) errors.repoUrl = 'Enter a full HTTPS URL.'
   if (input.runDate && new Date(input.runDate).getTime() > Date.now() + 86400000) errors.runDate = 'Run date cannot be in the future.'
   Object.assign(errors, conditionErrors(input))
+  Object.assign(errors, detailErrors(input, input.decodeTps))
   if (input.rigId) {
     const rig = db.rigs.find((r) => r.id === input.rigId)
     if (!rig) errors.rigId = 'Unknown rig.'

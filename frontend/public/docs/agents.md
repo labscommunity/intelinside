@@ -125,7 +125,12 @@ Record how the number was measured in the optional condition fields:
 `total`, only when `concurrency` is above 1), `decodeMethod` (`streamed`,
 `engine`, `llama_bench`, or `wall`), `repeats`, `promptCache`, `thinking`, and
 `speculative` (`none`, `lossless`, or `lossy`). Set `revision` to the engine
-commit for stock runs too. Leave a field out rather than guess. Put any other
+commit for stock runs too. Name the model file with `modelRepo`, `modelFile`
+and `modelSha256` (lowercase hex), and the spread of the repeats with
+`decodeTpsMin` and `decodeTpsMax`. When the items of a batch are one run, the
+same setup measured at several input lengths or request counts, add
+`"sameRun": true` beside `items`: they share a `runId` and the rig page draws
+them as one curve. Leave a field out rather than guess. Put any other
 caveats in `runtimeFlags` and `notes`. Publishing measured aggregate throughput
 as a single stream measurement would misrepresent the run.
 
@@ -189,7 +194,7 @@ All paths below are relative to `/api/v1`. Every route except `/catalog` require
 | POST | `/custom-runtimes` | write | Create a record owned by the authenticated user. |
 | PATCH | `/custom-runtimes/{id}` | write | Update your record. Requires X-Expected-Version with its updatedAt value. |
 | DELETE | `/custom-runtimes/{id}` | write | Delete your record. Requires X-Expected-Version. Rig deletion with results also requires cascade=true. |
-| POST | `/results/batch` | write | Create up to 100 results atomically. A failure rolls back the entire batch. |
+| POST | `/results/batch` | write | Create up to 100 results atomically. A failure rolls back the entire batch. Set sameRun when the items are one run (one setup at several input lengths or request counts): they get a shared runId and the rig page draws them as one curve. |
 | GET | `/results` | read | List results. Filter by owner=me, q, or resource-specific IDs. |
 | GET | `/results/{id}` | read | Read one record and its current updatedAt version. |
 | POST | `/results` | write | Create a record owned by the authenticated user. |
@@ -235,6 +240,7 @@ Unknown fields are rejected. PATCH accepts the same fields as POST, all optional
 | Field | Required on create | Type and limits |
 | --- | --- | --- |
 | `items` | Yes | array; 1–100 items |
+| `sameRun` | No | boolean |
 
 Each item uses the POST /results fields below.
 
@@ -269,6 +275,11 @@ Unknown fields are rejected. PATCH accepts the same fields as POST, all optional
 | `promptCache` | No | boolean or null |
 | `thinking` | No | boolean or null |
 | `speculative` | No | string or null: none, lossless, lossy |
+| `modelRepo` | No | string or null; max 200 characters |
+| `modelFile` | No | string or null; max 255 characters |
+| `modelSha256` | No | string or null |
+| `decodeTpsMin` | No | number or null; greater than 0; maximum 1000000000000 |
+| `decodeTpsMax` | No | number or null; greater than 0; maximum 1000000000000 |
 | `repoUrl` | No | string or null (https-url); max 2048 characters |
 | `runDate` | Yes | string (date) |
 
