@@ -183,6 +183,18 @@ export type Result = {
   promptCache?: boolean
   thinking?: boolean
   speculative?: Speculative
+  // Details (issue #130 step 4). Optional; see lib/conditions.ts.
+  /** Where the weights came from, such as Qwen/Qwen3-8B-GGUF. */
+  modelRepo?: string
+  /** The file within it, such as Qwen3-8B-Q4_K_M.gguf. */
+  modelFile?: string
+  /** The file's SHA-256, lowercase hex. */
+  modelSha256?: string
+  /** Slowest and fastest measured repeat behind decodeTps. */
+  decodeTpsMin?: number
+  decodeTpsMax?: number
+  /** Shared by the results of one run: one setup measured at several input lengths or request counts. Set by the server. */
+  runId?: string
   notes?: string
   /** Optional HTTPS evidence link. The legacy name is retained for API compatibility. */
   repoUrl?: string
@@ -199,7 +211,7 @@ export type Result = {
 export type ResultInput = Omit<
   Result,
   | 'id' | 'submitterId' | 'submitter' | 'rig' | 'component' | 'verification' | 'moderation' | 'createdAt' | 'updatedAt'
-  | 'execution' | 'customRuntime' | 'componentHost' | 'sourcePrUrl'
+  | 'execution' | 'customRuntime' | 'componentHost' | 'sourcePrUrl' | 'runId'
 >
 
 export type BoardKind = 'rigs' | 'components'

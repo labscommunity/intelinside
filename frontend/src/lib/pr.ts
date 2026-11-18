@@ -2,7 +2,7 @@ import { REVISION_MAX, RUNTIME_FLAGS_MAX, type Result, type ResultInput } from '
 import { REPO } from '@/lib/brand'
 import { HARDWARE_BY_ID, MODEL_BY_ID, QUANT_BY_ID, RUNTIME_BY_ID } from '@/catalog'
 import { isEvidenceUrl } from '@/lib/evidence'
-import { CONDITION_KEYS, conditionProblems, type Conditions } from '@/lib/conditions'
+import { CONDITION_KEYS, DETAIL_KEYS, conditionProblems, detailProblems, normalizeSha256, type Conditions, type RunDetails } from '@/lib/conditions'
 
 // PR results are validated by trusted CI and inserted into Supabase on merge.
 // This parser also supports the legacy browser prefill and exporting existing results as archive files.
@@ -12,7 +12,17 @@ export const RESULTS_DIR = 'results'
 const API = 'https://api.github.com'
 
 /** A result as committed to the repo. Mirrors ResultInput with catalog ids, plus the rig by id or name. */
-export type ResultFile = Conditions & {
+/**
+ * The fields that change from point to point of a run. A file with `points` lists these per point and keeps
+ * everything else once at the top, shared by every point.
+ */
+export const POINT_KEYS = ['decodeTps', 'decodeTpsMin', 'decodeTpsMax', 'promptTps', 'ttftMs', 'inputTokens', 'outputTokens', 'concurrency', 'decodeScope'] as const
+/** Measured numbers: only ever per point in a file with points, never at the top. */
+const MEASURED_KEYS = ['decodeTps', 'decodeTpsMin', 'decodeTpsMax', 'promptTps', 'ttftMs'] as const
+export const POINTS_MAX = 64
+export type ResultPoint = Partial<Pick<ResultFile, (typeof POINT_KEYS)[number]>> & { decodeTps: number }
+
+export type ResultFile = Conditions & RunDetails & {
   /** The number at the end of the rig's URL on the site, or the rig's exact name. */
   rig: string
   /** Hardware id of the one part the run used. Leave out for a whole-rig result. */
@@ -42,6 +52,8 @@ export type ResultFile = Conditions & {
   evidenceUrl?: string
   /** The result's URL on the site once it has been submitted, so the archive entry and the live entry point at each other. */
   result?: string
+  /** One run at several input lengths or request counts: one result per point, sharing the rest of the file. */
+  points?: ResultPoint[]
 }
 
 export type PrRef = { number: number; url: string }
@@ -69,7 +81,7 @@ const DATE = /^\d{4}-\d{2}-\d{2}$/
 export const RESULT_FILE_KEYS = [
   '$schema', 'rig', 'component', 'componentQuantity', 'model', 'quant', 'runtime', 'runtimeVersion', 'runtimeFlags',
   'customRuntime', 'customRuntimeFile', 'revision', 'decodeTps', 'promptTps', 'ttftMs', 'contextLength', 'batchSize',
-  ...CONDITION_KEYS, 'runDate', 'notes', 'evidenceUrl', 'result',
+  ...CONDITION_KEYS, ...DETAIL_KEYS, 'runDate', 'notes', 'evidenceUrl', 'result', 'points',
 ] as const
 
 /** How many single-letter edits turn a into b. Small strings only. */
@@ -97,6 +109,51 @@ function unknownFieldProblem(key: string): string {
  * bad id still prefills the rest of the form. The CI check treats any problem as a failure.
  */
 export function parseResultFile(raw: unknown): { file: Partial<ResultFile>; problems: string[] } {
+  if (raw && typeof raw === 'object' && !Array.isArray(raw) && 'points' in raw) return parsePointsFile(raw as Record<string, unknown>)
+  return parseFields(raw)
+}
+
+/**
+ * A file with points is read as one full result per point: the top-level fields with that point's fields on top.
+ * A problem every point shares (a bad rig, say) is named once; a problem in one point names the point.
+ */
+function parsePointsFile(data: Record<string, unknown>): { file: Partial<ResultFile>; problems: string[] } {
+  const { points, ...shared } = data
+  const problems: string[] = []
+  for (const key of MEASURED_KEYS) if (key in shared) problems.push(`"${key}" goes in each point, not at the top, in a file with "points".`)
+  if (!Array.isArray(points) || points.length < 1 || points.length > POINTS_MAX) {
+    // Still check the shared fields; the placeholder rate only stands in for the missing points.
+    const base = parseFields({ ...shared, decodeTps: 1 })
+    delete base.file.decodeTps
+    return { file: base.file, problems: [...problems, ...base.problems, `"points" must be a list of 1 to ${POINTS_MAX} points.`] }
+  }
+  const parsed = points.map((point, i) => {
+    if (!point || typeof point !== 'object' || Array.isArray(point)) return { file: {} as Partial<ResultFile>, problems: [`points[${i}] must be an object.`], own: true }
+    const extra = Object.keys(point).filter((key) => !(POINT_KEYS as readonly string[]).includes(key))
+    const extraProblems = extra.map((key) => `points[${i}]: "${key}" cannot vary by point; put it at the top. A point holds ${POINT_KEYS.map((k) => `"${k}"`).join(', ')}.`)
+    const result = parseFields({ ...shared, ...(point as Record<string, unknown>) })
+    return { file: result.file, problems: [...extraProblems, ...result.problems], own: false }
+  })
+  const counts = new Map<string, number>()
+  for (const p of parsed) for (const problem of new Set(p.problems)) counts.set(problem, (counts.get(problem) ?? 0) + 1)
+  const everywhere = new Set([...counts].filter(([, n]) => n === parsed.length).map(([problem]) => problem))
+  problems.push(...everywhere)
+  parsed.forEach((p, i) => {
+    for (const problem of p.problems) if (!everywhere.has(problem)) problems.push(problem.startsWith('points[') ? problem : `points[${i}]: ${problem}`)
+  })
+  const seen = new Map<string, number>()
+  parsed.forEach((p, i) => {
+    const key = [p.file.inputTokens, p.file.outputTokens, p.file.concurrency, p.file.decodeScope].join('|')
+    if (seen.has(key)) problems.push(`points[${i}] repeats points[${seen.get(key)}]: each point needs its own input tokens, output tokens, concurrency or scope.`)
+    else seen.set(key, i)
+  })
+  const first = parsed.find((p) => !p.own)?.file ?? {}
+  const file: Partial<ResultFile> = Object.fromEntries(Object.entries(first).filter(([key]) => !(POINT_KEYS as readonly string[]).includes(key)))
+  file.points = parsed.map((p) => Object.fromEntries(POINT_KEYS.filter((key) => p.file[key] != null).map((key) => [key, p.file[key]])) as ResultPoint)
+  return { file, problems }
+}
+
+function parseFields(raw: unknown): { file: Partial<ResultFile>; problems: string[] } {
   const problems: string[] = []
   const file: Partial<ResultFile> = {}
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { file, problems: ['The file must be a JSON object.'] }
@@ -156,6 +213,10 @@ export function parseResultFile(raw: unknown): { file: Partial<ResultFile>; prob
   const conditionIssues = conditionProblems(conditions)
   problems.push(...conditionIssues)
   if (!conditionIssues.length) Object.assign(file, conditions)
+  const details = Object.fromEntries(DETAIL_KEYS.filter((key) => data[key] != null).map((key) => [key, key === 'modelSha256' ? normalizeSha256(data[key]) : data[key]]))
+  const detailIssues = detailProblems(details, file.decodeTps)
+  problems.push(...detailIssues)
+  if (!detailIssues.length) Object.assign(file, details)
   file.runDate = str('runDate', true)
   if (file.runDate && !DATE.test(file.runDate)) {
     problems.push('"runDate" must be YYYY-MM-DD.')
@@ -231,6 +292,7 @@ export function resultFileFor(r: Result | ResultInput, resultUrl?: string): Resu
     ...(r.contextLength != null ? { contextLength: r.contextLength } : {}),
     ...(r.batchSize != null ? { batchSize: r.batchSize } : {}),
     ...Object.fromEntries(CONDITION_KEYS.filter((key) => r[key] != null).map((key) => [key, r[key]])),
+    ...Object.fromEntries(DETAIL_KEYS.filter((key) => r[key] != null).map((key) => [key, r[key]])),
     runDate: r.runDate.slice(0, 10),
     ...(r.notes ? { notes: r.notes } : {}),
     ...(r.repoUrl?.trim() ? { evidenceUrl: r.repoUrl.trim() } : {}),

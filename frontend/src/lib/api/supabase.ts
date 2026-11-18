@@ -10,6 +10,7 @@ import type {
   CustomRuntime, DecodeMethod, DecodeScope, Speculative,
 } from './types'
 import { ApiError, BUILD_SUMMARY_MAX, REVISION_MAX, RUNTIME_FLAGS_MAX } from './types'
+import { MODEL_FILE_MAX, MODEL_REPO_MAX, normalizeSha256 } from '@/lib/conditions'
 import { SETUPS, SETUP_BY_ID, isTotalThroughput, type SetupId } from '@/lib/setups'
 import { resultRank } from '@/lib/rank'
 import { hardwareChart } from './hardware-chart'
@@ -60,6 +61,12 @@ type ResultRow = {
   prompt_cache: boolean | null
   thinking: boolean | null
   speculative: Speculative | null
+  model_repo: string | null
+  model_file: string | null
+  model_sha256: string | null
+  decode_tps_min: number | string | null
+  decode_tps_max: number | string | null
+  run_id: string | null
   notes: string | null
   repo_url: string | null
   source_pr_url: string | null
@@ -163,12 +170,15 @@ function resultPayload(input: Partial<ResultInput>, create = false): Record<stri
     ['inputTokens', 'input_tokens'], ['outputTokens', 'output_tokens'], ['concurrency', 'concurrency'],
     ['decodeScope', 'decode_scope'], ['decodeMethod', 'decode_method'], ['repeats', 'repeats'],
     ['promptCache', 'prompt_cache'], ['thinking', 'thinking'], ['speculative', 'speculative'],
+    ['modelRepo', 'model_repo'], ['modelFile', 'model_file'], ['modelSha256', 'model_sha256'],
+    ['decodeTpsMin', 'decode_tps_min'], ['decodeTpsMax', 'decode_tps_max'],
   ]
   const payload: Record<string, unknown> = {}
   for (const [source, target] of map) {
     if (create || source in input) payload[target] = input[source] ?? null
   }
   if ('repo_url' in payload) payload.repo_url = input.repoUrl?.trim() || null
+  if (typeof payload.model_sha256 === 'string') payload.model_sha256 = normalizeSha256(payload.model_sha256) || null
   if (payload.component_id == null) payload.component_quantity = null
   return payload
 }
@@ -321,6 +331,12 @@ function view(snapshot: Snapshot) {
       promptCache: optional(row.prompt_cache),
       thinking: optional(row.thinking),
       speculative: optional(row.speculative),
+      modelRepo: optional(row.model_repo),
+      modelFile: optional(row.model_file),
+      modelSha256: optional(row.model_sha256),
+      decodeTpsMin: row.decode_tps_min == null ? undefined : numberValue(row.decode_tps_min),
+      decodeTpsMax: row.decode_tps_max == null ? undefined : numberValue(row.decode_tps_max),
+      runId: optional(row.run_id),
       notes: optional(row.notes),
       repoUrl: optional(row.repo_url),
       sourcePrUrl: optional(row.source_pr_url),
@@ -700,7 +716,7 @@ export const supabaseApi: Api = {
   },
   async createResult(input) {
     const submitterId = await requireUserId()
-    moderateText([['runtimeVersion', input.runtimeVersion, 80], ['runtimeFlags', input.runtimeFlags, RUNTIME_FLAGS_MAX], ['revision', input.revision, REVISION_MAX], ['notes', input.notes, 5000]])
+    moderateText([['runtimeVersion', input.runtimeVersion, 80], ['runtimeFlags', input.runtimeFlags, RUNTIME_FLAGS_MAX], ['revision', input.revision, REVISION_MAX], ['notes', input.notes, 5000], ['modelRepo', input.modelRepo, MODEL_REPO_MAX], ['modelFile', input.modelFile, MODEL_FILE_MAX]])
     const created = await rows<ResultRow[]>(requiredClient().from('results').insert({
       ...resultPayload(input, true),
       submitter_id: submitterId,
@@ -709,7 +725,7 @@ export const supabaseApi: Api = {
   },
   async updateResult(id, input) {
     await requireUserId()
-    moderateText([['runtimeVersion', input.runtimeVersion, 80], ['runtimeFlags', input.runtimeFlags, RUNTIME_FLAGS_MAX], ['revision', input.revision, REVISION_MAX], ['notes', input.notes, 5000]])
+    moderateText([['runtimeVersion', input.runtimeVersion, 80], ['runtimeFlags', input.runtimeFlags, RUNTIME_FLAGS_MAX], ['revision', input.revision, REVISION_MAX], ['notes', input.notes, 5000], ['modelRepo', input.modelRepo, MODEL_REPO_MAX], ['modelFile', input.modelFile, MODEL_FILE_MAX]])
     const updated = await rows<ResultRow[]>(requiredClient().from('results').update(resultPayload(input)).eq('id', id).select('*'))
     if (!updated.length) throw new ApiError('not_found', 'No such result.', 404)
     return supabaseApi.result(id)

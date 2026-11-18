@@ -31,7 +31,7 @@ import { ApiError, REVISION_MAX, RUNTIME_FLAGS_MAX, type CustomRuntime, type Res
 import { fmtTps, pluralize } from '@/lib/format'
 import { resultShareTarget } from '@/lib/share'
 import { cn } from '@/lib/utils'
-import { DECODE_METHODS, DECODE_SCOPES, SPECULATIVE, type Conditions } from '@/lib/conditions'
+import { DECODE_METHODS, DECODE_SCOPES, MODEL_FILE_MAX, MODEL_REPO_MAX, SPECULATIVE, detailErrors, normalizeSha256, type Conditions, type RunDetails } from '@/lib/conditions'
 import { boardPhrase, rankBoardPath, unitPhrase } from '@/lib/rank'
 import { HARDWARE_BY_ID, MODEL_BY_ID, QUANT_BY_ID, RUNTIME_BY_ID } from '@/catalog'
 
@@ -64,6 +64,12 @@ type Form = {
   promptCache: string
   thinking: string
   speculative: string
+  // Details: the model file and the spread of the repeats.
+  modelRepo: string
+  modelFile: string
+  modelSha256: string
+  decodeTpsMin: string
+  decodeTpsMax: string
   repoUrl: string
   runDate: string
   notes: string
@@ -80,19 +86,24 @@ const num = (s: string) => (s.trim() === '' ? undefined : Number(s))
 const CONDITION_INTEGERS = ['inputTokens', 'outputTokens', 'concurrency', 'repeats'] as const
 
 function emptyConditions() {
-  return { inputTokens: '', outputTokens: '', concurrency: '', decodeScope: '', decodeMethod: '', repeats: '', promptCache: '', thinking: '', speculative: '' }
+  return {
+    inputTokens: '', outputTokens: '', concurrency: '', decodeScope: '', decodeMethod: '', repeats: '', promptCache: '', thinking: '', speculative: '',
+    modelRepo: '', modelFile: '', modelSha256: '', decodeTpsMin: '', decodeTpsMax: '',
+  }
 }
 /** Form strings from stored conditions, for a file, an edit, or a carried-over setup. */
-function conditionFields(c: Partial<Conditions>): ReturnType<typeof emptyConditions> {
+function conditionFields(c: Partial<Conditions & RunDetails>): ReturnType<typeof emptyConditions> {
   const text = (v: number | boolean | string | undefined) => (v == null ? '' : String(v))
   return {
     inputTokens: text(c.inputTokens), outputTokens: text(c.outputTokens), concurrency: text(c.concurrency),
     decodeScope: text(c.decodeScope), decodeMethod: text(c.decodeMethod), repeats: text(c.repeats),
     promptCache: text(c.promptCache), thinking: text(c.thinking), speculative: text(c.speculative),
+    modelRepo: text(c.modelRepo), modelFile: text(c.modelFile), modelSha256: text(c.modelSha256),
+    decodeTpsMin: text(c.decodeTpsMin), decodeTpsMax: text(c.decodeTpsMax),
   }
 }
 /** Stored conditions from the form. Per request vs total only applies with several requests, so it is dropped otherwise. */
-function conditionsFrom(f: Form): Conditions {
+function conditionsFrom(f: Form): Conditions & RunDetails {
   const bool = (v: string) => (v === '' ? undefined : v === 'true')
   const concurrency = num(f.concurrency)
   return {
@@ -102,10 +113,13 @@ function conditionsFrom(f: Form): Conditions {
     repeats: num(f.repeats),
     promptCache: bool(f.promptCache), thinking: bool(f.thinking),
     speculative: (f.speculative || undefined) as Conditions['speculative'],
+    modelRepo: f.modelRepo.trim() || undefined, modelFile: f.modelFile.trim() || undefined,
+    modelSha256: (normalizeSha256(f.modelSha256) as string) || undefined,
+    decodeTpsMin: num(f.decodeTpsMin), decodeTpsMax: num(f.decodeTpsMax),
   }
 }
-/** "Submit another" keeps the setup, since a series of runs usually changes one thing at a time. */
-const conditionsCarried = (f: Form) => conditionFields(conditionsFrom(f))
+/** "Submit another" keeps the setup and the model file, since a series of runs usually changes one thing at a time. The spread belongs to one number. */
+const conditionsCarried = (f: Form) => ({ ...conditionFields(conditionsFrom(f)), decodeTpsMin: '', decodeTpsMax: '' })
 
 // The same model, quant, runtime, and card can differ twofold on kernel choices, so the placeholder names the ones
 // that matter for each runtime rather than leaving people to guess what belongs here.
@@ -144,6 +158,13 @@ function validate(f: Form): Record<string, string> {
     const v = num(f[k])
     if (v != null && !(Number.isInteger(v) && v >= 1)) e[k] = 'Enter a whole number of 1 or more.'
   }
+  for (const [k, message] of Object.entries(detailErrors(conditionsFrom(f), d))) {
+    e[k] = k === 'modelSha256' ? 'Paste the 64-character SHA-256.' : k.startsWith('decodeTps') ? (k === 'decodeTpsMin' ? 'Slowest run cannot be faster than decode tok/s.' : 'Fastest run cannot be slower than decode tok/s.') : message
+  }
+  for (const k of ['decodeTpsMin', 'decodeTpsMax'] as const) {
+    const v = num(f[k])
+    if (v != null && !(v > 0)) e[k] = 'Enter tok/s above zero.'
+  }
   if (f.repoUrl.trim() && !isEvidenceUrl(f.repoUrl.trim())) e.repoUrl = 'Enter a full URL, starting with https://.'
   if (!f.runDate) e.runDate = 'Enter the run date.'
   else if (f.runDate > today()) e.runDate = 'Run date cannot be in the future.'
@@ -178,6 +199,10 @@ function toInput(f: Form): ResultInput {
 /** Fills the form from a result file. Ids the catalog does not know stay blank and are reported, so the rest still lands. */
 function formFromFile(file: Partial<ResultFile>, rigs: RigSummary[], customRuntimes: CustomRuntime[], prev: Form): { form: Form; problems: string[] } {
   const problems: string[] = []
+  if (file.points?.length) {
+    problems.push(`This file holds ${file.points.length} points of one run. The form shows the first; merging submits all of them.`)
+    file = { ...file, ...file.points[0] }
+  }
   if (file.customRuntimeFile) problems.push(`Custom runtime ${file.customRuntimeFile} resolves when this PR is merged. This preview cannot resolve an unmerged registration.`)
   const wanted = file.rig?.toLowerCase()
   const rig = wanted ? rigs.find((r) => r.id.toLowerCase() === wanted) ?? rigs.find((r) => r.name.toLowerCase() === wanted) : undefined
@@ -878,6 +903,12 @@ export default function SubmitResult({ mode = 'create' }: { mode?: 'create' | 'e
                 <Field id="ttftMs" label="Time to first token (ms)" error={errors.ttftMs}>
                   <Input {...inputProps('ttftMs')} type="number" min={0} step="any" inputMode="decimal" placeholder="Optional" className="font-mono" />
                 </Field>
+                <Field id="decodeTpsMin" label="Slowest run (tok/s)" error={errors.decodeTpsMin}>
+                  <Input {...inputProps('decodeTpsMin')} type="number" min={0} step="any" inputMode="decimal" placeholder="Optional" className="font-mono" />
+                </Field>
+                <Field id="decodeTpsMax" label="Fastest run (tok/s)" error={errors.decodeTpsMax}>
+                  <Input {...inputProps('decodeTpsMax')} type="number" min={0} step="any" inputMode="decimal" placeholder="Optional" className="font-mono" />
+                </Field>
                 {/* Legacy and ambiguous, so new results use the conditions below. Shown only while a value is there,
                     so editing an older result never drops it silently. */}
                 {form.contextLength || errors.contextLength ? (
@@ -944,6 +975,17 @@ export default function SubmitResult({ mode = 'create' }: { mode?: 'create' | 'e
                   </NativeSelect>
                 </Field>
               </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field id="modelRepo" label="Model repository" error={errors.modelRepo} hint="Where the weights came from.">
+                  <Input {...inputProps('modelRepo')} maxLength={MODEL_REPO_MAX} placeholder="Qwen/Qwen3-8B-GGUF" className="font-mono" />
+                </Field>
+                <Field id="modelFile" label="Model file" error={errors.modelFile} hint="Two Q4_K_M files from different quantizers can differ in speed.">
+                  <Input {...inputProps('modelFile')} maxLength={MODEL_FILE_MAX} placeholder="Qwen3-8B-Q4_K_M.gguf" className="font-mono" />
+                </Field>
+              </div>
+              <Field id="modelSha256" label="Model file SHA-256" error={errors.modelSha256}>
+                <Input {...inputProps('modelSha256')} maxLength={64} spellCheck={false} placeholder="Optional" className="font-mono" />
+              </Field>
             </Step>
 
             <Step n={7} title="Evidence" hint="An evidence link is optional. Logs, scripts, a gist, a report, or a repository can help others check your result.">

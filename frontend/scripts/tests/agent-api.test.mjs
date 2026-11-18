@@ -201,3 +201,17 @@ test('results record optional conditions, and a stock run keeps its revision',as
  assert.notEqual((await call('/api/v1/results',{method:'POST',body:{...resultInput(),decodeScope:'total',concurrency:1}})).status,201)
  okay(await call(`/api/v1/results/${created.id}`,{method:'DELETE',version:cleared.updatedAt}))
 })
+
+test('a batch with sameRun shares one run id; details round-trip; runId is not writable',async()=>{
+ const details={modelRepo:'Qwen/Qwen3-8B-GGUF',modelFile:'Qwen3-8B-Q4_K_M.gguf',modelSha256:'b'.repeat(64),decodeTpsMin:7.5,decodeTpsMax:8.1}
+ const run=okay(await call('/api/v1/results/batch',{method:'POST',body:{sameRun:true,items:[{...resultInput(),...details,concurrency:1},{...resultInput(),concurrency:4,decodeScope:'total',decodeTps:20}]}}),201)
+ assert.ok(run.items[0].runId);assert.equal(run.items[0].runId,run.items[1].runId)
+ for(const [k,v] of Object.entries(details)) assert.equal(run.items[0][k],v,k)
+ const loose=okay(await call('/api/v1/results/batch',{method:'POST',body:{items:[resultInput(),resultInput()]}}),201)
+ assert.equal(loose.items[0].runId,null);assert.equal(loose.items[1].runId,null)
+ const other=okay(await call('/api/v1/results/batch',{method:'POST',body:{sameRun:true,items:[resultInput()]}}),201)
+ assert.notEqual(other.items[0].runId,run.items[0].runId,'each batch is its own run')
+ assert.equal((await call('/api/v1/results',{method:'POST',body:{...resultInput(),runId:run.items[0].runId}})).status,400)
+ assert.equal((await call('/api/v1/results',{method:'POST',body:{...resultInput(),modelSha256:'B'.repeat(64)}})).status,400)
+ assert.notEqual((await call('/api/v1/results',{method:'POST',body:{...resultInput(),decodeTpsMin:9}})).status,201,'the slowest run cannot beat the mean')
+})

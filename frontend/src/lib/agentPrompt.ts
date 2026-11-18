@@ -26,7 +26,10 @@ Read ${RESULTS_DIR}/README.md in that repo for the field list, and frontend/src/
 and runtime ids. Fill the file from my run: model, quant, runtime, runtimeVersion, decodeTps and runDate are
 required; promptTps, ttftMs, runtimeFlags and revision (the engine commit) if the log has them. Also record how
 it was measured, where the log or my setup says so: inputTokens, outputTokens, concurrency (and decodeScope when
-above 1), decodeMethod, repeats, promptCache, thinking and speculative. Leave out anything you would have to guess.
+above 1), decodeMethod, repeats, promptCache, thinking and speculative; the model file as modelRepo, modelFile and
+modelSha256; and the slowest and fastest repeat as decodeTpsMin and decodeTpsMax. If I measured the same setup at
+several prompt lengths or request counts, write one file with a "points" list instead of one file per point (the
+README shows how). Leave out anything you would have to guess.
 If I have a published log, script, gist, report, or repository for the run, include its full HTTPS URL as
 evidenceUrl. This is optional; omit it if unavailable. The submission PR is linked automatically.
 

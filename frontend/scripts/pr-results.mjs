@@ -39,7 +39,7 @@ export function prepareFile(path, status, raw, author, parseResultFile) {
   }
   const { file, problems } = parseResultFile(raw)
   if (status !== 'added' && !file.result) problems.push('Only new files can submit runs. Use a new filename; edit existing live results on the site.')
-  for (const [field, limit] of [['runtimeVersion', 80], ['runtimeFlags', 200], ['revision', 80], ['notes', 5000]]) {
+  for (const [field, limit] of [['runtimeVersion', 80], ['runtimeFlags', 200], ['revision', 80], ['notes', 5000], ['modelRepo', 200], ['modelFile', 255]]) {
     if (file[field]?.length > limit) problems.push(`${field} must be ${limit} characters or fewer.`)
     if (file[field] && matcher.hasMatch(file[field])) problems.push(`${field}: please remove offensive or profane language.`)
   }
@@ -117,6 +117,9 @@ export async function processPr({ github, database, repository, number, defaultB
   const lines = data.map((entry) => {
     const registration = files.find((f) => f.path === entry.path && f.path.startsWith('custom-runtimes/'))
     const url = entry.id ? `${site}/${registration ? `runtimes/${registration.file.runtime}/custom` : 'results'}/${entry.id}` : null
+    // A file with points is one run: name how many results it makes and link each one.
+    if (entry.ids?.length > 1) return `- ${entry.path}: ${entry.status}, ${entry.ids.length} points (${entry.ids.map((id) => `${site}/results/${id}`).join(', ')})`
+    if (entry.points > 1) return `- ${entry.path}: ${entry.status}, ${entry.points} points`
     return `- ${entry.path}: ${entry.status}${url ? ` (${url})` : ''}`
   })
   lines.push(merged

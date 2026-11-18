@@ -125,7 +125,12 @@ Record how the number was measured in the optional condition fields:
 `total`, only when `concurrency` is above 1), `decodeMethod` (`streamed`,
 `engine`, `llama_bench`, or `wall`), `repeats`, `promptCache`, `thinking`, and
 `speculative` (`none`, `lossless`, or `lossy`). Set `revision` to the engine
-commit for stock runs too. Leave a field out rather than guess. Put any other
+commit for stock runs too. Name the model file with `modelRepo`, `modelFile`
+and `modelSha256` (lowercase hex), and the spread of the repeats with
+`decodeTpsMin` and `decodeTpsMax`. When the items of a batch are one run, the
+same setup measured at several input lengths or request counts, add
+`"sameRun": true` beside `items`: they share a `runId` and the rig page draws
+them as one curve. Leave a field out rather than guess. Put any other
 caveats in `runtimeFlags` and `notes`. Publishing measured aggregate throughput
 as a single stream measurement would misrepresent the run.
 
