@@ -1,0 +1,62 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "soyo \u2014 Ryzen 7 255",
+  "model": "lfm2-5-2-6b",
+  "quant": "q4_k_m",
+  "runtime": "llamacpp",
+  "runtimeVersion": "0.9.0-dev 8954f1948 (build 12340), CPU",
+  "decodeMethod": "engine",
+  "repeats": 3,
+  "promptCache": false,
+  "thinking": false,
+  "speculative": "none",
+  "modelRepo": "LiquidAI/LFM2.5-2.6B-GGUF",
+  "modelFile": "LFM2.5-2.6B-Q4_K_M.gguf",
+  "runDate": "2026-11-22",
+  "points": [
+    {
+      "inputTokens": 512,
+      "outputTokens": 256,
+      "concurrency": 1,
+      "decodeTps": 25.14,
+      "decodeTpsMin": 25.0,
+      "decodeTpsMax": 25.26,
+      "promptTps": 230.9,
+      "ttftMs": 2219
+    },
+    {
+      "inputTokens": 4096,
+      "outputTokens": 256,
+      "concurrency": 1,
+      "decodeTps": 22.06,
+      "decodeTpsMin": 22.03,
+      "decodeTpsMax": 22.11,
+      "promptTps": 229.6,
+      "ttftMs": 17847
+    },
+    {
+      "inputTokens": 16384,
+      "outputTokens": 256,
+      "concurrency": 1,
+      "decodeTps": 14.93,
+      "decodeTpsMin": 13.54,
+      "decodeTpsMax": 15.69,
+      "promptTps": 184.5,
+      "ttftMs": 88825
+    },
+    {
+      "inputTokens": 32768,
+      "outputTokens": 256,
+      "concurrency": 1,
+      "decodeTps": 10.53,
+      "decodeTpsMin": 10.35,
+      "decodeTpsMax": 10.66,
+      "promptTps": 140.8,
+      "ttftMs": 232775
+    }
+  ],
+  "runtimeFlags": "-t 12, CPU backend",
+  "revision": "8954f1948",
+  "modelSha256": "02a8b7e17487d326e46d68ce0ba24211e1b80a14c4cd0597fa73c1cd697f52ed",
+  "notes": "Ryzen 7 255 NUC (Zen 4 mobile, 22GB), CPU-only. Token-array prompts, cache_prompt=false, mean of 3 reps. Self-reported, E2."
+}

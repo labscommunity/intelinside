@@ -1,0 +1,62 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "mp \u2014 EPYC 7402",
+  "model": "lfm2-5-2-6b",
+  "quant": "q4_k_m",
+  "runtime": "llamacpp",
+  "runtimeVersion": "0.9.0-dev 8954f1948 (build 12340), CPU",
+  "decodeMethod": "engine",
+  "repeats": 3,
+  "promptCache": false,
+  "thinking": false,
+  "speculative": "none",
+  "modelRepo": "LiquidAI/LFM2.5-2.6B-GGUF",
+  "modelFile": "LFM2.5-2.6B-Q4_K_M.gguf",
+  "runDate": "2026-11-22",
+  "points": [
+    {
+      "inputTokens": 512,
+      "outputTokens": 256,
+      "concurrency": 1,
+      "decodeTps": 9.62,
+      "decodeTpsMin": 9.6,
+      "decodeTpsMax": 9.64,
+      "promptTps": 230.1,
+      "ttftMs": 2234
+    },
+    {
+      "inputTokens": 4096,
+      "outputTokens": 256,
+      "concurrency": 1,
+      "decodeTps": 8.41,
+      "decodeTpsMin": 8.4,
+      "decodeTpsMax": 8.42,
+      "promptTps": 240.3,
+      "ttftMs": 17043
+    },
+    {
+      "inputTokens": 16384,
+      "outputTokens": 256,
+      "concurrency": 1,
+      "decodeTps": 6.06,
+      "decodeTpsMin": 5.97,
+      "decodeTpsMax": 6.12,
+      "promptTps": 202.4,
+      "ttftMs": 80936
+    },
+    {
+      "inputTokens": 32768,
+      "outputTokens": 256,
+      "concurrency": 1,
+      "decodeTps": 4.35,
+      "decodeTpsMin": 4.33,
+      "decodeTpsMax": 4.39,
+      "promptTps": 162.4,
+      "ttftMs": 201762
+    }
+  ],
+  "runtimeFlags": "-t 40, CPU backend",
+  "revision": "8954f1948",
+  "modelSha256": "02a8b7e17487d326e46d68ce0ba24211e1b80a14c4cd0597fa73c1cd697f52ed",
+  "notes": "EPYC 7402 24-core, CPU-only. Token-array prompts, cache_prompt=false, mean of 3 reps. Self-reported, E2."
+}

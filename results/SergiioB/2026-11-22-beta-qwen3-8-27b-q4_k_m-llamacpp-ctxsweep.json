@@ -1,0 +1,63 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "NUC beta \u2014 Core Ultra X7 358H",
+  "model": "qwen3-8-27b",
+  "quant": "q4_k_m",
+  "runtime": "llamacpp",
+  "runtimeVersion": "SYCL 0.1.0-dev 1692f9e50 (build 10431)",
+  "decodeMethod": "engine",
+  "repeats": 3,
+  "promptCache": false,
+  "thinking": false,
+  "speculative": "none",
+  "modelRepo": "unsloth/Qwen3.8-27B-GGUF",
+  "modelFile": "Qwen3.8-27B-UD-Q4_K_M.gguf",
+  "runDate": "2026-11-22",
+  "points": [
+    {
+      "inputTokens": 512,
+      "outputTokens": 11,
+      "concurrency": 1,
+      "decodeTps": 1.76,
+      "decodeTpsMin": 1.75,
+      "decodeTpsMax": 1.77,
+      "promptTps": 62.2,
+      "ttftMs": 8241
+    },
+    {
+      "inputTokens": 4096,
+      "outputTokens": 256,
+      "concurrency": 1,
+      "decodeTps": 1.93,
+      "decodeTpsMin": 1.75,
+      "decodeTpsMax": 2.29,
+      "promptTps": 67.9,
+      "ttftMs": 60305
+    },
+    {
+      "inputTokens": 16384,
+      "outputTokens": 256,
+      "concurrency": 1,
+      "decodeTps": 1.71,
+      "decodeTpsMin": 1.66,
+      "decodeTpsMax": 1.8,
+      "promptTps": 61.1,
+      "ttftMs": 268086
+    },
+    {
+      "inputTokens": 32768,
+      "outputTokens": 256,
+      "concurrency": 1,
+      "decodeTps": 1.67,
+      "decodeTpsMin": 1.55,
+      "decodeTpsMax": 1.92,
+      "promptTps": 54.3,
+      "ttftMs": 603927
+    }
+  ],
+  "component": "intel-arc-b390",
+  "runtimeFlags": "-fa 1, -ngl 99, SYCL backend",
+  "revision": "1692f9e50",
+  "modelSha256": "1bce504dfecd84153666928a41d8a66706f0158d3a317bc5196b72819d7dc529",
+  "notes": "Core Ultra X7 358H NUC (Panther Lake, 32GB, Arc B390 iGPU via SYCL). Token-array prompts, cache_prompt=false, mean of 3 reps. Self-reported, E2."
+}
