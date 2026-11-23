@@ -25,6 +25,26 @@
       "ttftMs": 2219
     },
     {
+      "inputTokens": 1024,
+      "outputTokens": 256,
+      "concurrency": 1,
+      "decodeTps": 24.55,
+      "decodeTpsMin": 24.49,
+      "decodeTpsMax": 24.65,
+      "promptTps": 242.7,
+      "ttftMs": 4220
+    },
+    {
+      "inputTokens": 2048,
+      "outputTokens": 256,
+      "concurrency": 1,
+      "decodeTps": 23.27,
+      "decodeTpsMin": 23.19,
+      "decodeTpsMax": 23.33,
+      "promptTps": 237.5,
+      "ttftMs": 8625
+    },
+    {
       "inputTokens": 4096,
       "outputTokens": 256,
       "concurrency": 1,
@@ -33,6 +53,16 @@
       "decodeTpsMax": 22.11,
       "promptTps": 229.6,
       "ttftMs": 17847
+    },
+    {
+      "inputTokens": 8192,
+      "outputTokens": 256,
+      "concurrency": 1,
+      "decodeTps": 17.61,
+      "decodeTpsMin": 17.4,
+      "decodeTpsMax": 17.77,
+      "promptTps": 212.6,
+      "ttftMs": 38537
     },
     {
       "inputTokens": 16384,
