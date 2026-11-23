@@ -1,0 +1,63 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "16",
+  "model": "qwen3-8b",
+  "quant": "q4_k_m",
+  "runtime": "llamacpp",
+  "runtimeVersion": "0.9.0-dev 8954f1948 (build 12340), Metal",
+  "decodeMethod": "engine",
+  "repeats": 3,
+  "promptCache": false,
+  "thinking": false,
+  "speculative": "none",
+  "modelRepo": "Qwen/Qwen3-8B-GGUF",
+  "modelFile": "Qwen3-8B-Q4_K_M.gguf",
+  "runDate": "2026-11-22",
+  "points": [
+    {
+      "inputTokens": 512,
+      "outputTokens": 256,
+      "concurrency": 1,
+      "decodeTps": 19.46,
+      "decodeTpsMin": 19.29,
+      "decodeTpsMax": 19.64,
+      "promptTps": 221.0,
+      "ttftMs": 2317
+    },
+    {
+      "inputTokens": 4096,
+      "outputTokens": 256,
+      "concurrency": 1,
+      "decodeTps": 16.93,
+      "decodeTpsMin": 16.7,
+      "decodeTpsMax": 17.07,
+      "promptTps": 194.7,
+      "ttftMs": 21040
+    },
+    {
+      "inputTokens": 16384,
+      "outputTokens": 256,
+      "concurrency": 1,
+      "decodeTps": 11.38,
+      "decodeTpsMin": 11.31,
+      "decodeTpsMax": 11.43,
+      "promptTps": 149.6,
+      "ttftMs": 109548
+    },
+    {
+      "inputTokens": 32768,
+      "outputTokens": 256,
+      "concurrency": 1,
+      "decodeTps": 7.93,
+      "decodeTpsMin": 7.91,
+      "decodeTpsMax": 7.94,
+      "promptTps": 113.8,
+      "ttftMs": 287953
+    }
+  ],
+  "component": "apple-m4-gpu-10c",
+  "runtimeFlags": "-fa 1, -ngl 99, Metal backend",
+  "revision": "8954f1948",
+  "modelSha256": "d98cdcbd03e17ce47681435b5150e34c1417f50b5c0019dd560e4882c5745785",
+  "notes": "Mac Mini M4 16GB. Token-array prompts, cache_prompt=false, mean of 3 reps. Self-reported, E2."
+}

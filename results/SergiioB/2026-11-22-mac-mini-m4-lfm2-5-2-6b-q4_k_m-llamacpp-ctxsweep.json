@@ -1,0 +1,63 @@
+{
+  "$schema": "https://raw.githubusercontent.com/labscommunity/intelinside/main/results/schema.json",
+  "rig": "16",
+  "model": "lfm2-5-2-6b",
+  "quant": "q4_k_m",
+  "runtime": "llamacpp",
+  "runtimeVersion": "0.9.0-dev 8954f1948 (build 12340), Metal",
+  "decodeMethod": "engine",
+  "repeats": 3,
+  "promptCache": false,
+  "thinking": false,
+  "speculative": "none",
+  "modelRepo": "LiquidAI/LFM2.5-2.6B-GGUF",
+  "modelFile": "LFM2.5-2.6B-Q4_K_M.gguf",
+  "runDate": "2026-11-22",
+  "points": [
+    {
+      "inputTokens": 512,
+      "outputTokens": 256,
+      "concurrency": 1,
+      "decodeTps": 56.47,
+      "decodeTpsMin": 56.42,
+      "decodeTpsMax": 56.53,
+      "promptTps": 620.9,
+      "ttftMs": 825
+    },
+    {
+      "inputTokens": 4096,
+      "outputTokens": 256,
+      "concurrency": 1,
+      "decodeTps": 54.47,
+      "decodeTpsMin": 54.09,
+      "decodeTpsMax": 54.71,
+      "promptTps": 618.6,
+      "ttftMs": 6622
+    },
+    {
+      "inputTokens": 16384,
+      "outputTokens": 256,
+      "concurrency": 1,
+      "decodeTps": 48.39,
+      "decodeTpsMin": 48.27,
+      "decodeTpsMax": 48.45,
+      "promptTps": 558.0,
+      "ttftMs": 29363
+    },
+    {
+      "inputTokens": 32768,
+      "outputTokens": 256,
+      "concurrency": 1,
+      "decodeTps": 42.02,
+      "decodeTpsMin": 41.92,
+      "decodeTpsMax": 42.06,
+      "promptTps": 466.3,
+      "ttftMs": 70283
+    }
+  ],
+  "component": "apple-m4-gpu-10c",
+  "runtimeFlags": "-fa 1, -ngl 99, Metal backend",
+  "revision": "8954f1948",
+  "modelSha256": "02a8b7e17487d326e46d68ce0ba24211e1b80a14c4cd0597fa73c1cd697f52ed",
+  "notes": "Mac Mini M4 16GB. Token-array prompts, cache_prompt=false, mean of 3 reps. Self-reported, E2."
+}
