@@ -4,15 +4,15 @@
   "component": "intel-arc-pro-b70",
   "componentQuantity": 1,
   "model": "ornith-1-5-35b-a3b",
-  "quant": "int4",
+  "quant": "int8",
   "runtime": "openvino-genai",
   "runtimeVersion": "2026.4.0.0-3407-7ea2546852a",
-  "runtimeFlags": "OpenVINO 2026.4.0, VLMPipeline text-only, default GenAI pipeline, batch 1",
+  "runtimeFlags": "OpenVINO 2026.4.0, VLMPipeline text-only, default GenAI pipeline, batch 1 \u2014 quant correction 2026-11-18: weights are INT8 asymmetric (U8 + zero-points, NNCF fallback from requested int4-sym; verified",
   "decodeTps": 72.2,
   "promptTps": 58.1,
   "ttftMs": 442.6,
   "contextLength": 153,
   "batchSize": 1,
   "runDate": "2026-09-28",
-  "notes": "ReBAR on, 32GB BAR. 3-run mean; decode_tps runs: 67.6/75.4/73.6. Community OV convert vonvonhero/Ornith-1.5-35B-A3B-Uncensored-OpenVINO-INT4, run text-only via VLMPipeline. prompt_tps = input_tokens/TTFT."
+  "notes": "ReBAR on, 32GB BAR. 3-run mean; decode_tps runs: 67.6/75.4/73.6. Community OV convert vonvonhero/Ornith-1.5-35B-A3B-Uncensored-OpenVINO-INT4, run text-only via VLMPipeline. prompt_tps = input_tokens/TTFT. | Quant correction 2026-11-18: weights are INT8 asymmetric (U8 + zero-points, NNCF fallback from requested int4-sym; verified via XML, zero i4/u4 tensors)."
 }
