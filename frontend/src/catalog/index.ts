@@ -50,7 +50,7 @@ export const QUANTS: Quant[] = [
   { id: 'exl3-4bpw', label: 'EXL3 4bpw', bits: 4, format: 'EXL3 trellis quantization (ExLlamaV3), ~4 bits per weight' },
   { id: 'exl3-5bpw', label: 'EXL3 5bpw', bits: 5, format: 'EXL3 trellis quantization (ExLlamaV3), mixed-bit ~5 bits per weight' },
   { id: 'mlx-4bit', label: 'MLX 4-bit', bits: 4, format: 'MLX affine 4-bit, group size 64 (used by TensorFold)' },
-  { id: 'sq-64', label: 'SQ-64', bits: 4, format: 'Strata native 4-bit block quantization, group size 64' },
+  { id: 'sq-64', label: 'SQ-64', bits: 2, format: 'Strata mixed-precision SQuant (.strata v1.0, S1.25–S8_K, 256-weight / 4x64 Hadamard super-blocks) sized to a ~64 GB pack (~2.2 bpw avg)' },
 ]
 
 export const MODELS: Model[] = [
@@ -112,7 +112,7 @@ export const MODELS: Model[] = [
   },
   {
     id: 'inkling-2-mini', name: 'Inkling 2 Mini', family: 'Inkling 2', brand: 'Inkling', params: '26.4B', architecture: 'moe', activeParams: '3.4B',
-    sourceUrl: 'https://huggingface.co/thinkingmachines/Inkling-2-Mini', logoUrl: '/logos/models/thinking-machines.webp', brandColor: '#e89960', quants: ['bf16', 'nvfp4'],
+    sourceUrl: 'https://huggingface.co/thinkingmachines/Inkling-2-Mini', logoUrl: '/logos/models/thinking-machines.webp', brandColor: '#e89960', quants: ['bf16', 'nvfp4', 'q4_k_xl'],
   },
   {
     id: 'kolibri-1-78b-a3b', name: 'Kolibri 1 78B A3B', family: 'Kolibri 1', brand: 'Aleph Alpha', params: '78B', architecture: 'moe', activeParams: '3.46B',
