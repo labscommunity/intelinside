@@ -7,12 +7,12 @@
   "quant": "int4",
   "runtime": "openvino-genai",
   "runtimeVersion": "2026.4.0.0-3407-7ea2546852a",
-  "runtimeFlags": "OpenVINO GenAI 2026.4, GPU (Arc Pro B70, ReBAR on), int4-sym g128, ctx 4096, batch 1",
+  "runtimeFlags": "OpenVINO GenAI 2026.4, GPU (Arc Pro B70, ReBAR on), int8-asym per-tensor (NNCF auto-fallback from requested int4-sym g128 \u2014 MoE expert shapes), ctx 4096, batch 1",
   "decodeTps": 151.2,
   "promptTps": 217.8,
   "ttftMs": 64.3,
   "contextLength": 142,
   "batchSize": 1,
   "runDate": "2026-10-16",
-  "notes": "JetBrains/Mellum2.1-12B-A2.5B-Thinking self-export (int4-sym g128), first custom-arch OV export: optimum-intel git-main on transformers 5.20.1 with a registered MellumOpenVINOConfig + LFM2-MoE bmm forward patcher (MellumExperts shares the LFM2 experts signature). Exported on a DGX Spark (121GB RAM) because the fx-trace peaks ~46GB anon-rss; published at twilson63/Mellum2.1-12B-A2.5B-INT4-ov. 3-run mean decode 150.6/151.7/151.2, prompt 209-224, TTFT 63-67ms. Cascadia 0.2.4 rebuilt against GenAI 2026.4 SDK: wall 138.9/149.4/151.5 tok/s, no tokenizer segfault. vs llama.cpp Q4_K_M 175.5 on the same GPU."
+  "notes": "JetBrains/Mellum2.1-12B-A2.5B-Thinking self-export (int8-asym (NNCF auto-fallback from requested int4-sym g128; no i4/u4 tensors in the final IR \u2014 verified via openvino_model.xml)), first custom-arch OV export: optimum-intel git-main on transformers 5.20.1 with a registered MellumOpenVINOConfig + LFM2-MoE bmm forward patcher (MellumExperts shares the LFM2 experts signature). Exported on a DGX Spark (121GB RAM) because the fx-trace peaks ~46GB anon-rss; published at twilson63/Mellum2.1-12B-A2.5B-INT4-ov. 3-run mean decode 150.6/151.7/151.2, prompt 209-224, TTFT 63-67ms. Cascadia 0.2.4 rebuilt against GenAI 2026.4 SDK: wall 138.9/149.4/151.5 tok/s, no tokenizer segfault. vs llama.cpp Q4_K_M 175.5 on the same GPU."
 }
